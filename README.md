@@ -9,7 +9,8 @@ Startregion: Frankfurt am Main / Rhein-Main ↔ Nador und Umgebung.
 |---|---|
 | **Preis** | 2,00 € pro kg · Mindestpreis 20 € · Abholung +10 € |
 | **Sperrgut** | individueller Pauschalpreis nach Fotos und Maßen |
-| **Stack** | Next.js 16 (App Router) · TypeScript · Tailwind CSS · Supabase · Vercel |
+| **Stack** | Next.js 16 (App Router) · TypeScript · Tailwind CSS · Supabase |
+| **Hosting** | Railway (Docker) oder Vercel — beides vorbereitet |
 
 > Die Marke ist austauschbar: alle Namen, Kontaktdaten und das Nummernpräfix stehen zentral in
 > `src/config/brand.ts`.
@@ -23,13 +24,14 @@ Startregion: Frankfurt am Main / Rhein-Main ↔ Nador und Umgebung.
 3. [Supabase einrichten](#3-supabase-einrichten)
 4. [Lokal starten](#4-lokal-starten)
 5. [Admin-Benutzer anlegen](#5-admin-benutzer-anlegen)
-6. [Auf Vercel deployen](#6-auf-vercel-deployen)
-7. [Domain verbinden](#7-domain-verbinden)
-8. [Projektstruktur](#8-projektstruktur)
-9. [Sicherheit & Datenschutz](#9-sicherheit--datenschutz)
-10. [Anpassen](#10-anpassen)
-11. [Tests und Qualitätssicherung](#11-tests-und-qualitätssicherung)
-12. [Vor dem echten Geschäftsbetrieb](#12-vor-dem-echten-geschäftsbetrieb)
+6. [Auf Railway deployen](#6-auf-railway-deployen)
+7. [Alternative: Vercel](#7-alternative-vercel)
+8. [Domain verbinden](#8-domain-verbinden)
+9. [Projektstruktur](#9-projektstruktur)
+10. [Sicherheit & Datenschutz](#10-sicherheit--datenschutz)
+11. [Anpassen](#11-anpassen)
+12. [Tests und Qualitätssicherung](#12-tests-und-qualitätssicherung)
+13. [Vor dem echten Geschäftsbetrieb](#13-vor-dem-echten-geschäftsbetrieb)
 
 ---
 
@@ -71,7 +73,7 @@ Startregion: Frankfurt am Main / Rhein-Main ↔ Nador und Umgebung.
 | **npm** | kommt mit Node | Paketverwaltung |
 | **Git** | aktuell | Code auf GitHub laden |
 | **Supabase-Konto** | kostenlos | Datenbank, Login, Dateispeicher |
-| **Vercel-Konto** | kostenlos | Hosting |
+| **Railway- oder Vercel-Konto** | kostenlos zum Start | Hosting |
 
 Node-Version prüfen:
 
@@ -232,9 +234,97 @@ update public.profiles set role = 'staff'
 
 ---
 
-## 6. Auf Vercel deployen
+## 6. Auf Railway deployen
 
-### 6.1 Auf GitHub pushen
+Railway baut das mitgelieferte `Dockerfile` (festgelegt in `railway.toml`). Der Container läuft
+als Nicht-Root-Benutzer und enthält nur die Laufzeit — kein Quellcode, keine Dev-Abhängigkeiten.
+
+### 6.1 Projekt anlegen
+
+1. [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo**
+2. Repository auswählen, Branch `claude/marocargo-logistics-platform-f7hscf` (oder `main`)
+3. Railway erkennt `railway.toml` und baut mit Docker — Build Command musst du nicht setzen
+
+### 6.2 Variablen setzen
+
+**Variables → Raw Editor**, diesen Block einfügen und die Werte ersetzen:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://DEINPROJEKT.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=DEIN_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY=DEIN_SERVICE_ROLE_KEY
+```
+
+Das genügt für den Start. **`NEXT_PUBLIC_APP_URL` brauchst du zunächst nicht** — die App liest
+Railways `RAILWAY_PUBLIC_DOMAIN` und baut Links, QR-Codes und E-Mails daraus automatisch richtig.
+Setze die Variable erst, wenn du eine eigene Domain hast.
+
+> **Warum die Reihenfolge zählt:** `NEXT_PUBLIC_*` wird beim **Build** fest in den Browser-Code
+> eingebaut, nicht zur Laufzeit gelesen. Trägst du sie später nach, musst du **neu deployen**.
+> Für `SUPABASE_SERVICE_ROLE_KEY` gilt das nicht — der wird nur zur Laufzeit auf dem Server
+> gelesen und landet bewusst nie im Image.
+
+### 6.3 Domain erzeugen
+
+**Settings → Networking → Generate Domain**. Du bekommst z. B.
+`marocargo-production.up.railway.app`. Einen Port musst du nicht angeben — Railway setzt `PORT`,
+der Container übernimmt ihn.
+
+### 6.4 Supabase nachziehen
+
+Supabase → **Authentication → URL Configuration**:
+
+- **Site URL**: deine Railway-Domain
+- **Redirect URLs**: `https://DEINE-RAILWAY-DOMAIN/auth/callback`
+
+Ohne diesen Schritt funktioniert die Anmeldung nicht — der Bestätigungslink läuft ins Leere.
+
+### 6.5 Prüfen, ob alles steht
+
+```bash
+curl https://DEINE-RAILWAY-DOMAIN/api/health
+```
+
+Erwartete Antwort:
+
+```json
+{"status":"ok","configured":true,"timestamp":"..."}
+```
+
+`"configured": false` heißt: die Supabase-Variablen fehlen oder es wurde seit dem Eintragen nicht
+neu deployt. Genau diesen Pfad nutzt auch Railways Healthcheck (`/api/health`) — er fragt
+absichtlich **nicht** die Datenbank ab, damit eine Supabase-Störung keinen Neustart-Kreislauf
+auslöst.
+
+### 6.6 Lokal mit Docker testen
+
+Der identische Build, den Railway ausführt:
+
+```bash
+docker build -t marocargo \
+  --build-arg NEXT_PUBLIC_SUPABASE_URL=https://DEINPROJEKT.supabase.co \
+  --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=DEIN_ANON_KEY \
+  .
+
+docker run -p 3000:3000 \
+  -e SUPABASE_SERVICE_ROLE_KEY=DEIN_SERVICE_ROLE_KEY \
+  marocargo
+```
+
+### 6.7 Wenn etwas nicht läuft
+
+| Symptom | Ursache |
+|---|---|
+| Gelber Hinweis „Supabase ist nicht konfiguriert" | Variablen fehlen oder es wurde nach dem Eintragen nicht neu deployt. `NEXT_PUBLIC_*` wirkt erst nach einem neuen Build. |
+| Healthcheck schlägt fehl, Deploy bleibt hängen | Container startet nicht. Deploy-Logs prüfen — meist ein fehlendes `SUPABASE_SERVICE_ROLE_KEY` in einem Server-Pfad. |
+| QR-Codes/E-Mail-Links zeigen auf `localhost:3000` | Weder `NEXT_PUBLIC_APP_URL` gesetzt noch `RAILWAY_PUBLIC_DOMAIN` vorhanden. Domain erzeugen und neu deployen. |
+| Anmeldung leitet ins Leere | Redirect-URL in Supabase fehlt (Schritt 6.4). |
+
+---
+
+## 7. Alternative: Vercel
+
+### 7.1 Auf GitHub pushen
 
 ```bash
 git add -A
@@ -242,7 +332,7 @@ git commit -m "MaroCargo"
 git push -u origin main
 ```
 
-### 6.2 In Vercel importieren
+### 7.2 In Vercel importieren
 
 1. [vercel.com](https://vercel.com) → **Add New… → Project**
 2. Repository auswählen → **Import**
@@ -252,7 +342,7 @@ git push -u origin main
    Preset bereits, du kannst es zusätzlich im Dashboard prüfen.
 4. **Deploy noch nicht klicken** — erst die Environment Variables setzen
 
-### 6.3 Environment Variables eintragen
+### 7.3 Environment Variables eintragen
 
 Im Import-Bildschirm (oder später unter **Settings → Environment Variables**) für die Umgebungen
 **Production**, **Preview** und **Development**:
@@ -272,7 +362,7 @@ Im Import-Bildschirm (oder später unter **Settings → Environment Variables**)
 > `NEXT_PUBLIC_APP_URL` muss auf die **echte** Domain zeigen. Aus diesem Wert werden die Links
 > in E-Mails, die QR-Codes auf den Labels und die Sperrgut-Angebotslinks gebaut.
 
-### 6.4 Deployen
+### 7.4 Deployen
 
 **Deploy** klicken. Der Build läuft ohne besondere Infrastruktur:
 
@@ -282,7 +372,7 @@ npm run build      # muss lokal fehlerfrei durchlaufen
 
 Es gibt keine Schreibzugriffe auf das Dateisystem — alle Uploads gehen direkt in Supabase Storage.
 
-### 6.5 Wenn der Build fehlschlägt
+### 7.5 Wenn der Build fehlschlägt
 
 | Fehlermeldung | Ursache und Lösung |
 |---|---|
@@ -290,7 +380,7 @@ Es gibt keine Schreibzugriffe auf das Dateisystem — alle Uploads gehen direkt 
 | `Supabase ist nicht konfiguriert` zur Laufzeit | Die drei Supabase-Variablen fehlen für die betroffene Umgebung (Production, Preview oder Development). Nach dem Nachtragen **neu deployen** — Environment Variables werden beim Build eingebacken. |
 | Links in E-Mails zeigen auf `localhost` | `NEXT_PUBLIC_APP_URL` steht noch auf dem lokalen Wert. Auf die echte Domain setzen und neu deployen. |
 
-### 6.6 Supabase nachziehen
+### 7.6 Supabase nachziehen
 
 Nach dem ersten Deployment in Supabase → **Authentication → URL Configuration**:
 
@@ -299,20 +389,26 @@ Nach dem ersten Deployment in Supabase → **Authentication → URL Configuratio
 
 ---
 
-## 7. Domain verbinden
+## 8. Domain verbinden
 
-1. Vercel → dein Projekt → **Settings → Domains → Add**
-2. Domain eingeben, z. B. `marocargo.de`
-3. Vercel zeigt dir die nötigen DNS-Einträge:
-   - **A-Record** `@` → `76.76.21.21`, oder
-   - **CNAME** `www` → `cname.vercel-dns.com`
-4. Einträge bei deinem Domain-Anbieter setzen (DNS-Verbreitung: Minuten bis 48 Stunden)
-5. Das TLS-Zertifikat stellt Vercel automatisch aus
-6. Danach `NEXT_PUBLIC_APP_URL` auf die neue Domain setzen und **einmal neu deployen**
+### Railway
 
----
+1. **Settings → Networking → Custom Domain** → deine Domain eintragen, z. B. `marocargo.de`
+2. Railway zeigt einen **CNAME**-Eintrag, den du beim Domain-Anbieter setzt
+3. Das TLS-Zertifikat stellt Railway automatisch aus
+4. Danach `NEXT_PUBLIC_APP_URL=https://marocargo.de` als Variable setzen und **neu deployen** —
+   sonst zeigen QR-Codes und E-Mail-Links weiter auf die `.up.railway.app`-Adresse
+5. In Supabase die neue Domain bei **Site URL** und **Redirect URLs** ergänzen
 
-## 8. Projektstruktur
+### Vercel
+
+1. **Settings → Domains → Add** → Domain eintragen
+2. Vercel zeigt die nötigen DNS-Einträge (A-Record `@` → `76.76.21.21` oder CNAME `www`)
+3. Zertifikat kommt automatisch
+4. `NEXT_PUBLIC_APP_URL` auf die neue Domain setzen und einmal neu deployen
+5. Domain in Supabase bei **Site URL** und **Redirect URLs** ergänzen
+
+## 9. Projektstruktur
 
 ```
 src/
@@ -347,8 +443,13 @@ src/
 └─ proxy.ts              Session-Refresh + Schutz der internen Bereiche
 
 supabase/
-├─ migrations/           4 SQL-Dateien — die einzige Quelle des Schemas
+├─ migrations/           5 SQL-Dateien — die einzige Quelle des Schemas
 └─ seed.sql              Demodaten, nur für Entwicklung
+
+Dockerfile               Container-Build für Railway (und jeden Docker-Host)
+railway.toml             Railway: Docker-Builder + Healthcheck
+vercel.json              Vercel: Framework-Preset
+scripts/verify-db.sh     Migrationen gegen echtes PostgreSQL prüfen
 ```
 
 **Die wichtigsten Dateien**
@@ -364,7 +465,7 @@ supabase/
 
 ---
 
-## 9. Sicherheit & Datenschutz
+## 10. Sicherheit & Datenschutz
 
 **Rollen werden dreifach geprüft**
 
@@ -407,7 +508,7 @@ GPS-Koordinaten verloren gehen.
 
 ---
 
-## 10. Anpassen
+## 11. Anpassen
 
 ### Preise ändern
 
@@ -455,7 +556,7 @@ registrieren.
 
 ---
 
-## 11. Tests und Qualitätssicherung
+## 12. Tests und Qualitätssicherung
 
 ```bash
 npm run test        # Vitest — 78 Tests
@@ -500,7 +601,7 @@ Datenbank namens `marocargo_test`.
 
 ---
 
-## 12. Vor dem echten Geschäftsbetrieb
+## 13. Vor dem echten Geschäftsbetrieb
 
 Die Software ist fertig. Diese Punkte sind **geschäftlich und rechtlich** noch offen:
 

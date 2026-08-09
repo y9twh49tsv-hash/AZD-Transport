@@ -1,0 +1,26 @@
+.git
+.github
+node_modules
+.next
+out
+build
+dist
+coverage
+
+.env
+.env.local
+.env*.local
+
+npm-debug.log*
+*.tsbuildinfo
+next-env.d.ts
+
+.vercel
+.DS_Store
+
+# Not needed inside the image
+supabase
+scripts
+README.md
+AGENTS.md
+CLAUDE.md

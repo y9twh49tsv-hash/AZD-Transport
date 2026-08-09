@@ -35,6 +35,15 @@ const supabaseHost = (() => {
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  /**
+   * Self-hosting (Railway, Docker, any container host) needs the standalone
+   * build: Next then emits a small server.js plus only the node_modules it
+   * actually traced, which keeps the image around 200 MB instead of 1 GB.
+   *
+   * Gated on DOCKER_BUILD so the managed-platform build path (Vercel) stays
+   * exactly as it was — it does its own bundling and ignores this setting.
+   */
+  output: process.env.DOCKER_BUILD === '1' ? 'standalone' : undefined,
   images: {
     remotePatterns: supabaseHost
       ? [{ protocol: 'https', hostname: supabaseHost, pathname: '/storage/v1/object/**' }]

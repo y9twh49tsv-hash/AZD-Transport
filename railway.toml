@@ -1,0 +1,19 @@
+# =============================================================================
+# Railway deployment configuration
+# =============================================================================
+# Railway reads this file automatically. It pins the Dockerfile build so the
+# result is identical to a local `docker build`, instead of relying on Nixpacks
+# auto-detection.
+# =============================================================================
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# /api/health answers without touching Supabase, so a database hiccup cannot
+# trigger a restart loop.
+healthcheckPath = "/api/health"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
