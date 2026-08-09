@@ -29,43 +29,64 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   // instead of the whole app crashing.
   if (!isSupabaseConfigured()) return null;
 
-  const supabase = await createServerSupabase();
+  try {
+    const supabase = await createServerSupabase();
 
-  // getUser() re-validates the JWT with the auth server; getSession() alone
-  // would trust a cookie that could have been tampered with.
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+    // getUser() re-validates the JWT with the auth server; getSession() alone
+    // would trust a cookie that could have been tampered with.
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
-  if (error || !user) return null;
+    if (error || !user) return null;
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, full_name, phone, is_active')
-    .eq('id', user.id)
-    .maybeSingle();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, full_name, phone, is_active')
+      .eq('id', user.id)
+      .maybeSingle();
 
-  if (!profile) {
-    // Auth user without a profile row: treat as the least privileged role.
+    if (!profile) {
+      // Auth user without a profile row: treat as the least privileged role.
+      return {
+        id: user.id,
+        email: user.email ?? null,
+        role: 'customer',
+        fullName: null,
+        phone: null,
+        isActive: true,
+      };
+    }
+
     return {
       id: user.id,
       email: user.email ?? null,
-      role: 'customer',
-      fullName: null,
-      phone: null,
-      isActive: true,
+      role: profile.role,
+      fullName: profile.full_name,
+      phone: profile.phone,
+      isActive: profile.is_active,
     };
+  } catch (error) {
+    /**
+     * Reaching the auth server can fail for reasons that have nothing to do
+     * with the visitor: a wrong project URL, an expired key, a Supabase
+     * outage, a DNS hiccup on the host.
+     *
+     * None of those may take down the public website. Every caller treats a
+     * null result as "not signed in", which degrades the site to its logged-out
+     * state — the price calculator, tracking and the legal pages keep working,
+     * and the protected areas still redirect to the login page.
+     *
+     * The message goes to the server log (Railway → Deploy Logs) so the real
+     * cause is diagnosable; it never reaches the browser.
+     */
+    console.error(
+      '[auth] Session konnte nicht gelesen werden — Besucher wird als abgemeldet behandelt:',
+      error instanceof Error ? error.message : error,
+    );
+    return null;
   }
-
-  return {
-    id: user.id,
-    email: user.email ?? null,
-    role: profile.role,
-    fullName: profile.full_name,
-    phone: profile.phone,
-    isActive: profile.is_active,
-  };
 });
 
 // The permission rules themselves live in `roles.ts` — pure, dependency-free

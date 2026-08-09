@@ -42,17 +42,39 @@ export const brand = {
  * Only ever called on the server. In a browser bundle the non-public variables
  * resolve to undefined and the chain simply falls through.
  */
+const FALLBACK_URL = 'http://localhost:3000';
+
+/**
+ * Turns whatever was configured into a usable absolute URL, or returns null.
+ *
+ * Hosting dashboards invite the mistake of entering a bare domain
+ * ("meine-app.up.railway.app") — `new URL()` throws on that, and because the
+ * root layout builds `metadataBase` from this value, the whole site would go
+ * down over a missing "https://". So a missing scheme is added rather than
+ * treated as an error, and anything still unusable is rejected here instead of
+ * crashing a page render.
+ */
+function normaliseUrl(value: string | undefined): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+
+  const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+
+  try {
+    const parsed = new URL(withScheme);
+    if (!parsed.hostname) return null;
+    return withScheme.replace(/\/+$/, '');
+  } catch {
+    return null;
+  }
+}
+
 export function appUrl(): string {
-  const explicit = process.env.NEXT_PUBLIC_APP_URL;
-  if (explicit) return explicit.replace(/\/$/, '');
-
-  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
-    return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
-  }
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
-  }
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-
-  return 'http://localhost:3000';
+  return (
+    normaliseUrl(process.env.NEXT_PUBLIC_APP_URL) ??
+    normaliseUrl(process.env.RAILWAY_PUBLIC_DOMAIN) ??
+    normaliseUrl(process.env.VERCEL_PROJECT_PRODUCTION_URL) ??
+    normaliseUrl(process.env.VERCEL_URL) ??
+    FALLBACK_URL
+  );
 }
