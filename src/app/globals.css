@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Warm neutral canvas — reads premium, avoids the cold "backend" look */
+    --background: 40 20% 99%;
+    --foreground: 20 14% 5%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 20 14% 5%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14% 5%;
+
+    /* Atlas Green — a deep, calm green nodding to Morocco without being flag-literal */
+    --primary: 165 78% 19%;
+    --primary-foreground: 40 30% 98%;
+    --primary-muted: 165 45% 94%;
+
+    --secondary: 30 12% 96%;
+    --secondary-foreground: 20 14% 12%;
+
+    /* Terracotta — warm CTA / highlight accent */
+    --accent: 18 62% 44%;
+    --accent-foreground: 40 30% 98%;
+
+    /* Sand/gold — subtle nod to the German flag's gold, used for seals & badges */
+    --sand: 42 88% 47%;
+    --sand-foreground: 20 40% 12%;
+
+    --muted: 30 14% 96%;
+    --muted-foreground: 25 6% 42%;
+
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 30 10% 90%;
+    --input: 30 10% 88%;
+    --ring: 165 78% 19%;
+
+    --radius: 0.875rem;
+  }
+
+  .dark {
+    --background: 20 14% 6%;
+    --foreground: 40 20% 96%;
+
+    --card: 20 12% 9%;
+    --card-foreground: 40 20% 96%;
+
+    --popover: 20 12% 9%;
+    --popover-foreground: 40 20% 96%;
+
+    --primary: 162 62% 42%;
+    --primary-foreground: 20 20% 6%;
+    --primary-muted: 165 30% 16%;
+
+    --secondary: 20 8% 15%;
+    --secondary-foreground: 40 20% 96%;
+
+    --accent: 18 68% 54%;
+    --accent-foreground: 20 20% 6%;
+
+    --sand: 42 82% 55%;
+    --sand-foreground: 20 40% 10%;
+
+    --muted: 20 8% 15%;
+    --muted-foreground: 30 6% 64%;
+
+    --destructive: 0 62% 52%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 20 8% 18%;
+    --input: 20 8% 22%;
+    --ring: 162 62% 42%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    text-rendering: optimizeLegibility;
+    /* iOS safe areas — the driver UI has bottom-anchored actions */
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Never let iOS Safari auto-zoom on focus: inputs must be >= 16px */
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1rem);
+  }
+
+  ::selection {
+    @apply bg-primary/15;
+  }
+}
+
+@layer components {
+  .surface {
+    @apply rounded-2xl border border-border bg-card shadow-soft;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-foreground;
+  }
+
+  /* Subtle DE/MA corridor gradient used behind hero + key panels */
+  .corridor-gradient {
+    background-image:
+      radial-gradient(70% 120% at 8% 0%, hsl(var(--primary) / 0.1) 0%, transparent 60%),
+      radial-gradient(60% 100% at 100% 10%, hsl(var(--accent) / 0.1) 0%, transparent 55%),
+      radial-gradient(50% 80% at 50% 100%, hsl(var(--sand) / 0.08) 0%, transparent 60%);
+  }
+
+  .grid-texture {
+    background-image:
+      linear-gradient(hsl(var(--border) / 0.6) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.6) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(70% 60% at 50% 0%, black, transparent 75%);
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  @page {
+    margin: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
