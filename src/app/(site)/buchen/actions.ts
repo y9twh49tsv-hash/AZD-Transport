@@ -74,7 +74,7 @@ export async function createBooking(input: unknown): Promise<BookingResult> {
   try {
     const { data: existing } = await supabase
       .from('customers')
-      .select('id')
+      .select('id, profile_id')
       // Both schemas lower-case the address, so an exact match is correct here
       // — and unlike ILIKE it cannot be widened by "_" or "%" inside an e-mail.
       .eq('phone', data.senderPhone)
@@ -83,18 +83,28 @@ export async function createBooking(input: unknown): Promise<BookingResult> {
 
     if (existing) {
       customerId = existing.id;
-      await supabase
-        .from('customers')
-        .update({
-          first_name: data.senderFirstName,
-          last_name: data.senderLastName,
-          address_line1: data.senderAddress,
-          postal_code: data.senderPostalCode,
-          city: data.senderCity,
-          country: data.senderCountry,
-          ...(user ? { profile_id: user.id } : {}),
-        })
-        .eq('id', existing.id);
+
+      // `profile_id` is deliberately never written here. Linking an address-book
+      // entry to a login grants that login access to the entry's whole shipment
+      // history via row level security — so knowing somebody's phone number and
+      // e-mail address must not be enough to claim it. New bookings by a
+      // signed-in user are still found through `created_by`.
+      //
+      // For the same reason we only refresh the contact details when the record
+      // is unclaimed or already belongs to the person booking.
+      if (!existing.profile_id || existing.profile_id === user?.id) {
+        await supabase
+          .from('customers')
+          .update({
+            first_name: data.senderFirstName,
+            last_name: data.senderLastName,
+            address_line1: data.senderAddress,
+            postal_code: data.senderPostalCode,
+            city: data.senderCity,
+            country: data.senderCountry,
+          })
+          .eq('id', existing.id);
+      }
     } else {
       const { data: created } = await supabase
         .from('customers')

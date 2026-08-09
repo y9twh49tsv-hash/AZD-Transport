@@ -199,6 +199,22 @@ where not exists (select 1 from public.shipments where tracking_number = v.colum
 
 alter table public.shipments enable trigger shipments_assign_tracking_number;
 
+-- The demo shipments were inserted with the trigger switched off, so the
+-- sequence counter never saw them. Without this step the next real booking
+-- would start again at 0001 and eventually collide with MC-260809-0042.
+-- Deriving the values from the numbers themselves keeps this correct no matter
+-- which day the seed is run on.
+insert into public.tracking_counters (prefix, day, last_seq)
+select
+  split_part(s.tracking_number, '-', 1),
+  to_date(split_part(s.tracking_number, '-', 2), 'YYMMDD'),
+  max(split_part(s.tracking_number, '-', 3)::int)
+from public.shipments s
+where s.tracking_number ~ '^[A-Z]{2,5}-[0-9]{6}-[0-9]{4,}$'
+group by 1, 2
+on conflict (prefix, day) do update
+  set last_seq = greatest(tracking_counters.last_seq, excluded.last_seq);
+
 -- --------------------------------------------------------------------------
 -- Security seal for the flagship demo shipment
 -- --------------------------------------------------------------------------

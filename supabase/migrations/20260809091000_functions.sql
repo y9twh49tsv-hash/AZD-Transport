@@ -45,8 +45,11 @@ set search_path = public, pg_temp
 as $$
 begin
   if tg_op = 'INSERT' then
+    -- Both values are assigned unconditionally: whatever the caller sent is
+    -- discarded. A caller-chosen scan token would make the QR code on the
+    -- label guessable, so this must never fall back to the supplied value.
     new.tracking_number := public.next_tracking_number();
-    new.scan_token := coalesce(nullif(new.scan_token, ''), public.generate_token(40));
+    new.scan_token := public.generate_token(40);
     return new;
   end if;
 

@@ -5,14 +5,10 @@ import { Button } from '@/components/ui/button';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { cityName } from '@/config/regions';
 import { formatWeight } from '@/lib/pricing';
-import { normaliseTrackingNumber } from '@/lib/utils';
+import { escapeFilterValue, normaliseTrackingNumber } from '@/lib/utils';
 import type { ShipmentStatus } from '@/lib/shipment-status';
 
 export const dynamic = 'force-dynamic';
-
-function escapeFilterValue(value: string): string {
-  return value.replace(/[,()\\]/g, ' ').replace(/\s+/g, ' ').trim();
-}
 
 export default async function DriverSearchPage({
   searchParams,

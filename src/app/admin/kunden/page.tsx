@@ -3,14 +3,10 @@ import { Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { countryLabels } from '@/config/regions';
-import { formatDate } from '@/lib/utils';
+import { escapeFilterValue, formatDate } from '@/lib/utils';
 import { whatsappLink } from '@/lib/notifications/whatsapp';
 
 export const dynamic = 'force-dynamic';
-
-function escapeFilterValue(value: string): string {
-  return value.replace(/[,()\\]/g, ' ').replace(/\s+/g, ' ').trim();
-}
 
 export default async function CustomersPage({
   searchParams,

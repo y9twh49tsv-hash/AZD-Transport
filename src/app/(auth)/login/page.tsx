@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { LoginForm } from './login-form';
 import { SetupNotice } from '@/components/layout/setup-notice';
-import { getSessionUser } from '@/lib/auth';
+import { getSessionUser, homeRouteFor } from '@/lib/auth';
 
 export const metadata: Metadata = {
   title: 'Anmelden',
@@ -17,9 +17,7 @@ export default async function LoginPage({
   const user = await getSessionUser();
   const { next } = await searchParams;
 
-  if (user) {
-    redirect(user.role === 'admin' || user.role === 'staff' ? '/admin' : user.role === 'driver' ? '/driver' : '/konto');
-  }
+  if (user) redirect(homeRouteFor(user));
 
   // Only same-origin paths survive — see safeRedirect in actions.ts.
   const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : undefined;

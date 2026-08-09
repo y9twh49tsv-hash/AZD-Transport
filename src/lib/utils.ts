@@ -100,3 +100,22 @@ export function normaliseTrackingNumber(input: string): string {
 export function pluralise(count: number, one: string, many: string): string {
   return count === 1 ? one : many;
 }
+
+/**
+ * Makes a user-typed search term safe to embed in a PostgREST `or()` filter.
+ *
+ * That grammar separates conditions with commas and groups them with
+ * parentheses, so a term containing `,` `(` `)` or `\` could otherwise change
+ * the meaning of the query — e.g. turning a name search into an extra `or`
+ * condition that matches rows the search was never meant to reach.
+ *
+ * Everything dangerous is replaced with a space rather than removed, so
+ * "Meier,Schmidt" degrades to a harmless "Meier Schmidt" instead of silently
+ * becoming a different word.
+ */
+export function escapeFilterValue(value: string): string {
+  return value
+    .replace(/[,()\\]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}

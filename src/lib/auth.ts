@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { cache } from 'react';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
+import { hasRole as hasRoleFor } from '@/lib/roles';
 import type { UserRole } from '@/lib/supabase/database.types';
 
 export type SessionUser = {
@@ -67,31 +68,9 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   };
 });
 
-const roleRank: Record<UserRole, number> = { customer: 0, driver: 1, staff: 2, admin: 3 };
-
-export function hasRole(user: SessionUser | null, roles: UserRole[]): boolean {
-  if (!user || !user.isActive) return false;
-  return roles.includes(user.role);
-}
-
-/** Staff and admins share back-office access; admins additionally get settings. */
-export function isStaff(user: SessionUser | null): boolean {
-  return hasRole(user, ['staff', 'admin']);
-}
-
-export function isAdmin(user: SessionUser | null): boolean {
-  return hasRole(user, ['admin']);
-}
-
-/** Drivers plus everybody above them may use the driver screens. */
-export function canUseDriverApp(user: SessionUser | null): boolean {
-  return hasRole(user, ['driver', 'staff', 'admin']);
-}
-
-export function atLeast(user: SessionUser | null, role: UserRole): boolean {
-  if (!user || !user.isActive) return false;
-  return roleRank[user.role] >= roleRank[role];
-}
+// The permission rules themselves live in `roles.ts` — pure, dependency-free
+// and unit tested. This module only adds the request-scoped plumbing.
+export { atLeast, canUseDriverApp, hasRole, homeRouteFor, isAdmin, isStaff } from '@/lib/roles';
 
 /**
  * Guard for pages and server actions. Redirects to the login page (or to a
@@ -107,7 +86,7 @@ export async function requireRole(
   if (!user) {
     redirect(`${redirectTo}?next=${encodeURIComponent('/')}`);
   }
-  if (!hasRole(user, roles)) {
+  if (!hasRoleFor(user, roles)) {
     redirect('/kein-zugriff');
   }
   return user;
@@ -133,6 +112,6 @@ export class AuthorizationError extends Error {
 export async function assertRole(roles: UserRole[]): Promise<SessionUser> {
   const user = await getSessionUser();
   if (!user) throw new AuthorizationError('Nicht angemeldet.');
-  if (!hasRole(user, roles)) throw new AuthorizationError('Keine Berechtigung.');
+  if (!hasRoleFor(user, roles)) throw new AuthorizationError('Keine Berechtigung.');
   return user;
 }

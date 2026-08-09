@@ -3,9 +3,9 @@ import { Filter, Package, X } from 'lucide-react';
 import { PaymentBadge, StatusBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { createServerSupabase } from '@/lib/supabase/server';
-import { cityName, cities, countryLabels, type CountryCode } from '@/config/regions';
+import { cityName, cities, countryLabels, findCity, type CountryCode } from '@/config/regions';
 import { formatCents, formatWeight } from '@/lib/pricing';
-import { formatDate } from '@/lib/utils';
+import { escapeFilterValue, formatDate } from '@/lib/utils';
 import {
   PAYMENT_STATUSES,
   SHIPMENT_STATUSES,
@@ -18,6 +18,7 @@ import {
 export const dynamic = 'force-dynamic';
 
 const PAGE_SIZE = 40;
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -25,11 +26,6 @@ function single(params: SearchParams, key: string): string | undefined {
   const value = params[key];
   const result = Array.isArray(value) ? value[0] : value;
   return result?.trim() || undefined;
-}
-
-/** Escapes the PostgREST `or()` grammar so a search term cannot break out. */
-function escapeFilterValue(value: string): string {
-  return value.replace(/[,()\\]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 export default async function ShipmentsPage({
@@ -63,9 +59,15 @@ export default async function ShipmentsPage({
   if (paid === 'nein') request = request.eq('payment_status', 'unpaid');
   if (paid === 'ja') request = request.neq('payment_status', 'unpaid');
   if (country === 'DE' || country === 'MA') request = request.eq('origin_country', country);
-  if (city) request = request.or(`origin_city.eq.${city},destination_city.eq.${city}`);
-  if (from) request = request.gte('created_at', `${from}T00:00:00`);
-  if (to) request = request.lte('created_at', `${to}T23:59:59`);
+
+  // The city goes into a PostgREST `or()` expression, whose grammar uses commas
+  // and parentheses — so only a slug from our own list is ever allowed through.
+  if (city && findCity(city)) {
+    request = request.or(`origin_city.eq.${city},destination_city.eq.${city}`);
+  }
+
+  if (from && ISO_DATE.test(from)) request = request.gte('created_at', `${from}T00:00:00`);
+  if (to && ISO_DATE.test(to)) request = request.lte('created_at', `${to}T23:59:59`);
 
   if (query) {
     const safe = escapeFilterValue(query);
