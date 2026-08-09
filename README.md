@@ -246,7 +246,10 @@ git push -u origin main
 
 1. [vercel.com](https://vercel.com) → **Add New… → Project**
 2. Repository auswählen → **Import**
-3. Framework wird automatisch als **Next.js** erkannt — nichts ändern
+3. **Framework Preset** muss **Next.js** sein. Steht dort „Other", schlägt der Build
+   am Ende mit `No Output Directory named "public" found` fehl — Vercel sucht dann eine
+   statische Website statt der Next.js-Ausgabe. Das mitgelieferte `vercel.json` setzt das
+   Preset bereits, du kannst es zusätzlich im Dashboard prüfen.
 4. **Deploy noch nicht klicken** — erst die Environment Variables setzen
 
 ### 6.3 Environment Variables eintragen
@@ -279,7 +282,15 @@ npm run build      # muss lokal fehlerfrei durchlaufen
 
 Es gibt keine Schreibzugriffe auf das Dateisystem — alle Uploads gehen direkt in Supabase Storage.
 
-### 6.5 Supabase nachziehen
+### 6.5 Wenn der Build fehlschlägt
+
+| Fehlermeldung | Ursache und Lösung |
+|---|---|
+| `No Output Directory named "public" found` | Framework Preset steht auf „Other". `vercel.json` mit `"framework": "nextjs"` behebt das; alternativ im Dashboard unter **Settings → Build & Deployment → Framework Preset** auf **Next.js** stellen und neu deployen. |
+| `Supabase ist nicht konfiguriert` zur Laufzeit | Die drei Supabase-Variablen fehlen für die betroffene Umgebung (Production, Preview oder Development). Nach dem Nachtragen **neu deployen** — Environment Variables werden beim Build eingebacken. |
+| Links in E-Mails zeigen auf `localhost` | `NEXT_PUBLIC_APP_URL` steht noch auf dem lokalen Wert. Auf die echte Domain setzen und neu deployen. |
+
+### 6.6 Supabase nachziehen
 
 Nach dem ersten Deployment in Supabase → **Authentication → URL Configuration**:
 
