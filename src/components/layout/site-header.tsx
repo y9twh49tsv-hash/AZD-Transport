@@ -27,11 +27,6 @@ export function SiteHeader({
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  // Close the mobile menu whenever the route changes.
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
   // Prevent the page behind the open menu from scrolling on iOS.
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : '';
@@ -95,7 +90,14 @@ export function SiteHeader({
       </div>
 
       {open && (
-        <div id="mobile-nav" className="border-t border-border bg-background lg:hidden">
+        // Closing happens on click rather than in an effect watching `pathname`:
+        // navigating to the current route would not change the path, and an
+        // effect that calls setState causes an extra render pass.
+        <div
+          id="mobile-nav"
+          className="border-t border-border bg-background lg:hidden"
+          onClick={() => setOpen(false)}
+        >
           <nav className="container flex flex-col gap-1 py-4" aria-label="Mobile Navigation">
             {links.map((link) => (
               <Link

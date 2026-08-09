@@ -25,7 +25,7 @@ export default function LiabilityPage() {
         <p>
           <strong>
             [Konkreten Höchstbetrag eintragen, abgestimmt mit deiner Transportversicherung, z. B.
-            „bis 500 € je Sendung". Ohne abgeschlossene Versicherung hier keinen Betrag nennen.]
+            „bis 500 € je Sendung“. Ohne abgeschlossene Versicherung hier keinen Betrag nennen.]
           </strong>
         </p>
       </Section>

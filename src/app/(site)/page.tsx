@@ -38,7 +38,7 @@ const advantages = [
   {
     icon: PackageSearch,
     title: 'Statusverfolgung',
-    text: 'Von „Gebucht" bis „Zugestellt": jeder Schritt wird protokolliert und ist für dich online sichtbar.',
+    text: 'Von „Gebucht“ bis „Zugestellt“: jeder Schritt wird protokolliert und ist für dich online sichtbar.',
   },
   {
     icon: ShieldCheck,

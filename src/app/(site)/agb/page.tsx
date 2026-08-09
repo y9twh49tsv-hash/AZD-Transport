@@ -15,7 +15,7 @@ export default function TermsPage() {
       <Section title="§ 1 Geltungsbereich">
         <p>
           Diese Bedingungen gelten für alle Transportleistungen zwischen {brand.legalName}{' '}
-          (nachfolgend „wir") und dem Auftraggeber (nachfolgend „Kunde") im Verkehr zwischen
+          (nachfolgend „wir“) und dem Auftraggeber (nachfolgend „Kunde“) im Verkehr zwischen
           Deutschland und Marokko.
         </p>
       </Section>
@@ -47,7 +47,7 @@ export default function TermsPage() {
         <ul>
           <li>vollständige und wahrheitsgemäße Angaben zu Inhalt, Gewicht und Empfänger</li>
           <li>transportsichere Verpackung der Sendung</li>
-          <li>keine verbotenen oder nicht deklarierten Waren (siehe Seite „Verbotene Waren")</li>
+          <li>keine verbotenen oder nicht deklarierten Waren (siehe Seite „Verbotene Waren“)</li>
           <li>Erreichbarkeit des Empfängers unter der angegebenen Telefonnummer</li>
         </ul>
       </Section>
@@ -62,7 +62,7 @@ export default function TermsPage() {
       <Section title="§ 6 Laufzeiten">
         <p>
           <strong>
-            [Realistische Transportzeiten eintragen, z. B. „in der Regel 7–12 Tage ab Verladung".
+            [Realistische Transportzeiten eintragen, z. B. „in der Regel 7–12 Tage ab Verladung“.
             Verbindliche Zusagen nur machen, wenn sie eingehalten werden können.]
           </strong>{' '}
           Angegebene Laufzeiten sind unverbindliche Richtwerte. Verzögerungen durch Zoll, Fähre
@@ -72,7 +72,7 @@ export default function TermsPage() {
 
       <Section title="§ 7 Haftung">
         <p>
-          Es gelten die Regelungen der Seite „Haftung &amp; Versicherung".{' '}
+          Es gelten die Regelungen der Seite „Haftung &amp; Versicherung“.{' '}
           <strong>
             [Prüfen lassen, ob und in welchem Umfang die CMR (Übereinkommen über den
             Beförderungsvertrag im internationalen Straßengüterverkehr) oder §§ 407 ff. HGB
