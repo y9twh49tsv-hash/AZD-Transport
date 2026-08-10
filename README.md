@@ -122,6 +122,15 @@ npx supabase db push
 > Die Migrationsdateien bleiben die maßgebliche Quelle. `supabase/setup.sql` wird daraus
 > erzeugt — nach einer Änderung an einer Migration `npm run build:setup-sql` ausführen.
 
+**Kontrolle:** `supabase/check.sql` im SQL Editor ausführen. Es liest nur und zeigt eine
+Tabelle, in der in der Spalte `ok` überall `true` stehen muss.
+
+**Wenn `setup.sql` mit einem Fehler abbricht** wie `type "user_role" already exists` oder
+`relation "shipments" already exists`, ist aus einem früheren Versuch noch etwas übrig.
+Dann erst `supabase/reset.sql` ausführen (löscht alles, was zu MaroCargo gehört) und
+danach `setup.sql` erneut. ⚠️ `reset.sql` löscht alle Sendungen und Kunden — nur
+benutzen, solange noch keine echten Daten drin sind.
+
 ### 3.3 Storage-Buckets prüfen
 
 Migration 4 legt drei **private** Buckets an. Unter **Storage** solltest du sehen:
@@ -455,6 +464,8 @@ src/
 supabase/
 ├─ migrations/           5 SQL-Dateien — die einzige Quelle des Schemas
 ├─ setup.sql             alle Migrationen in einer Datei (aus migrations/ erzeugt)
+├─ check.sql             liest nur: ist die Einrichtung vollständig?
+├─ reset.sql             räumt alles wieder ab, damit setup.sql neu laufen kann
 └─ seed.sql              Demodaten, nur für Entwicklung
 
 Dockerfile               Container-Build für Railway (und jeden Docker-Host)
@@ -600,6 +611,11 @@ ein und prüft anschließend die Zusagen, auf die sich die Anwendung verlässt:
 - niemand kann sich selbst zum Admin machen oder ein deaktiviertes Konto reaktivieren
 - Preis-, Status- und Routenänderungen landen im Änderungsprotokoll
 - alle Storage-Buckets sind privat und auf allen Tabellen ist RLS aktiv
+
+Anschließend läuft derselbe Prüfsatz noch einmal, nachdem `reset.sql` und `setup.sql`
+die Datenbank komplett neu aufgebaut haben. Das hält die beiden Dateien, die nur im
+Supabase SQL Editor benutzt werden, mit den Migrationen im Gleichschritt und stellt
+sicher, dass nach einem Zurücksetzen auch die Tabellenrechte wieder stimmen.
 
 Voraussetzung ist ein lokal laufender PostgreSQL-Server (Version 15 oder neuer):
 
