@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { redirect } from 'next/navigation';
+import { redirect, unstable_rethrow } from 'next/navigation';
 import { cache } from 'react';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
@@ -68,6 +68,16 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
       isActive: profile.is_active,
     };
   } catch (error) {
+    /**
+     * Next signals control flow through thrown errors — reading cookies during
+     * a static render, `redirect()`, `notFound()`. Swallowing those would mean
+     * a page that needs a session could be prerendered as "logged out" and then
+     * served from the cache to someone who is signed in. `unstable_rethrow` is
+     * the documented way to let the framework's own errors pass through; it
+     * returns without doing anything for a genuine failure.
+     */
+    unstable_rethrow(error);
+
     /**
      * Reaching the auth server can fail for reasons that have nothing to do
      * with the visitor: a wrong project URL, an expired key, a Supabase
