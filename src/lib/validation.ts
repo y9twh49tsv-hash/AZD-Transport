@@ -31,6 +31,62 @@ const trimmed = (min: number, max: number, label: string) =>
     .max(max, `${label} ist zu lang (max. ${max} Zeichen).`);
 
 /**
+ * Optional free text that ends up as `text NULL` in the database.
+ *
+ * Accepts a string, an empty string, `null` and `undefined`, and always yields
+ * `string | null`. That the null side is accepted matters more than it looks:
+ * these schemas validate the same data twice — once in the browser through
+ * react-hook-form, once again in the server action, because a server must never
+ * trust what the browser sends. The browser hands on the *parsed* result, so
+ * the second pass sees the `null` the first pass produced. A schema that only
+ * accepted `string | undefined` would reject its own output with
+ * "Expected string, received null" — and the form would be impossible to
+ * submit while every field on screen looks perfectly filled in.
+ *
+ * The rule to keep: every schema here must accept what it returns.
+ * `validation.test.ts` asserts exactly that for all of them.
+ */
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max, `Bitte kürzer fassen (max. ${max} Zeichen).`)
+    .nullish()
+    .transform((v) => v || null);
+
+/** Optional selection of something identified by a uuid. */
+const optionalUuid = () =>
+  z
+    .union([z.string().uuid('Ungültige Auswahl.'), z.literal('')])
+    .nullish()
+    .transform((v) => (v ? v : null));
+
+/** Optional ISO date (`2026-08-10`) coming from an `<input type="date">`. */
+const optionalIsoDate = (message = 'Bitte ein gültiges Datum wählen.') =>
+  z
+    .union([z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, message), z.literal('')])
+    .nullish()
+    .transform((v) => (v ? v : null));
+
+/** Optional time of day (`08:30`) from an `<input type="time">`. */
+const optionalTime = () =>
+  z
+    .union([z.string().trim().regex(/^\d{2}:\d{2}$/, 'Format HH:MM'), z.literal('')])
+    .nullish()
+    .transform((v) => (v ? v : null));
+
+/**
+ * Optional number.
+ *
+ * The empty string and null are treated as "not given" rather than handed to
+ * `z.coerce.number()`, which would turn both into 0. For a price field that
+ * distinction is the difference between "leave the price alone" and "this
+ * shipment is free".
+ */
+const optionalNumber = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((v) => (v === '' || v === null ? undefined : v), schema.optional());
+
+/**
  * Phone numbers arrive in many shapes (+49 176…, 0176…, 00212…). We keep the
  * original formatting but require a plausible amount of digits.
  */
@@ -51,7 +107,7 @@ export const emailSchema = z
 
 export const optionalEmailSchema = z
   .union([emailSchema, z.literal('')])
-  .optional()
+  .nullish()
   .transform((v) => (v ? v : null));
 
 export const weightSchema = z.coerce
@@ -108,15 +164,9 @@ export const bookingSchema = z
     weightKg: weightSchema,
     pieceCount: pieceCountSchema,
     contentType: trimmed(2, 120, 'Art des Inhalts'),
-    description: z.string().trim().max(2000).optional().transform((v) => v || null),
+    description: optionalText(2000),
     pickupRequested: z.boolean().default(false),
-    pickupDate: z
-      .string()
-      .trim()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Bitte ein gültiges Datum wählen.')
-      .optional()
-      .or(z.literal(''))
-      .transform((v) => (v ? v : null)),
+    pickupDate: optionalIsoDate(),
 
     // Sender
     senderFirstName: trimmed(2, 80, 'Vorname'),
@@ -124,7 +174,7 @@ export const bookingSchema = z
     senderPhone: phoneSchema,
     senderEmail: emailSchema,
     senderAddress: trimmed(3, 200, 'Adresse'),
-    senderPostalCode: z.string().trim().max(16).optional().transform((v) => v || null),
+    senderPostalCode: optionalText(16),
     senderCity: trimmed(2, 100, 'Stadt'),
     senderCountry: countrySchema,
 
@@ -176,7 +226,7 @@ export const bulkyRequestSchema = z
     destinationCity: citySchema,
 
     itemType: trimmed(2, 80, 'Gegenstand'),
-    itemDescription: z.string().trim().max(2000).optional().transform((v) => v || null),
+    itemDescription: optionalText(2000),
     approxWeightKg: z.coerce
       .number({ invalid_type_error: 'Bitte gib ein ungefähres Gewicht an.' })
       .positive('Das Gewicht muss größer als 0 sein.')
@@ -190,7 +240,7 @@ export const bulkyRequestSchema = z
     phone: phoneSchema,
     email: optionalEmailSchema,
     pickupRequested: z.boolean().default(false),
-    notes: z.string().trim().max(2000).optional().transform((v) => v || null),
+    notes: optionalText(2000),
 
     /** Storage paths of photos already uploaded via a signed upload URL. */
     photoPaths: z.array(z.string().trim().min(1).max(300)).max(6).default([]),
@@ -227,9 +277,9 @@ export const uuidSchema = z.string().uuid('Ungültige ID.');
 export const statusUpdateSchema = z.object({
   shipmentId: uuidSchema,
   status: z.enum(SHIPMENT_STATUSES),
-  location: z.string().trim().max(120).optional().transform((v) => v || null),
-  publicMessage: z.string().trim().max(500).optional().transform((v) => v || null),
-  internalNote: z.string().trim().max(2000).optional().transform((v) => v || null),
+  location: optionalText(120),
+  publicMessage: optionalText(500),
+  internalNote: optionalText(2000),
 });
 
 export const sealSchema = z.object({
@@ -241,50 +291,38 @@ export const sealSchema = z.object({
     .min(3, 'Bitte gib eine Sicherheitsnummer an.')
     .max(40)
     .regex(/^[A-Z0-9][A-Z0-9\-_/]*$/, 'Nur Buchstaben, Ziffern und - _ / sind erlaubt.'),
-  note: z.string().trim().max(500).optional().transform((v) => v || null),
-  photoPath: z.string().trim().max(300).optional().transform((v) => v || null),
+  note: optionalText(500),
+  photoPath: optionalText(300),
 });
 
 export const shipmentEditSchema = z.object({
   shipmentId: uuidSchema,
-  weightKg: weightSchema.optional(),
-  pieceCount: pieceCountSchema.optional(),
-  priceTotalCents: z.coerce.number().int().min(0).max(10_000_000).optional(),
+  weightKg: optionalNumber(weightSchema),
+  pieceCount: optionalNumber(pieceCountSchema),
+  priceTotalCents: optionalNumber(z.coerce.number().int().min(0).max(10_000_000)),
   paymentStatus: z.enum(PAYMENT_STATUSES).optional(),
-  internalNotes: z.string().trim().max(4000).optional().transform((v) => v ?? null),
+  internalNotes: optionalText(4000),
 });
 
 export const pickupScheduleSchema = z.object({
   shipmentId: uuidSchema,
   scheduledDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, 'Bitte ein gültiges Datum wählen.'),
-  timeWindowStart: z
-    .string()
-    .trim()
-    .regex(/^\d{2}:\d{2}$/, 'Format HH:MM')
-    .optional()
-    .or(z.literal(''))
-    .transform((v) => (v ? v : null)),
-  timeWindowEnd: z
-    .string()
-    .trim()
-    .regex(/^\d{2}:\d{2}$/, 'Format HH:MM')
-    .optional()
-    .or(z.literal(''))
-    .transform((v) => (v ? v : null)),
-  driverId: z.union([uuidSchema, z.literal('')]).optional().transform((v) => (v ? v : null)),
-  note: z.string().trim().max(500).optional().transform((v) => v || null),
+  timeWindowStart: optionalTime(),
+  timeWindowEnd: optionalTime(),
+  driverId: optionalUuid(),
+  note: optionalText(500),
 });
 
 export const vehicleSchema = z.object({
   id: uuidSchema.optional(),
   plate: trimmed(2, 20, 'Kennzeichen').transform((v) => v.toUpperCase()),
-  make: z.string().trim().max(60).optional().transform((v) => v || null),
-  model: z.string().trim().max(60).optional().transform((v) => v || null),
-  grossWeightKg: z.coerce.number().positive().max(60_000).optional(),
+  make: optionalText(60),
+  model: optionalText(60),
+  grossWeightKg: optionalNumber(z.coerce.number().positive().max(60_000)),
   payloadKg: z.coerce.number({ invalid_type_error: 'Bitte gib die Nutzlast an.' }).positive().max(60_000),
-  cargoVolumeM3: z.coerce.number().positive().max(200).optional(),
+  cargoVolumeM3: optionalNumber(z.coerce.number().positive().max(200)),
   status: z.enum(VEHICLE_STATUSES).default('available'),
-  notes: z.string().trim().max(1000).optional().transform((v) => v || null),
+  notes: optionalText(1000),
 });
 
 export const tripSchema = z
@@ -296,18 +334,12 @@ export const tripSchema = z
     destinationCountry: countrySchema,
     destinationCity: citySchema,
     departureDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, 'Bitte ein gültiges Datum wählen.'),
-    plannedArrivalDate: z
-      .string()
-      .trim()
-      .regex(/^\d{4}-\d{2}-\d{2}$/)
-      .optional()
-      .or(z.literal(''))
-      .transform((v) => (v ? v : null)),
-    vehicleId: z.union([uuidSchema, z.literal('')]).optional().transform((v) => (v ? v : null)),
-    driverId: z.union([uuidSchema, z.literal('')]).optional().transform((v) => (v ? v : null)),
+    plannedArrivalDate: optionalIsoDate(),
+    vehicleId: optionalUuid(),
+    driverId: optionalUuid(),
     status: z.enum(TRIP_STATUSES).default('PLANNED'),
-    maxPayloadKg: z.coerce.number().positive().max(60_000).optional(),
-    notes: z.string().trim().max(2000).optional().transform((v) => v || null),
+    maxPayloadKg: optionalNumber(z.coerce.number().positive().max(60_000)),
+    notes: optionalText(2000),
   })
   .refine((v) => v.originCountry !== v.destinationCountry, {
     message: 'Start- und Zielland müssen unterschiedlich sein.',
@@ -317,8 +349,8 @@ export const tripSchema = z
 export const bulkyQuoteSchema = z.object({
   requestId: uuidSchema,
   status: z.enum(BULKY_STATUSES),
-  quotedPriceCents: z.coerce.number().int().min(0).max(10_000_000).optional(),
-  quoteNote: z.string().trim().max(2000).optional().transform((v) => v || null),
+  quotedPriceCents: optionalNumber(z.coerce.number().int().min(0).max(10_000_000)),
+  quoteNote: optionalText(2000),
 });
 
 export const roleChangeSchema = z.object({

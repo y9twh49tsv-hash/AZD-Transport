@@ -74,6 +74,52 @@ const STEP_FIELDS: Record<number, FieldPath<BookingInput>[]> = {
   3: ['detailsConfirmed', 'prohibitedConfirmed', 'termsAccepted'],
 };
 
+/**
+ * Plain German names for the error summary on the last step.
+ *
+ * Without them a rejected field shows only its message, and a message can be
+ * as unhelpful as "Invalid input" — leaving someone staring at a form where
+ * every visible field looks correct, because the offending one lives two steps
+ * back and is not on screen.
+ */
+const FIELD_LABELS: Partial<Record<FieldPath<BookingInput>, string>> = {
+  originCountry: 'Startland',
+  originCity: 'Abholstadt',
+  destinationCountry: 'Zielland',
+  destinationCity: 'Zielstadt',
+  weightKg: 'Gewicht',
+  pieceCount: 'Gepäckstücke',
+  contentType: 'Art des Inhalts',
+  description: 'Beschreibung',
+  pickupRequested: 'Abholung',
+  pickupDate: 'Abholdatum',
+  senderFirstName: 'Vorname (Absender)',
+  senderLastName: 'Nachname (Absender)',
+  senderPhone: 'Telefon (Absender)',
+  senderEmail: 'E-Mail (Absender)',
+  senderAddress: 'Adresse (Absender)',
+  senderPostalCode: 'PLZ (Absender)',
+  senderCity: 'Stadt (Absender)',
+  senderCountry: 'Land (Absender)',
+  recipientFirstName: 'Vorname (Empfänger)',
+  recipientLastName: 'Nachname (Empfänger)',
+  recipientPhone: 'Telefon (Empfänger)',
+  recipientAddress: 'Adresse (Empfänger)',
+  recipientCity: 'Stadt (Empfänger)',
+  recipientCountry: 'Land (Empfänger)',
+  detailsConfirmed: 'Bestätigung der Angaben',
+  prohibitedConfirmed: 'Bestätigung zu verbotenen Waren',
+  termsAccepted: 'Versandbedingungen',
+};
+
+/** In welchem Schritt das Feld steht — für den Sprung dorthin. */
+function stepOfField(field: string): number {
+  for (const [step, fields] of Object.entries(STEP_FIELDS)) {
+    if ((fields as string[]).includes(field)) return Number(step);
+  }
+  return 0;
+}
+
 export type BookingDefaults = Partial<
   Pick<
     BookingInput,
@@ -209,12 +255,31 @@ export function BookingForm({ defaults }: { defaults?: BookingDefaults }) {
 
           {step === 3 && Object.keys(errors).length > 0 && (
             <Alert tone="error" title="Bitte prüfe deine Angaben" className="mt-6">
-              <ul className="list-inside list-disc space-y-1">
+              <ul className="list-disc space-y-1 pl-5">
                 {Object.entries(errors)
                   .slice(0, 6)
-                  .map(([field, error]) => (
-                    <li key={field}>{(error as { message?: string })?.message}</li>
-                  ))}
+                  .map(([field, error]) => {
+                    const label = FIELD_LABELS[field as FieldPath<BookingInput>];
+                    const targetStep = stepOfField(field);
+                    return (
+                      <li key={field}>
+                        {label && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setStep(targetStep);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            className="font-medium underline underline-offset-2"
+                          >
+                            {label}
+                          </button>
+                        )}
+                        {label ? ': ' : ''}
+                        {(error as { message?: string })?.message}
+                      </li>
+                    );
+                  })}
               </ul>
             </Alert>
           )}

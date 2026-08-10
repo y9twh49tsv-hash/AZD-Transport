@@ -1,12 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
   bookingSchema,
+  bulkyQuoteSchema,
   bulkyRequestSchema,
+  optionalEmailSchema,
   phoneSchema,
+  pickupScheduleSchema,
   quoteSchema,
   sealSchema,
+  shipmentEditSchema,
   signedUploadSchema,
+  statusUpdateSchema,
   trackingNumberSchema,
+  tripSchema,
+  vehicleSchema,
 } from './validation';
 
 const validBooking = {
@@ -284,5 +291,149 @@ describe('signedUploadSchema', () => {
       sizeBytes: 1000,
     });
     expect(result.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Ein Schema muss annehmen, was es selbst zurückgibt
+// ---------------------------------------------------------------------------
+// Diese Schemas prüfen dieselben Daten zweimal: react-hook-form im Browser und
+// danach die Server Action noch einmal, weil ein Server dem Browser nicht
+// glauben darf. Der Browser reicht dabei das *geparste* Ergebnis weiter — die
+// Ausgabe des einen Durchgangs ist also die Eingabe des nächsten.
+//
+// Ein Schema, das seine eigene Ausgabe ablehnt, macht das Formular
+// unabsendbar, und zwar mit einer Meldung, die kein Feld benennt, während auf
+// dem Bildschirm jedes Feld korrekt ausgefüllt aussieht. Genau das hat die
+// Buchung blockiert: '' wurde beim Hinausgehen zu null und beim Hereinkommen
+// abgelehnt — "Expected string, received null" und "Invalid input".
+
+const UUID = '11111111-2222-3333-4444-555555555555';
+
+const roundTrip = [
+  ['bookingSchema', bookingSchema, validBooking],
+  [
+    'statusUpdateSchema',
+    statusUpdateSchema,
+    { shipmentId: UUID, status: 'IN_TRANSIT', location: '', publicMessage: '', internalNote: '' },
+  ],
+  ['sealSchema', sealSchema, { shipmentId: UUID, sealNumber: 'SEC-583921', note: '', photoPath: '' }],
+  [
+    'shipmentEditSchema',
+    shipmentEditSchema,
+    { shipmentId: UUID, weightKg: 25, pieceCount: 2, priceTotalCents: 5000, internalNotes: '' },
+  ],
+  [
+    'pickupScheduleSchema',
+    pickupScheduleSchema,
+    {
+      shipmentId: UUID,
+      scheduledDate: '2026-08-20',
+      timeWindowStart: '',
+      timeWindowEnd: '',
+      driverId: '',
+      note: '',
+    },
+  ],
+  [
+    'vehicleSchema',
+    vehicleSchema,
+    { plate: 'F-MC 1234', make: '', model: '', payloadKg: 1200, notes: '' },
+  ],
+  [
+    'tripSchema',
+    tripSchema,
+    {
+      code: 'TOUR-01',
+      originCountry: 'DE',
+      originCity: 'frankfurt-am-main',
+      destinationCountry: 'MA',
+      destinationCity: 'nador',
+      departureDate: '2026-08-20',
+      plannedArrivalDate: '',
+      vehicleId: '',
+      driverId: '',
+      notes: '',
+    },
+  ],
+  ['bulkyQuoteSchema', bulkyQuoteSchema, { requestId: UUID, status: 'QUOTED', quoteNote: '' }],
+] as const;
+
+describe('Schemas akzeptieren ihre eigene Ausgabe', () => {
+  it.each(roundTrip)('%s', (_name, schema, input) => {
+    const first = schema.parse(input);
+    // Der zweite Durchgang ist der, der auf dem Server läuft.
+    expect(schema.parse(first)).toEqual(first);
+  });
+
+  it('bulkyRequestSchema', () => {
+    const first = bulkyRequestSchema.parse({
+      originCountry: 'DE',
+      originCity: 'frankfurt-am-main',
+      destinationCountry: 'MA',
+      destinationCity: 'nador',
+      itemType: 'Waschmaschine',
+      itemDescription: '',
+      approxWeightKg: 75,
+      lengthCm: 60,
+      widthCm: 60,
+      heightCm: 85,
+      contactFirstName: 'Rachid',
+      contactLastName: 'El Fassi',
+      phone: '+49 176 9999999',
+      email: '',
+      pickupRequested: true,
+      notes: '',
+      photoPaths: [],
+      prohibitedConfirmed: true,
+    });
+    expect(bulkyRequestSchema.parse(first)).toEqual(first);
+  });
+
+  it('auch beim dritten Mal', () => {
+    const once = bookingSchema.parse(validBooking);
+    expect(bookingSchema.parse(bookingSchema.parse(once))).toEqual(once);
+  });
+});
+
+describe('Buchung ohne Abholung', () => {
+  it('geht durch — der Fall, der die Buchung blockierte', () => {
+    const parsed = bookingSchema.parse(validBooking);
+    expect(parsed.pickupDate).toBeNull();
+    expect(parsed.description).toBeNull();
+    expect(() => bookingSchema.parse(parsed)).not.toThrow();
+  });
+
+  it('macht aus einer leeren PLZ null, nicht eine leere Zeichenkette', () => {
+    expect(bookingSchema.parse({ ...validBooking, senderPostalCode: '   ' }).senderPostalCode)
+      .toBeNull();
+  });
+});
+
+describe('optionale Zahlen', () => {
+  it('behandeln leer und null als »nicht angegeben«, nicht als 0', () => {
+    // Sonst würde ein leer gelassenes Preisfeld die Sendung kostenlos machen.
+    for (const value of ['', null, undefined]) {
+      const parsed = shipmentEditSchema.parse({ shipmentId: UUID, priceTotalCents: value });
+      expect(parsed.priceTotalCents, `Eingabe: ${JSON.stringify(value)}`).toBeUndefined();
+    }
+  });
+
+  it('nehmen eine echte Zahl weiterhin an', () => {
+    expect(shipmentEditSchema.parse({ shipmentId: UUID, priceTotalCents: '4500' }).priceTotalCents)
+      .toBe(4500);
+  });
+});
+
+describe('optionalEmailSchema', () => {
+  it('akzeptiert Adresse, leer, null und undefined', () => {
+    expect(optionalEmailSchema.parse('Mehdi90@Outlook.de')).toBe('mehdi90@outlook.de');
+    for (const value of ['', null, undefined]) {
+      expect(optionalEmailSchema.parse(value), `Eingabe: ${JSON.stringify(value)}`).toBeNull();
+    }
+  });
+
+  it('lehnt eine kaputte Adresse ab', () => {
+    expect(optionalEmailSchema.safeParse('keine-adresse').success).toBe(false);
   });
 });
