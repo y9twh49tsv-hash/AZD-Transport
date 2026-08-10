@@ -146,6 +146,10 @@ und darf beliebig oft laufen.
 keine echten Aufträge erfasst sind. Angelegte Konten in `auth.users` bleiben erhalten;
 ihre Rolle vergibst du danach mit `make-admin.sql` neu.
 
+**Läuft die Datenbank schon und du willst nur nachziehen**, ohne etwas zu verlieren:
+`supabase/update.sql`. Es bringt eine bestehende Einrichtung auf den aktuellen Stand und
+vergibt in einem Zug die Admin-Rolle. Es löscht nichts und darf beliebig oft laufen.
+
 ### 3.3 Storage-Buckets prüfen
 
 Migration 4 legt drei **private** Buckets an. Unter **Storage** solltest du sehen:
@@ -495,6 +499,7 @@ supabase/
 ├─ migrations/           6 SQL-Dateien — die einzige Quelle des Schemas
 ├─ setup.sql             alle Migrationen in einer Datei — für ein frisches Projekt
 ├─ reinstall.sql         reset + setup in einer Datei — für eine benutzte Datenbank
+├─ update.sql            Nachtrag für eine schon eingerichtete Datenbank
 ├─ check.sql             liest nur: ist die Einrichtung vollständig?
 ├─ make-admin.sql        ein Konto zum Admin machen
 ├─ reset.sql             räumt alles ab (steckt auch in reinstall.sql)
