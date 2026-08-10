@@ -199,13 +199,16 @@ export async function updateShipmentDetails(input: unknown): Promise<ActionResul
       patch.price_total_cents = data.priceTotalCents;
       patch.price_base_cents = Math.max(0, data.priceTotalCents - pickupFee);
       patch.pickup_fee_cents = pickupFee;
-    } else if (data.weightKg !== undefined && shipment.shipment_type === 'standard') {
+    } else if (data.weightKg !== undefined && shipment.shipment_type !== 'bulky') {
       // Weight changed without an explicit price: recompute from the central
-      // pricing function rather than leaving a stale total behind.
+      // pricing function rather than leaving a stale total behind. Sperrgut is
+      // excluded because its price is always a manual quote; für Dokumente
+      // liefert die Funktion den Pauschalpreis zurück, das Gewicht ändert daran
+      // nichts.
       const price = calculatePrice({
         weightKg: data.weightKg,
         pickupRequested: shipment.pickup_requested,
-        shipmentType: 'standard',
+        shipmentType: shipment.shipment_type,
       });
       patch.price_base_cents = price.basePriceCents;
       patch.pickup_fee_cents = price.pickupFeeCents;

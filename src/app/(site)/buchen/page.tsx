@@ -41,6 +41,8 @@ function parseDefaults(params: Record<string, string | string[] | undefined>): B
       destinationCity?.country === destinationCountry ? destinationCity.slug : undefined,
     weightKg,
     pickupRequested: get('abholung') === '1',
+    // Sperrgut kommt hier nie an — dafür führt der Rechner nach /sperrgut.
+    shipmentType: get('art') === 'documents' ? ('documents' as const) : ('standard' as const),
   };
 }
 

@@ -7,7 +7,7 @@ Startregion: Frankfurt am Main / Rhein-Main ↔ Nador und Umgebung.
 
 | | |
 |---|---|
-| **Preis** | 2,00 € pro kg · Mindestpreis 20 € · Abholung +10 € |
+| **Preis** | 2,00 € pro kg · Mindestpreis 20 € · Dokumente pauschal 10 € · Abholung +10 € |
 | **Sperrgut** | individueller Pauschalpreis nach Fotos und Maßen |
 | **Stack** | Next.js 16 (App Router) · TypeScript · Tailwind CSS · Supabase |
 | **Hosting** | Railway (Docker) oder Vercel — beides vorbereitet |
@@ -41,6 +41,7 @@ Startregion: Frankfurt am Main / Rhein-Main ↔ Nador und Umgebung.
 
 - Preisrechner mit sofortigem Ergebnis, ohne Anmeldung
 - Buchung in vier Schritten, mit sofortiger Sendungsnummer (`AZD-260809-0042`)
+- Dokumentenversand zum Pauschalpreis: Pässe, Urkunden, Verträge, Vollmachten
 - Öffentliche Sendungsverfolgung mit vollständigem Verlauf
 - Sperrgut-Anfrage mit Foto-Upload direkt vom Handy
 - Angebotslink zum Annehmen oder Ablehnen eines Sperrgut-Festpreises

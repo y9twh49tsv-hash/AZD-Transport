@@ -100,3 +100,48 @@ describe('money formatting', () => {
     expect(parseEuroToCents('')).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Dokumente — Pauschalpreis
+// ---------------------------------------------------------------------------
+describe('Dokumentenversand', () => {
+  const doc = (weightKg: number, pickupRequested = false) =>
+    calculatePrice({ weightKg, pickupRequested, shipmentType: 'documents' });
+
+  it('kostet pauschal 10 €, unabhängig vom Gewicht', () => {
+    // Der ganze Zweck der Sendungsart: ein Umschlag wiegt fast nichts, und der
+    // Mindestpreis von 20 € würde die Leistung sinnlos verteuern.
+    for (const kg of [0.01, 0.1, 0.5, 1, 2]) {
+      expect(doc(kg).totalCents, `${kg} kg`).toBe(1000);
+    }
+  });
+
+  it('rechnet die Abholung obendrauf', () => {
+    expect(doc(0.2, true).totalCents).toBe(2000);
+    expect(doc(0.2, true).pickupFeeCents).toBe(1000);
+  });
+
+  it('weist das Gewicht aus, ohne es zu berechnen', () => {
+    const price = doc(1.5);
+    expect(price.weightKg).toBe(1.5);
+    expect(price.weightPriceCents).toBe(0);
+    expect(price.minimumApplied).toBe(false);
+  });
+
+  it('ist billiger als dieselbe Sendung als Paket', () => {
+    const alsPaket = calculatePrice({
+      weightKg: 0.5,
+      pickupRequested: false,
+      shipmentType: 'standard',
+    });
+    expect(alsPaket.totalCents).toBe(2000);
+    expect(doc(0.5).totalCents).toBeLessThan(alsPaket.totalCents);
+  });
+
+  it('liefert einen berechenbaren Preis — anders als Sperrgut', () => {
+    expect(doc(1).quotable).toBe(true);
+    expect(
+      calculatePrice({ weightKg: 1, pickupRequested: false, shipmentType: 'bulky' }).quotable,
+    ).toBe(false);
+  });
+});

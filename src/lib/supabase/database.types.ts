@@ -12,7 +12,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json } | 
 
 export type UserRole = 'customer' | 'driver' | 'staff' | 'admin';
 export type CountryCode = 'DE' | 'MA';
-export type ShipmentType = 'standard' | 'bulky';
+export type ShipmentType = 'standard' | 'documents' | 'bulky';
 export type ShipmentStatus =
   | 'BOOKED'
   | 'PICKUP_SCHEDULED'

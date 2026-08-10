@@ -63,7 +63,7 @@ export async function createBooking(input: unknown): Promise<BookingResult> {
   const price = calculatePrice({
     weightKg: data.weightKg,
     pickupRequested: data.pickupRequested,
-    shipmentType: 'standard',
+    shipmentType: data.shipmentType,
   });
 
   const supabase = createAdminClient();
@@ -136,7 +136,7 @@ export async function createBooking(input: unknown): Promise<BookingResult> {
     .insert({
       // tracking_number and scan_token are assigned by the database trigger —
       // deliberately absent here so no code path can influence them.
-      shipment_type: 'standard',
+      shipment_type: data.shipmentType,
       status: 'BOOKED',
       customer_id: customerId,
       created_by: user?.id ?? null,

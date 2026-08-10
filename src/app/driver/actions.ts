@@ -127,11 +127,11 @@ export async function driverUpdateShipment(input: unknown): Promise<DriverResult
     // for what we actually carry.
     if (data.weightKg !== undefined && data.weightKg !== Number(shipment.weight_kg)) {
       patch.weight_kg = data.weightKg;
-      if (shipment.shipment_type === 'standard') {
+      if (shipment.shipment_type !== 'bulky') {
         const price = calculatePrice({
           weightKg: data.weightKg,
           pickupRequested: shipment.pickup_requested,
-          shipmentType: 'standard',
+          shipmentType: shipment.shipment_type,
         });
         patch.price_base_cents = price.basePriceCents;
         patch.pickup_fee_cents = price.pickupFeeCents;

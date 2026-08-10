@@ -1,6 +1,6 @@
 import { pricingConfig } from '@/config/pricing';
 
-export type ShipmentType = 'standard' | 'bulky';
+export type ShipmentType = 'standard' | 'documents' | 'bulky';
 
 export type PriceInput = {
   weightKg: number;
@@ -33,19 +33,35 @@ function toCents(value: number): number {
  * THE single pricing function of the application.
  *
  * Rules:
- *   standard: base = max(20,00 €, weight × 2,00 €)
- *   pickup:   + 10,00 €
- *   bulky:    no automatic price — always a manual quote by the office
+ *   standard:  base = max(20,00 €, weight × 2,00 €)
+ *   documents: flat 10,00 €, regardless of weight
+ *   pickup:    + 10,00 €
+ *   bulky:     no automatic price — always a manual quote by the office
  *
  * Both the client-side calculator and the server-side booking endpoint call
  * this, and the server result is the one that is stored. A price sent by the
  * browser is never trusted.
  */
 export function calculatePrice(input: PriceInput): PriceBreakdown {
-  const { pricePerKgCents, minimumPriceCents, pickupFeeCents } = pricingConfig;
+  const { pricePerKgCents, minimumPriceCents, pickupFeeCents, documentsPriceCents } = pricingConfig;
 
   const weightKg = Number.isFinite(input.weightKg) ? Math.max(0, input.weightKg) : 0;
   const pickupFee = input.pickupRequested ? pickupFeeCents : 0;
+
+  if (input.shipmentType === 'documents') {
+    // Flat rate: the weight is recorded for the manifest, but never priced.
+    return {
+      quotable: true,
+      weightKg,
+      weightPriceCents: 0,
+      basePriceCents: documentsPriceCents,
+      minimumApplied: false,
+      pickupFeeCents: pickupFee,
+      totalCents: documentsPriceCents + pickupFee,
+      ratePerKgCents: 0,
+      minimumPriceCents: documentsPriceCents,
+    };
+  }
 
   if (input.shipmentType === 'bulky') {
     return {

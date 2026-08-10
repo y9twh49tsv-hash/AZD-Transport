@@ -66,11 +66,16 @@ export const de = {
     typeLabel: 'Art der Sendung',
     typeStandard: 'Normale Sendung',
     typeStandardHint: 'Pakete, Taschen, Kartons',
+    typeDocuments: 'Dokumente',
+    typeDocumentsHint: 'Pässe, Urkunden, Verträge',
     typeBulky: 'Sperrig / schwer',
     typeBulkyHint: 'Möbel, Geräte, Fahrrad …',
     yourPrice: 'Dein Preis',
     breakdownWeight: 'Transport ({weight})',
     breakdownMinimum: 'Mindestpreis',
+    breakdownDocuments: 'Dokumente (Pauschale)',
+    documentsExplain:
+      'Pauschal 10 € bis {max} kg — unabhängig vom Gewicht. Für Pässe, Urkunden, Verträge und Vollmachten. Schwerer oder mehr als ein Umschlag? Dann buche es als normale Sendung.',
     breakdownPickup: 'Abholung',
     bulkyNotice: 'Individuelles Angebot erforderlich',
     bulkyExplain:

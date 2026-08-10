@@ -1,10 +1,10 @@
 -- =============================================================================
 -- AZD Transport — komplette Einrichtung in einem Durchgang
 -- =============================================================================
--- Diese Datei ist die Aneinanderreihung aller 7 Migrationen aus
+-- Diese Datei ist die Aneinanderreihung aller 8 Migrationen aus
 -- supabase/migrations/ in der richtigen Reihenfolge. Sie existiert nur der
 -- Bequemlichkeit halber: einmal in den Supabase SQL Editor einfügen und
--- ausführen, statt 7 Dateien nacheinander.
+-- ausführen, statt 8 Dateien nacheinander.
 --
 -- Die einzelnen Migrationsdateien bleiben die maßgebliche Quelle. Wenn du dort
 -- etwas änderst, erzeuge diese Datei neu:
@@ -1671,3 +1671,31 @@ update public.app_settings
 -- 0001 — AZD-260810-0001 kann neben einem schon vergebenen MC-260810-0003
 -- stehen. Das ist unkritisch: die Eindeutigkeit hängt an der vollständigen
 -- Nummer, und die enthält das Präfix.
+
+
+-- ###########################################################################
+-- ## 20260810140000_documents_shipment_type.sql
+-- ###########################################################################
+
+-- =============================================================================
+-- AZD Transport — Dokumentenversand als eigene Sendungsart
+-- =============================================================================
+-- Pässe, Urkunden, Verträge, Vollmachten: ein Pauschalpreis von 10,00 €,
+-- unabhängig vom Gewicht.
+--
+-- Warum eine eigene Art und kein leichtes Paket: Beim Gewichtstarif greift der
+-- Mindestpreis von 20,00 €, und ein Umschlag wiegt praktisch nichts. Die
+-- Leistung wäre damit doppelt so teuer wie sie sein soll. Umgekehrt darf ein
+-- 30-kg-Karton nicht als „Dokumente“ zum Pauschalpreis durchrutschen — die
+-- Anwendung begrenzt die Sendungsart deshalb auf 2 kg.
+--
+-- Der Preis selbst steht in src/config/pricing.ts und wird bei jeder Buchung
+-- serverseitig neu berechnet. Diese Migration erweitert nur den Wertebereich
+-- der Datenbank, damit die neue Art überhaupt gespeichert werden kann.
+-- =============================================================================
+
+-- Der Wert wird in dieser Transaktion nur angelegt, nicht verwendet. Das ist
+-- die Bedingung, unter der PostgreSQL das Erweitern eines Aufzählungstyps
+-- innerhalb einer Transaktion erlaubt — und der Supabase SQL Editor führt eine
+-- eingefügte Datei immer als eine Transaktion aus.
+alter type public.shipment_type add value if not exists 'documents';

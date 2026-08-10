@@ -110,14 +110,32 @@ export const optionalEmailSchema = z
   .nullish()
   .transform((v) => (v ? v : null));
 
+/**
+ * Gewicht in Kilogramm.
+ *
+ * Die Untergrenze ist die absolute — die eines Briefumschlags. Das
+ * Mindestgewicht für Pakete ist höher und wird dort geprüft, wo die
+ * Sendungsart bekannt ist (siehe `requiresParcelWeight`). Stünde die
+ * Paketgrenze schon hier, ließe sich der Dokumentenversand nicht buchen: ein
+ * Umschlag mit Pass und zwei Urkunden wiegt rund 50 Gramm.
+ */
 export const weightSchema = z.coerce
   .number({ invalid_type_error: 'Bitte gib ein Gewicht in kg an.' })
   .positive('Das Gewicht muss größer als 0 sein.')
-  .min(pricingConfig.minWeightKg, `Mindestens ${pricingConfig.minWeightKg} kg.`)
+  .min(pricingConfig.minDocumentsWeightKg, `Mindestens ${pricingConfig.minDocumentsWeightKg} kg.`)
   .max(
     pricingConfig.maxStandardWeightKg,
     `Über ${pricingConfig.maxStandardWeightKg} kg bitte als Sperrgut anfragen.`,
   );
+
+/** Alles außer Dokumenten muss das Paket-Mindestgewicht erreichen. */
+const requiresParcelWeight = (v: { shipmentType?: string; weightKg: number }) =>
+  v.shipmentType === 'documents' || v.weightKg >= pricingConfig.minWeightKg;
+
+const parcelWeightMessage = {
+  message: `Mindestens ${pricingConfig.minWeightKg} kg. Leichter? Dann ist es vermutlich eine Dokumentensendung.`,
+  path: ['weightKg'],
+};
 
 export const pieceCountSchema = z.coerce
   .number({ invalid_type_error: 'Bitte gib die Anzahl der Gepäckstücke an.' })
@@ -135,7 +153,7 @@ export const quoteSchema = z
     destinationCity: citySchema,
     weightKg: weightSchema,
     pickupRequested: z.boolean().default(false),
-    shipmentType: z.enum(['standard', 'bulky']).default('standard'),
+    shipmentType: z.enum(['standard', 'documents', 'bulky']).default('standard'),
   })
   .refine((v) => v.originCountry !== v.destinationCountry, {
     message: 'Wir transportieren zwischen Deutschland und Marokko — bitte wähle zwei Länder.',
@@ -148,7 +166,8 @@ export const quoteSchema = z
   .refine(
     (v) => cities.find((c) => c.slug === v.destinationCity)?.country === v.destinationCountry,
     { message: 'Die Zielstadt passt nicht zum gewählten Land.', path: ['destinationCity'] },
-  );
+  )
+  .refine(requiresParcelWeight, parcelWeightMessage);
 
 export type QuoteInput = z.infer<typeof quoteSchema>;
 
@@ -161,6 +180,12 @@ export const bookingSchema = z
     originCity: citySchema,
     destinationCountry: countrySchema,
     destinationCity: citySchema,
+    /**
+     * Sperrgut wird hier nicht angenommen: dafür gibt es /sperrgut mit Fotos,
+     * Maßen und einem Angebot durch das Büro. Wer hier bucht, bekommt sofort
+     * einen verbindlichen Preis — das geht nur für Paket und Dokumente.
+     */
+    shipmentType: z.enum(['standard', 'documents']).default('standard'),
     weightKg: weightSchema,
     pieceCount: pieceCountSchema,
     contentType: trimmed(2, 120, 'Art des Inhalts'),
@@ -212,6 +237,22 @@ export const bookingSchema = z
   .refine((v) => !v.pickupRequested || !!v.pickupDate, {
     message: 'Bitte wähle ein Wunschdatum für die Abholung.',
     path: ['pickupDate'],
+  })
+  .refine(requiresParcelWeight, parcelWeightMessage)
+  /**
+   * Der Pauschalpreis für Dokumente gilt für einen Umschlag, nicht für einen
+   * Karton. Ohne diese Grenze wäre „Dokumente“ schlicht der billigere Tarif
+   * für jede Sendung — 10,00 € statt 2,00 € pro Kilo.
+   */
+  .refine((v) => v.shipmentType !== 'documents' || v.weightKg <= pricingConfig.maxDocumentsWeightKg, {
+    message:
+      `Für Dokumente gilt der Pauschalpreis bis ${pricingConfig.maxDocumentsWeightKg} kg. ` +
+      'Schwerer? Dann buche es bitte als Paket.',
+    path: ['weightKg'],
+  })
+  .refine((v) => v.shipmentType !== 'documents' || v.pieceCount === 1, {
+    message: 'Für Dokumente ist ein Umschlag vorgesehen. Mehrere Stücke bitte als Paket buchen.',
+    path: ['pieceCount'],
   });
 
 export type BookingInput = z.infer<typeof bookingSchema>;

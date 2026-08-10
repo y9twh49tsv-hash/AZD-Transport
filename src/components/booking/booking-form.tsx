@@ -10,6 +10,8 @@ import {
   Check,
   CheckCircle2,
   Copy,
+  FileText,
+  Package,
   PackageSearch,
   Share2,
 } from 'lucide-react';
@@ -46,6 +48,7 @@ const STEP_FIELDS: Record<number, FieldPath<BookingInput>[]> = {
     'originCity',
     'destinationCountry',
     'destinationCity',
+    'shipmentType',
     'weightKg',
     'pieceCount',
     'contentType',
@@ -87,6 +90,7 @@ const FIELD_LABELS: Partial<Record<FieldPath<BookingInput>, string>> = {
   originCity: 'Abholstadt',
   destinationCountry: 'Zielland',
   destinationCity: 'Zielstadt',
+  shipmentType: 'Art der Sendung',
   weightKg: 'Gewicht',
   pieceCount: 'Gepäckstücke',
   contentType: 'Art des Inhalts',
@@ -123,7 +127,12 @@ function stepOfField(field: string): number {
 export type BookingDefaults = Partial<
   Pick<
     BookingInput,
-    'originCountry' | 'originCity' | 'destinationCountry' | 'destinationCity' | 'weightKg'
+    | 'originCountry'
+    | 'originCity'
+    | 'destinationCountry'
+    | 'destinationCity'
+    | 'weightKg'
+    | 'shipmentType'
   >
 > & { pickupRequested?: boolean };
 
@@ -143,6 +152,7 @@ export function BookingForm({ defaults }: { defaults?: BookingDefaults }) {
       originCity: defaults?.originCity ?? 'frankfurt-am-main',
       destinationCountry: defaults?.destinationCountry ?? 'MA',
       destinationCity: defaults?.destinationCity ?? 'nador',
+      shipmentType: defaults?.shipmentType ?? 'standard',
       weightKg: defaults?.weightKg ?? undefined,
       pieceCount: 1,
       contentType: '',
@@ -177,9 +187,9 @@ export function BookingForm({ defaults }: { defaults?: BookingDefaults }) {
       calculatePrice({
         weightKg: Number(values.weightKg) || 0,
         pickupRequested: !!values.pickupRequested,
-        shipmentType: 'standard',
+        shipmentType: values.shipmentType ?? 'standard',
       }),
-    [values.weightKg, values.pickupRequested],
+    [values.weightKg, values.pickupRequested, values.shipmentType],
   );
 
   async function goNext() {
@@ -358,6 +368,7 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
   const destinationCountry = watch('destinationCountry');
   const pickupRequested = watch('pickupRequested');
   const weight = watch('weightKg');
+  const shipmentType = watch('shipmentType');
 
   function handleCountryChange(side: 'origin' | 'destination', value: CountryCode) {
     const other: CountryCode = value === 'DE' ? 'MA' : 'DE';
@@ -383,10 +394,58 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
       <header>
         <h2 className="text-xl font-semibold tracking-tight">Was möchtest du versenden?</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Der Preis berechnet sich automatisch: {formatCents(pricingConfig.pricePerKgCents)} pro kg,
-          mindestens {formatCents(pricingConfig.minimumPriceCents)}.
+          {shipmentType === 'documents'
+            ? `Dokumente kosten pauschal ${formatCents(pricingConfig.documentsPriceCents)} bis ${pricingConfig.maxDocumentsWeightKg} kg.`
+            : `Der Preis berechnet sich automatisch: ${formatCents(pricingConfig.pricePerKgCents)} pro kg, mindestens ${formatCents(pricingConfig.minimumPriceCents)}.`}
         </p>
       </header>
+
+      <fieldset>
+        <legend className="field-label">{t('calculator.typeLabel')}</legend>
+        <div className="grid grid-cols-2 gap-2.5">
+          {(
+            [
+              {
+                value: 'standard' as const,
+                icon: Package,
+                label: t('calculator.typeStandard'),
+                hint: t('calculator.typeStandardHint'),
+              },
+              {
+                value: 'documents' as const,
+                icon: FileText,
+                label: t('calculator.typeDocuments'),
+                hint: `${formatCents(pricingConfig.documentsPriceCents)} pauschal`,
+              },
+            ]
+          ).map((option) => {
+            const Icon = option.icon;
+            const active = shipmentType === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  setValue('shipmentType', option.value, { shouldValidate: true });
+                  // Dokumente sind ein Umschlag. Ohne das Zurücksetzen bliebe
+                  // eine vorher eingetragene Stückzahl stehen und die Buchung
+                  // scheiterte an einer Regel, die der Kunde nicht sieht.
+                  if (option.value === 'documents') setValue('pieceCount', 1);
+                }}
+                aria-pressed={active}
+                className={cn(
+                  'flex min-h-[4.5rem] flex-col items-start gap-1 rounded-xl border p-3.5 text-left transition-colors',
+                  active ? 'border-primary bg-primary-muted' : 'border-border bg-card hover:bg-secondary',
+                )}
+              >
+                <Icon className={cn('size-5', active ? 'text-primary' : 'text-muted-foreground')} aria-hidden />
+                <span className="text-sm font-semibold leading-tight">{option.label}</span>
+                <span className="text-xs text-muted-foreground">{option.hint}</span>
+              </button>
+            );
+          })}
+        </div>
+      </fieldset>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label={t('common.from')} htmlFor="origin-country" required>

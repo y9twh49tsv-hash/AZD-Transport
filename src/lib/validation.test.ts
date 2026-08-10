@@ -437,3 +437,70 @@ describe('optionalEmailSchema', () => {
     expect(optionalEmailSchema.safeParse('keine-adresse').success).toBe(false);
   });
 });
+
+describe('Dokumentenversand', () => {
+  const alsDokument = { ...validBooking, shipmentType: 'documents' as const, weightKg: 0.3, pieceCount: 1 };
+
+  it('nimmt einen Umschlag an', () => {
+    const result = bookingSchema.safeParse(alsDokument);
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.shipmentType).toBe('documents');
+  });
+
+  it('lehnt ab, was kein Umschlag mehr ist', () => {
+    // Sonst wäre "Dokumente" schlicht der billigere Tarif für jede Sendung:
+    // 10 € pauschal statt 2 € pro Kilo.
+    const result = bookingSchema.safeParse({ ...alsDokument, weightKg: 25 });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].path).toEqual(['weightKg']);
+      expect(result.error.issues[0].message).toContain('Paket');
+    }
+  });
+
+  it('lässt mehrere Stücke nicht als Dokumente durchgehen', () => {
+    const result = bookingSchema.safeParse({ ...alsDokument, pieceCount: 5 });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues[0].path).toEqual(['pieceCount']);
+  });
+
+  it('lässt dasselbe Gewicht als Paket zu', () => {
+    expect(bookingSchema.safeParse({ ...validBooking, weightKg: 25, pieceCount: 5 }).success).toBe(
+      true,
+    );
+  });
+
+  it('nimmt Sperrgut hier nicht an — dafür gibt es die Sperrgut-Anfrage', () => {
+    expect(bookingSchema.safeParse({ ...validBooking, shipmentType: 'bulky' }).success).toBe(false);
+  });
+
+  it('bucht ohne Angabe weiterhin als Paket', () => {
+    const { shipmentType: _ignored, ...ohneArt } = alsDokument;
+    const result = bookingSchema.safeParse({ ...ohneArt, weightKg: 25 });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.shipmentType).toBe('standard');
+  });
+});
+
+describe('Mindestgewicht je Sendungsart', () => {
+  it('lässt einen 50-Gramm-Umschlag als Dokumente zu', () => {
+    // Genau der Fall, für den es die Sendungsart gibt. Mit der Paketgrenze von
+    // 0,5 kg wäre der Dienst für echte Umschläge nicht buchbar gewesen.
+    const result = bookingSchema.safeParse({
+      ...validBooking,
+      shipmentType: 'documents',
+      weightKg: 0.05,
+      pieceCount: 1,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('lehnt dasselbe Gewicht als Paket ab', () => {
+    const result = bookingSchema.safeParse({ ...validBooking, weightKg: 0.05 });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find((i) => i.path[0] === 'weightKg');
+      expect(issue?.message).toContain('Dokumentensendung');
+    }
+  });
+});

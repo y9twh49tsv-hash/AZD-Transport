@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ArrowRightLeft, Info, Package, Sofa, Truck } from 'lucide-react';
+import { ArrowRight, ArrowRightLeft, FileText, Info, Package, Sofa, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select } from '@/components/ui/input';
 import { calculatePrice, formatCents, formatWeight } from '@/lib/pricing';
@@ -11,7 +11,7 @@ import { citiesByCountry, countryFlags, countryLabels, type CountryCode } from '
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n';
 
-type ShipmentType = 'standard' | 'bulky';
+type ShipmentType = 'standard' | 'documents' | 'bulky';
 
 export type CalculatorState = {
   originCountry: CountryCode;
@@ -77,6 +77,12 @@ export function PriceCalculator({
   );
 
   const tooHeavy = hasWeight && weightNumber > pricingConfig.maxStandardWeightKg;
+  const tooHeavyForDocuments =
+    hasWeight &&
+    state.shipmentType === 'documents' &&
+    weightNumber > pricingConfig.maxDocumentsWeightKg;
+  /** Kein Preis und kein Weiter, solange das Gewicht nicht zur Sendungsart passt. */
+  const blocked = tooHeavy || tooHeavyForDocuments;
 
   function swapDirection() {
     setState((prev) => ({
@@ -121,6 +127,7 @@ export function PriceCalculator({
       nachStadt: state.destinationCity,
       gewicht: hasWeight ? String(weightNumber) : '',
       abholung: state.pickup ? '1' : '0',
+      art: state.shipmentType,
     },
   };
 
@@ -141,7 +148,7 @@ export function PriceCalculator({
         {/* Shipment type */}
         <fieldset>
           <legend className="field-label">{t('calculator.typeLabel')}</legend>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
             {(
               [
                 {
@@ -149,6 +156,12 @@ export function PriceCalculator({
                   icon: Package,
                   label: t('calculator.typeStandard'),
                   hint: t('calculator.typeStandardHint'),
+                },
+                {
+                  value: 'documents' as const,
+                  icon: FileText,
+                  label: t('calculator.typeDocuments'),
+                  hint: t('calculator.typeDocumentsHint'),
                 },
                 {
                   value: 'bulky' as const,
@@ -251,9 +264,17 @@ export function PriceCalculator({
           hint={
             state.shipmentType === 'bulky'
               ? 'Ungefähres Gewicht genügt — wir prüfen es bei der Abholung.'
-              : `Mindestpreis ${formatCents(pricingConfig.minimumPriceCents)} · danach ${formatCents(pricingConfig.pricePerKgCents)} pro kg`
+              : state.shipmentType === 'documents'
+                ? t('calculator.documentsExplain', { max: pricingConfig.maxDocumentsWeightKg })
+                : `Mindestpreis ${formatCents(pricingConfig.minimumPriceCents)} · danach ${formatCents(pricingConfig.pricePerKgCents)} pro kg`
           }
-          error={tooHeavy && state.shipmentType === 'standard' ? `Über ${pricingConfig.maxStandardWeightKg} kg bitte als Sperrgut anfragen.` : null}
+          error={
+            tooHeavy && state.shipmentType === 'standard'
+              ? `Über ${pricingConfig.maxStandardWeightKg} kg bitte als Sperrgut anfragen.`
+              : tooHeavyForDocuments
+                ? `Über ${pricingConfig.maxDocumentsWeightKg} kg bitte als normale Sendung buchen.`
+                : null
+          }
         >
           <div className="relative">
             <Input
@@ -335,10 +356,10 @@ export function PriceCalculator({
               <div>
                 <p className="text-sm font-medium text-muted-foreground">{t('calculator.yourPrice')}</p>
                 <p className="mt-1 text-4xl font-bold tracking-tight text-foreground tabular-nums">
-                  {hasWeight && !tooHeavy ? formatCents(breakdown.totalCents) : '—'}
+                  {hasWeight && !blocked ? formatCents(breakdown.totalCents) : '—'}
                 </p>
               </div>
-              {hasWeight && !tooHeavy && (
+              {hasWeight && !blocked && (
                 <p className="pb-1.5 text-right text-xs text-muted-foreground">
                   für {formatWeight(weightNumber)}
                   <br />
@@ -347,13 +368,15 @@ export function PriceCalculator({
               )}
             </div>
 
-            {hasWeight && !tooHeavy && (
+            {hasWeight && !blocked && (
               <dl className="space-y-1.5 border-t border-border pt-3 text-sm">
                 <div className="flex justify-between gap-4">
                   <dt className="text-muted-foreground">
-                    {breakdown.minimumApplied
-                      ? t('calculator.breakdownMinimum')
-                      : t('calculator.breakdownWeight', { weight: formatWeight(weightNumber) })}
+                    {state.shipmentType === 'documents'
+                      ? t('calculator.breakdownDocuments')
+                      : breakdown.minimumApplied
+                        ? t('calculator.breakdownMinimum')
+                        : t('calculator.breakdownWeight', { weight: formatWeight(weightNumber) })}
                   </dt>
                   <dd className="font-medium tabular-nums">{formatCents(breakdown.basePriceCents)}</dd>
                 </div>
@@ -372,8 +395,8 @@ export function PriceCalculator({
               </dl>
             )}
 
-            <Link href={bookingHref} aria-disabled={!hasWeight || tooHeavy}>
-              <Button size="lg" block disabled={!hasWeight || tooHeavy}>
+            <Link href={bookingHref} aria-disabled={!hasWeight || blocked}>
+              <Button size="lg" block disabled={!hasWeight || blocked}>
                 {t('common.bookShipment')}
                 <ArrowRight aria-hidden />
               </Button>
