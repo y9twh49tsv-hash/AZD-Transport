@@ -89,8 +89,12 @@ node -v      # muss v20.x oder höher sein
 
 1. Auf [supabase.com](https://supabase.com) anmelden → **New project**.
 2. Name z. B. `marocargo`, ein sicheres Datenbank-Passwort setzen (aufschreiben!).
-3. **Region: Frankfurt (eu-central-1)** — wichtig für die DSGVO, da du echte Kundendaten
-   verarbeitest.
+3. **Region: Central EU (Frankfurt), `eu-central-1`** — wichtig für die DSGVO, da du echte
+   Namen, Adressen und Telefonnummern verarbeitest. **Die Region lässt sich nachträglich
+   nicht ändern**, ein Wechsel bedeutet später einen Umzug mit echten Kundendaten. Achte
+   besonders darauf, nicht versehentlich *West EU (London)* zu nehmen: Großbritannien ist
+   seit dem Brexit ein Drittland, und der Angemessenheitsbeschluss der EU, auf dem die
+   Übermittlung dorthin beruht, muss regelmäßig verlängert werden.
 4. Warten, bis das Projekt bereitsteht (1–2 Minuten).
 
 > **Nimm ein frisches Projekt, kein bereits benutztes.** Die Migrationen legen Typen wie
