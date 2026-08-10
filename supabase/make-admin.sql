@@ -33,9 +33,10 @@
 
 do $$
 declare
-  -- ▼▼▼ HIER DEINE E-MAIL-ADRESSE EINTRAGEN ▼▼▼
+  -- Adresse und Name des künftigen Admins. Nur zwischen den Anführungszeichen
+  -- ändern — ans Ende des Skripts angehängt ergibt eine Adresse einen
+  -- Syntaxfehler.
   v_email    text := 'mehdi90@outlook.de';
-  -- ▼▼▼ Optional: Anzeigename im Dashboard ▼▼▼
   v_name     text := 'Mehdi';
 
   v_user_id  uuid;
