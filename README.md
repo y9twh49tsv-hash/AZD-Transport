@@ -138,9 +138,13 @@ Tabelle, in der in der Spalte `ok` überall `true` stehen muss.
 
 **Wenn `setup.sql` mit einem Fehler abbricht** wie `type "user_role" already exists` oder
 `relation "shipments" already exists`, ist aus einem früheren Versuch noch etwas übrig.
-Dann erst `supabase/reset.sql` ausführen (löscht alles, was zu MaroCargo gehört) und
-danach `setup.sql` erneut. ⚠️ `reset.sql` löscht alle Sendungen und Kunden — nur
-benutzen, solange noch keine echten Daten drin sind.
+Dann nimm stattdessen **`supabase/reinstall.sql`** — eine Datei, ein Einfügen, ein Klick.
+Sie räumt zuerst alles ab und baut danach alles neu auf, funktioniert in jedem Zustand
+und darf beliebig oft laufen.
+
+⚠️ `reinstall.sql` löscht alle Sendungen, Kunden und Fahrten — nur benutzen, solange noch
+keine echten Aufträge erfasst sind. Angelegte Konten in `auth.users` bleiben erhalten;
+ihre Rolle vergibst du danach mit `make-admin.sql` neu.
 
 ### 3.3 Storage-Buckets prüfen
 
@@ -489,10 +493,11 @@ src/
 
 supabase/
 ├─ migrations/           6 SQL-Dateien — die einzige Quelle des Schemas
-├─ setup.sql             alle Migrationen in einer Datei (aus migrations/ erzeugt)
+├─ setup.sql             alle Migrationen in einer Datei — für ein frisches Projekt
+├─ reinstall.sql         reset + setup in einer Datei — für eine benutzte Datenbank
 ├─ check.sql             liest nur: ist die Einrichtung vollständig?
 ├─ make-admin.sql        ein Konto zum Admin machen
-├─ reset.sql             räumt alles wieder ab, damit setup.sql neu laufen kann
+├─ reset.sql             räumt alles ab (steckt auch in reinstall.sql)
 └─ seed.sql              Demodaten, nur für Entwicklung
 
 Dockerfile               Container-Build für Railway (und jeden Docker-Host)

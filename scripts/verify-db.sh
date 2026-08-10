@@ -85,6 +85,17 @@ psql_quiet "$ROOT/supabase/setup.sql" >/dev/null
 psql_quiet "$ROOT/supabase/seed.sql"  >/dev/null
 run_assertions "$LOG_DIR/assertions-after-reset.log" | sed 's/^/ /'
 
+# reinstall.sql ist die Datei für den häufigsten Stolperstein: eine Datenbank,
+# in der setup.sql schon einmal lief. Sie muss deshalb genau dort funktionieren,
+# wo setup.sql scheitert — auf einer bereits eingerichteten Datenbank, und auch
+# beim zweiten Durchlauf.
+echo "▸ reinstall.sql auf einer bereits eingerichteten Datenbank"
+psql_quiet "$ROOT/supabase/reinstall.sql" >/dev/null
+psql_quiet "$ROOT/supabase/reinstall.sql" >/dev/null
+psql_quiet "$ROOT/supabase/seed.sql"      >/dev/null
+run_assertions "$LOG_DIR/assertions-after-reinstall.log" | sed -n '$p' | sed 's/^/ /'
+echo "   ✓ zweimal hintereinander fehlerfrei"
+
 # Die Rechte hängen am Schema public und werden von `drop schema … cascade`
 # mitgelöscht. Stellt reset.sql sie nicht wieder her, ist jede Tabelle da und
 # die Anwendung trotzdem tot: "permission denied for table shipments".
