@@ -93,6 +93,12 @@ node -v      # muss v20.x oder höher sein
    verarbeitest.
 4. Warten, bis das Projekt bereitsteht (1–2 Minuten).
 
+> **Nimm ein frisches Projekt, kein bereits benutztes.** Die Migrationen legen Typen wie
+> `user_role` und Tabellen wie `profiles` oder `customers` an — Namen, die eine andere
+> Anwendung mit hoher Wahrscheinlichkeit schon vergeben hat. `setup.sql` bricht dann gleich
+> am Anfang ab (`type "user_role" already exists`), und der einzige Ausweg wäre, das Schema
+> der anderen Anwendung zu löschen. Ein zweites Projekt kostet nichts.
+
 ### 3.2 Migrationen ausführen
 
 **Der einfache Weg (empfohlen):** Im Supabase-Dashboard → **SQL Editor** → **New query**.
@@ -307,13 +313,18 @@ curl https://DEINE-RAILWAY-DOMAIN/api/health
 Erwartete Antwort:
 
 ```json
-{"status":"ok","configured":true,"timestamp":"..."}
+{"status":"ok","configured":true,"commit":"de35518","publicUrl":"https://…","timestamp":"..."}
 ```
 
 `"configured": false` heißt: die Supabase-Variablen fehlen oder es wurde seit dem Eintragen nicht
 neu deployt. Genau diesen Pfad nutzt auch Railways Healthcheck (`/api/health`) — er fragt
 absichtlich **nicht** die Datenbank ab, damit eine Supabase-Störung keinen Neustart-Kreislauf
 auslöst.
+
+`commit` zeigt, welcher Stand tatsächlich läuft, und `publicUrl`, welche Adresse die App für
+QR-Codes und E-Mail-Links verwendet. Nach jeder Änderung an den Variablen ist das die schnellste
+Kontrolle, ob der neue Build wirklich draußen ist — steht dort noch der alte Commit, läuft auch
+noch der alte Container.
 
 ### 6.6 Lokal mit Docker testen
 
