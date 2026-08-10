@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:db": "bash scripts/verify-db.sh"
+    "test:db": "bash scripts/verify-db.sh",
+    "build:setup-sql": "node scripts/build-setup-sql.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

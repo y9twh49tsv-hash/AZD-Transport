@@ -95,8 +95,16 @@ node -v      # muss v20.x oder höher sein
 
 ### 3.2 Migrationen ausführen
 
-Im Supabase-Dashboard → **SQL Editor** → **New query**. Führe die fünf Dateien **in dieser
-Reihenfolge** aus, jede einzeln (Inhalt einfügen → **Run**):
+**Der einfache Weg (empfohlen):** Im Supabase-Dashboard → **SQL Editor** → **New query**.
+Den kompletten Inhalt von `supabase/setup.sql` einfügen → **Run**. Das ist genau die
+Aneinanderreihung aller fünf Migrationen und läuft in einem Durchgang durch.
+
+Danach sollte unter **Table Editor** die Tabelle `shipments` sichtbar sein.
+
+<details>
+<summary>Alternative: die fünf Migrationen einzeln ausführen</summary>
+
+Inhalt einfügen → **Run**, in **dieser Reihenfolge**:
 
 1. `supabase/migrations/20260809090000_init_schema.sql` — Tabellen, Enums, Indizes
 2. `supabase/migrations/20260809091000_functions.sql` — Sendungsnummern, öffentliches Tracking
@@ -104,13 +112,15 @@ Reihenfolge** aus, jede einzeln (Inhalt einfügen → **Run**):
 4. `supabase/migrations/20260809093000_storage.sql` — Storage-Buckets
 5. `supabase/migrations/20260809094000_hardening.sql` — zusätzliche Schutzregeln
 
-Nach Schritt 1 sollte unter **Table Editor** die Tabelle `shipments` sichtbar sein.
+Oder mit der Supabase CLI:
+```bash
+npx supabase link --project-ref <deine-project-ref>
+npx supabase db push
+```
+</details>
 
-> **Mit der Supabase CLI** geht es auch in einem Rutsch:
-> ```bash
-> npx supabase link --project-ref <deine-project-ref>
-> npx supabase db push
-> ```
+> Die Migrationsdateien bleiben die maßgebliche Quelle. `supabase/setup.sql` wird daraus
+> erzeugt — nach einer Änderung an einer Migration `npm run build:setup-sql` ausführen.
 
 ### 3.3 Storage-Buckets prüfen
 
@@ -444,6 +454,7 @@ src/
 
 supabase/
 ├─ migrations/           5 SQL-Dateien — die einzige Quelle des Schemas
+├─ setup.sql             alle Migrationen in einer Datei (aus migrations/ erzeugt)
 └─ seed.sql              Demodaten, nur für Entwicklung
 
 Dockerfile               Container-Build für Railway (und jeden Docker-Host)
