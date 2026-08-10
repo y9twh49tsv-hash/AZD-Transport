@@ -36,8 +36,8 @@ declare
   -- Adresse und Name des künftigen Admins. Nur zwischen den Anführungszeichen
   -- ändern — ans Ende des Skripts angehängt ergibt eine Adresse einen
   -- Syntaxfehler.
-  v_email    text := 'mehdi90@outlook.de';
-  v_name     text := 'Mehdi';
+  v_email    text := 'azd-transport@outlook.com';
+  v_name     text := 'AZD Transport';
 
   v_user_id  uuid;
   v_before   public.user_role;

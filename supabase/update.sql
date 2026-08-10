@@ -13,7 +13,7 @@
 -- Die Adresse des künftigen Admins — dieselbe wie unter Authentication → Users.
 -- Sie steht in der nächsten Zeile zwischen den Anführungszeichen. Nur dort
 -- ändern, sonst nirgends; ans Skript angehängt ergibt sie einen Syntaxfehler.
-create temporary table if not exists mc_admin_email as select 'mehdi90@outlook.de'::text as email;
+create temporary table if not exists mc_admin_email as select 'azd-transport@outlook.com'::text as email;
 
 
 -- -----------------------------------------------------------------------------
