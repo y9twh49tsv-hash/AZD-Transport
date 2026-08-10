@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { appUrl } from '@/config/brand';
-import { isSupabaseConfigured } from '@/lib/env';
+import { serviceRoleProblems, supabaseConfigProblems } from '@/lib/env';
 
 /**
  * Health check for the container host (Railway `healthcheckPath`, Docker
@@ -21,10 +21,16 @@ export function GET() {
   const commit =
     process.env.RAILWAY_GIT_COMMIT_SHA ?? process.env.VERCEL_GIT_COMMIT_SHA ?? null;
 
+  // Benennt das Problem, statt nur "nicht konfiguriert" zu melden. Enthält nie
+  // einen Schlüssel oder Teile davon — nur den Namen der Variablen und was an
+  // ihr nicht stimmt.
+  const problems = [...supabaseConfigProblems(), ...serviceRoleProblems()];
+
   return NextResponse.json(
     {
       status: 'ok',
-      configured: isSupabaseConfigured(),
+      configured: problems.length === 0,
+      ...(problems.length > 0 && { problems }),
       commit: commit ? commit.slice(0, 7) : null,
       publicUrl: appUrl(),
       timestamp: new Date().toISOString(),
