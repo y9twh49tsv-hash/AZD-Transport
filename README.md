@@ -201,6 +201,52 @@ Sperrgut-Anfragen.
 
 ---
 
+### 3.7 E-Mail-Versand einrichten (Resend)
+
+Ohne diesen Schritt funktioniert alles — Buchungen, Tracking, Dashboard — nur werden
+Bestätigungen **nicht verschickt**, sondern ins Serverprotokoll geschrieben. Vor dem
+ersten echten Kunden gehört das eingerichtet.
+
+**Der Punkt, an dem es fast immer klemmt:** Ein Versanddienst sendet nur von einer Domain,
+die dir gehört und die du per DNS-Eintrag nachgewiesen hast. Eine Freemail-Adresse wie
+`…@outlook.com`, `…@gmail.com`, `…@web.de` oder `…@gmx.de` geht deshalb **nicht** als
+Absender — diese Domains gehören Microsoft, Google und Co. Der Versand scheitert dann bei
+jeder einzelnen Mail mit 403, während die Buchung selbst fehlerfrei durchläuft. Der Fehler
+fällt also erst der Kundschaft auf.
+
+Die Lösung: über die eigene Domain senden, Antworten ins gewohnte Postfach leiten.
+
+```
+EMAIL_PROVIDER=resend
+EMAIL_API_KEY=re_…                                   # Resend → API Keys
+EMAIL_FROM=AZD Transport <info@deine-domain.de>      # verifizierte Domain
+EMAIL_REPLY_TO=deine-adresse@outlook.com             # hier darf Freemail stehen
+```
+
+**Schritt für Schritt**
+
+1. Domain besorgen, falls noch keine da ist (z. B. `azd-transport.de`, rund 10 € im Jahr).
+2. Auf [resend.com](https://resend.com) registrieren → **Domains → Add Domain**.
+3. Resend zeigt drei DNS-Einträge (SPF, DKIM, DMARC). Die trägst du beim Domain-Anbieter
+   ein. Nach 5–30 Minuten steht die Domain auf **Verified**.
+4. **API Keys → Create API Key** → der Schlüssel beginnt mit `re_`.
+5. Die vier Variablen oben in Railway eintragen → **Deploy**.
+
+**Kontrolle ohne Testmail an eine echte Adresse:** `/api/health` aufrufen. Dort steht
+
+```json
+"email": { "sending": true }
+```
+
+Stimmt etwas nicht, steht das Problem im Klartext daneben — welche Variable, und was an ihr
+falsch ist. Der API-Schlüssel wird dabei nie ausgegeben.
+
+**Zum Ausprobieren ohne eigene Domain:** `EMAIL_FROM` weglassen. Dann versendet Resend über
+`onboarding@resend.dev`. Das erreicht ausschließlich die Adresse, mit der du dich bei Resend
+registriert hast — für einen ersten Test genug, für den Betrieb nicht.
+
+---
+
 ## 4. Lokal starten
 
 ```bash
@@ -694,7 +740,8 @@ Die Software ist fertig. Diese Punkte sind **geschäftlich und rechtlich** noch 
 
 **Betrieb**
 
-- [ ] E-Mail-Versand konfigurieren und Absenderdomain verifizieren (SPF, DKIM)
+- [ ] E-Mail-Versand konfigurieren und Absenderdomain verifizieren (Abschnitt 3.7);
+      `/api/health` muss `"email": { "sending": true }` zeigen
 - [ ] „Confirm email“ in Supabase wieder aktivieren
 - [ ] Seed-Daten **nicht** in die Produktionsdatenbank laden
 - [ ] Datenbank-Backups in Supabase prüfen

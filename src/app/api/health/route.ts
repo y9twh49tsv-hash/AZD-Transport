@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { appUrl } from '@/config/brand';
 import { serviceRoleProblems, supabaseConfigProblems } from '@/lib/env';
+import { emailConfigProblems } from '@/lib/notifications/email';
 
 /**
  * Health check for the container host (Railway `healthcheckPath`, Docker
@@ -26,11 +27,21 @@ export function GET() {
   // ihr nicht stimmt.
   const problems = [...supabaseConfigProblems(), ...serviceRoleProblems()];
 
+  // Der E-Mail-Versand steht bewusst getrennt: fehlt er, funktioniert die
+  // Anwendung vollständig, nur Benachrichtigungen bleiben aus. Das darf den
+  // Healthcheck nicht auf "nicht konfiguriert" ziehen, muss aber sichtbar sein
+  // — ein stiller Versandfehler fällt sonst erst der Kundschaft auf.
+  const emailProblems = emailConfigProblems();
+
   return NextResponse.json(
     {
       status: 'ok',
       configured: problems.length === 0,
       ...(problems.length > 0 && { problems }),
+      email: {
+        sending: emailProblems.length === 0,
+        ...(emailProblems.length > 0 && { problems: emailProblems }),
+      },
       commit: commit ? commit.slice(0, 7) : null,
       publicUrl: appUrl(),
       timestamp: new Date().toISOString(),
