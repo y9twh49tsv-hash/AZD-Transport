@@ -5,7 +5,7 @@ import { PriceCalculator } from '@/components/booking/price-calculator';
 import { Button } from '@/components/ui/button';
 import { pricingConfig } from '@/config/pricing';
 import { formatCents } from '@/lib/pricing';
-import { t } from '@/lib/i18n';
+import { getT } from '@/lib/i18n/server';
 
 export const metadata: Metadata = {
   title: 'Preisrechner',
@@ -22,7 +22,8 @@ const examples = [
   { weight: 50, pickup: true },
 ];
 
-export default function CalculatorPage() {
+export default async function CalculatorPage() {
+  const t = await getT();
   return (
     <div className="container max-w-5xl py-10 sm:py-14">
       <header className="mb-8 max-w-2xl">

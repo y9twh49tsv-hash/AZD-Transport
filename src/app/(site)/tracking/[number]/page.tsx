@@ -7,7 +7,7 @@ import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { fetchPublicTracking } from '@/lib/tracking-server';
 import { normaliseTrackingNumber } from '@/lib/utils';
-import { t } from '@/lib/i18n';
+import { getT } from '@/lib/i18n/server';
 import { exampleTrackingNumber } from '@/config/brand';
 
 type Props = { params: Promise<{ number: string }> };
@@ -27,6 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export const dynamic = 'force-dynamic';
 
 export default async function TrackingDetailPage({ params }: Props) {
+  const t = await getT();
   const { number } = await params;
   const trackingNumber = normaliseTrackingNumber(decodeURIComponent(number));
   const lookup = await fetchPublicTracking(trackingNumber);

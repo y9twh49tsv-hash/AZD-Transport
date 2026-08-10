@@ -2,25 +2,29 @@ import Link from 'next/link';
 import { Mail, MapPin, Phone } from 'lucide-react';
 import { Logo } from '@/components/brand/logo';
 import { brand } from '@/config/brand';
-import { t } from '@/lib/i18n';
+import { getT } from '@/lib/i18n/server';
 
-const serviceLinks = [
-  { href: '/preisrechner', label: t('nav.calculator') },
-  { href: '/buchen', label: t('nav.booking') },
-  { href: '/tracking', label: t('nav.tracking') },
-  { href: '/sperrgut', label: t('nav.bulky') },
-];
+export async function SiteFooter() {
+  const t = await getT();
 
-const legalLinks = [
-  { href: '/impressum', label: t('footer.imprint') },
-  { href: '/datenschutz', label: t('footer.privacy') },
-  { href: '/agb', label: t('footer.terms') },
-  { href: '/versandbedingungen', label: t('footer.shippingTerms') },
-  { href: '/verbotene-waren', label: t('footer.prohibited') },
-  { href: '/haftung', label: t('footer.liability') },
-];
+  // In der Funktion, nicht auf Modulebene: sonst stünde die Beschriftung für
+  // immer in der Sprache, die beim Laden des Moduls galt.
+  const serviceLinks = [
+    { href: '/preisrechner', label: t('nav.calculator') },
+    { href: '/buchen', label: t('nav.booking') },
+    { href: '/tracking', label: t('nav.tracking') },
+    { href: '/sperrgut', label: t('nav.bulky') },
+  ];
 
-export function SiteFooter() {
+  const legalLinks = [
+    { href: '/impressum', label: t('footer.imprint') },
+    { href: '/datenschutz', label: t('footer.privacy') },
+    { href: '/agb', label: t('footer.terms') },
+    { href: '/versandbedingungen', label: t('footer.shippingTerms') },
+    { href: '/verbotene-waren', label: t('footer.prohibited') },
+    { href: '/haftung', label: t('footer.liability') },
+  ];
+
   return (
     <footer className="mt-20 border-t border-border bg-secondary/40">
       <div className="container grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">

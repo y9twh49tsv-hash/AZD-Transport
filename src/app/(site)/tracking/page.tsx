@@ -3,14 +3,15 @@ import { PackageSearch } from 'lucide-react';
 import { TrackingSearch } from '@/components/tracking/tracking-search';
 import { SetupNotice } from '@/components/layout/setup-notice';
 import { statusMeta, HAPPY_PATH } from '@/lib/shipment-status';
-import { t } from '@/lib/i18n';
+import { getT } from '@/lib/i18n/server';
 
 export const metadata: Metadata = {
   title: 'Sendungsverfolgung',
   description: 'Verfolge deine Sendung zwischen Deutschland und Marokko mit deiner Sendungsnummer.',
 };
 
-export default function TrackingPage() {
+export default async function TrackingPage() {
+  const t = await getT();
   return (
     <div className="container max-w-3xl py-10 sm:py-16">
       <header className="text-center">

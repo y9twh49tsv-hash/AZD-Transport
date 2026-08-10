@@ -3,7 +3,7 @@ import { Sofa } from 'lucide-react';
 import { BulkyForm, type BulkyDefaults } from '@/components/booking/bulky-form';
 import { SetupNotice } from '@/components/layout/setup-notice';
 import { findCity, type CountryCode } from '@/config/regions';
-import { t } from '@/lib/i18n';
+import { getT } from '@/lib/i18n/server';
 
 export const metadata: Metadata = {
   title: 'Sperrgut anfragen',
@@ -23,6 +23,7 @@ export default async function BulkyPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const t = await getT();
   const params = await searchParams;
   const get = (key: string) => {
     const value = params[key];

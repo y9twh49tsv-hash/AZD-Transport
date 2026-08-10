@@ -17,7 +17,7 @@ import { brand, exampleTrackingNumber } from '@/config/brand';
 import { pricingConfig } from '@/config/pricing';
 import { formatCents } from '@/lib/pricing';
 import { cities } from '@/config/regions';
-import { t } from '@/lib/i18n';
+import { getT } from '@/lib/i18n/server';
 
 const advantages = [
   {
@@ -59,7 +59,8 @@ const steps = [
   { title: 'Verfolgen bis zur Übergabe', text: 'Statusupdates bis die Sendung in Marokko ankommt.' },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const t = await getT();
   const activeDe = cities.filter((c) => c.country === 'DE' && c.active);
   const activeMa = cities.filter((c) => c.country === 'MA' && c.active);
 

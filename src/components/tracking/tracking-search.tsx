@@ -6,7 +6,7 @@ import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { normaliseTrackingNumber } from '@/lib/utils';
-import { t } from '@/lib/i18n';
+import { useT } from '@/lib/i18n/client';
 import { exampleTrackingNumber } from '@/config/brand';
 
 export function TrackingSearch({
@@ -16,6 +16,7 @@ export function TrackingSearch({
   initialValue?: string;
   autoFocus?: boolean;
 }) {
+  const t = useT();
   const router = useRouter();
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState<string | null>(null);

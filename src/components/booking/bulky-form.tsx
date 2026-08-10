@@ -12,7 +12,7 @@ import { PhotoUpload, type UploadedPhoto } from '@/components/booking/photo-uplo
 import { bulkyRequestSchema, type BulkyRequestInput } from '@/lib/validation';
 import { citiesByCountry, countryFlags, countryLabels, type CountryCode } from '@/config/regions';
 import { createBulkyRequest } from '@/app/(site)/sperrgut/actions';
-import { t } from '@/lib/i18n';
+import { useT } from '@/lib/i18n/client';
 
 const COMMON_ITEMS = [
   'Waschmaschine',
@@ -34,6 +34,7 @@ export type BulkyDefaults = {
 };
 
 export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
+  const t = useT();
   const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
   const [serverError, setServerError] = useState<string | null>(null);
   const [reference, setReference] = useState<string | null>(null);

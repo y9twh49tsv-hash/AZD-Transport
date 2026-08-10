@@ -8,7 +8,7 @@ import { formatCents } from '@/lib/pricing';
 import { cities, countryLabels } from '@/config/regions';
 import { prohibitedCategories } from '@/config/prohibited-items';
 import { isWhatsAppConfigured } from '@/lib/notifications/whatsapp';
-import { LOCALES, PLANNED_LOCALES } from '@/lib/i18n';
+import { LOCALE_LABELS, LOCALES } from '@/lib/i18n';
 
 export const dynamic = 'force-dynamic';
 
@@ -135,8 +135,11 @@ export default async function SettingsPage() {
       <section className="surface p-5">
         <h2 className="font-semibold">Sprachen</h2>
         <dl className="mt-4 space-y-2 text-sm">
-          <Row label="Aktiv">{LOCALES.join(', ')}</Row>
-          <Row label="Vorbereitet">{PLANNED_LOCALES.join(', ')}</Row>
+          <Row label="Aktiv">
+            {LOCALES.map((l) => `${LOCALE_LABELS[l]} (${l})`).join(' · ')}
+          </Row>
+          <Row label="Standard">Deutsch — auch die Rückfallsprache, wenn ein Text fehlt</Row>
+          <Row label="Verwaltung & Fahrer">nur Deutsch</Row>
         </dl>
         <p className="mt-4 border-t border-border pt-4 text-xs text-muted-foreground">
           Eine weitere Sprache ergänzt du, indem du{' '}

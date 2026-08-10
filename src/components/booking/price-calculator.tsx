@@ -9,7 +9,7 @@ import { calculatePrice, formatCents, formatWeight } from '@/lib/pricing';
 import { pricingConfig } from '@/config/pricing';
 import { citiesByCountry, countryFlags, countryLabels, type CountryCode } from '@/config/regions';
 import { cn } from '@/lib/utils';
-import { t } from '@/lib/i18n';
+import { useT } from '@/lib/i18n/client';
 
 type ShipmentType = 'standard' | 'documents' | 'bulky';
 
@@ -61,6 +61,7 @@ export function PriceCalculator({
   compact?: boolean;
   initial?: Partial<CalculatorState>;
 }) {
+  const t = useT();
   const [state, setState] = useState<CalculatorState>({ ...DEFAULT_STATE, ...initial });
 
   const weightNumber = Number.parseFloat(state.weight.replace(',', '.'));

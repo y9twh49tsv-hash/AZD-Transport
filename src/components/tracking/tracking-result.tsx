@@ -7,7 +7,7 @@ import { formatDateTime, formatRelative } from '@/lib/utils';
 import { formatWeight } from '@/lib/pricing';
 import { cn } from '@/lib/utils';
 import type { PublicTracking } from '@/lib/tracking';
-import { t } from '@/lib/i18n';
+import { getT } from '@/lib/i18n/server';
 
 /**
  * The public tracking view.
@@ -16,7 +16,8 @@ import { t } from '@/lib/i18n';
  * numbers, e-mail addresses, prices or internal notes exist in this component's
  * input at all.
  */
-export function TrackingResult({ data }: { data: PublicTracking }) {
+export async function TrackingResult({ data }: { data: PublicTracking }) {
+  const t = await getT();
   const progress = statusProgress(data.status);
   const isCancelled = data.status === 'CANCELLED';
   const isException = data.status === 'EXCEPTION';

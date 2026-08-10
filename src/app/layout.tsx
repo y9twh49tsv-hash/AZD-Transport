@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { brand, appUrl } from '@/config/brand';
-import { htmlLang } from '@/lib/i18n';
+import { createT, dir, htmlLang } from '@/lib/i18n';
+import { currentLocale } from '@/lib/i18n/server';
+import { LocaleProvider } from '@/lib/i18n/client';
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl()),
@@ -40,17 +42,20 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await currentLocale();
+  const t = createT(locale);
+
   return (
-    <html lang={htmlLang()} suppressHydrationWarning>
+    <html lang={htmlLang(locale)} dir={dir(locale)} suppressHydrationWarning>
       <body className="min-h-dvh">
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
         >
-          Zum Inhalt springen
+          {t('common.skipToContent')}
         </a>
-        {children}
+        <LocaleProvider locale={locale}>{children}</LocaleProvider>
       </body>
     </html>
   );

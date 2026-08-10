@@ -28,6 +28,7 @@ export const de = {
     date: 'Datum',
     close: 'Schließen',
     errorGeneric: 'Es ist ein Fehler aufgetreten. Bitte versuche es erneut.',
+    skipToContent: 'Zum Inhalt springen',
   },
   nav: {
     home: 'Start',
@@ -41,6 +42,8 @@ export const de = {
     account: 'Mein Konto',
     admin: 'Verwaltung',
     driver: 'Fahrer',
+    mainNavigation: 'Hauptnavigation',
+    menu: 'Menü öffnen',
   },
   home: {
     eyebrow: 'Deutschland ↔ Marokko',
@@ -93,6 +96,7 @@ export const de = {
     confirmTerms: 'Ich akzeptiere die Versandbedingungen und die Datenschutzhinweise.',
     successTitle: 'Deine Sendung wurde gebucht.',
     successHint: 'Notiere dir deine Sendungsnummer — damit kannst du jederzeit den Status abfragen.',
+    shareText: 'Meine Sendung {number} ist gebucht. Status verfolgen: {url}',
   },
   tracking: {
     title: 'Sendungsverfolgung',
@@ -127,4 +131,16 @@ export const de = {
   },
 } as const;
 
-export type Dictionary = typeof de;
+/**
+ * Widens the literal types that `as const` produces back to `string`.
+ *
+ * Without it every other locale would have to contain the German words: the
+ * type of `footer.legal` would be the literal `'Rechtliches'`, not `string`.
+ * The German file stays the shape everyone else has to match — same keys, same
+ * nesting — while the values are free.
+ */
+type Translated<T> = {
+  [K in keyof T]: T[K] extends string ? string : Translated<T[K]>;
+};
+
+export type Dictionary = Translated<typeof de>;

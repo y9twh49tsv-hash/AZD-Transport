@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { BookingForm, type BookingDefaults } from '@/components/booking/booking-form';
 import { SetupNotice } from '@/components/layout/setup-notice';
 import { findCity, type CountryCode } from '@/config/regions';
-import { t } from '@/lib/i18n';
+import { getT } from '@/lib/i18n/server';
 
 export const metadata: Metadata = {
   title: 'Sendung buchen',
@@ -51,6 +51,7 @@ export default async function BookingPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const t = await getT();
   const params = await searchParams;
   const defaults = parseDefaults(params);
 

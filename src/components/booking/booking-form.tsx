@@ -32,14 +32,8 @@ import { prohibitedShortList } from '@/config/prohibited-items';
 import { cn, todayIso } from '@/lib/utils';
 import { whatsappShareLink } from '@/lib/notifications/whatsapp';
 import { createBooking } from '@/app/(site)/buchen/actions';
-import { t } from '@/lib/i18n';
+import { useT } from '@/lib/i18n/client';
 
-const STEPS = [
-  { id: 'shipment', label: t('booking.stepShipment') },
-  { id: 'sender', label: t('booking.stepSender') },
-  { id: 'recipient', label: t('booking.stepRecipient') },
-  { id: 'confirm', label: t('booking.stepConfirm') },
-] as const;
 
 /** Which fields must be valid before the user may move to the next step. */
 const STEP_FIELDS: Record<number, FieldPath<BookingInput>[]> = {
@@ -137,7 +131,17 @@ export type BookingDefaults = Partial<
 > & { pickupRequested?: boolean };
 
 export function BookingForm({ defaults }: { defaults?: BookingDefaults }) {
+  const t = useT();
   const [step, setStep] = useState(0);
+
+  // Innerhalb der Komponente: auf Modulebene würde die Beschriftung einmal beim
+  // Laden ausgewertet und bliebe in der damals geltenden Sprache stehen.
+  const STEPS = [
+    { id: 'shipment', label: t('booking.stepShipment') },
+    { id: 'sender', label: t('booking.stepSender') },
+    { id: 'recipient', label: t('booking.stepRecipient') },
+    { id: 'confirm', label: t('booking.stepConfirm') },
+  ] as const;
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState<{ trackingNumber: string; totalCents: number } | null>(
     null,
@@ -362,6 +366,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 type FormApi = ReturnType<typeof useForm<BookingInput>>;
 
 function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof calculatePrice> }) {
+  const t = useT();
   const { register, watch, setValue, formState } = form;
   const errors = formState.errors;
   const originCountry = watch('originCountry');
@@ -751,6 +756,7 @@ function RecipientStep({ form }: { form: FormApi }) {
 }
 
 function ConfirmStep({ form, price }: { form: FormApi; price: ReturnType<typeof calculatePrice> }) {
+  const t = useT();
   const { register, watch, formState } = form;
   const errors = formState.errors;
   const v = watch();
@@ -882,11 +888,13 @@ function BookingSuccess({
   trackingNumber: string;
   totalCents: number;
 }) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
 
-  const shareText = `Meine Sendung ${trackingNumber} ist gebucht. Status verfolgen: ${
-    typeof window !== 'undefined' ? window.location.origin : ''
-  }/tracking/${trackingNumber}`;
+  const shareText = t('booking.shareText', {
+    number: trackingNumber,
+    url: `${typeof window !== 'undefined' ? window.location.origin : ''}/tracking/${trackingNumber}`,
+  });
 
   async function copy() {
     try {
