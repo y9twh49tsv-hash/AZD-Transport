@@ -1,5 +1,5 @@
 -- =============================================================================
--- MaroCargo — ein Konto zum Admin machen
+-- AZD Transport — ein Konto zum Admin machen
 -- =============================================================================
 -- Im Supabase SQL Editor ausführen, NACHDEM das Konto angelegt wurde
 -- (Dashboard → Authentication → Users → Add user → Create new user,

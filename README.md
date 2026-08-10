@@ -1,4 +1,4 @@
-# MaroCargo
+# AZD Transport
 
 Webplattform für Transporte zwischen **Deutschland 🇩🇪 und Marokko 🇲🇦** — Pakete, Taschen,
 Kartons, persönliche Gegenstände und Sperrgut.
@@ -40,7 +40,7 @@ Startregion: Frankfurt am Main / Rhein-Main ↔ Nador und Umgebung.
 **Für Kundinnen und Kunden**
 
 - Preisrechner mit sofortigem Ergebnis, ohne Anmeldung
-- Buchung in vier Schritten, mit sofortiger Sendungsnummer (`MC-260809-0042`)
+- Buchung in vier Schritten, mit sofortiger Sendungsnummer (`AZD-260809-0042`)
 - Öffentliche Sendungsverfolgung mit vollständigem Verlauf
 - Sperrgut-Anfrage mit Foto-Upload direkt vom Handy
 - Angebotslink zum Annehmen oder Ablehnen eines Sperrgut-Festpreises
@@ -88,7 +88,7 @@ node -v      # muss v20.x oder höher sein
 ### 3.1 Projekt anlegen
 
 1. Auf [supabase.com](https://supabase.com) anmelden → **New project**.
-2. Name z. B. `marocargo`, ein sicheres Datenbank-Passwort setzen (aufschreiben!).
+2. Name z. B. `azd-transport`, ein sicheres Datenbank-Passwort setzen (aufschreiben!).
 3. **Region: Central EU (Frankfurt), `eu-central-1`** — wichtig für die DSGVO, da du echte
    Namen, Adressen und Telefonnummern verarbeitest. **Die Region lässt sich nachträglich
    nicht ändern**, ein Wechsel bedeutet später einen Umzug mit echten Kundendaten. Achte
@@ -107,12 +107,12 @@ node -v      # muss v20.x oder höher sein
 
 **Der einfache Weg (empfohlen):** Im Supabase-Dashboard → **SQL Editor** → **New query**.
 Den kompletten Inhalt von `supabase/setup.sql` einfügen → **Run**. Das ist genau die
-Aneinanderreihung aller sechs Migrationen und läuft in einem Durchgang durch.
+Aneinanderreihung aller sieben Migrationen und läuft in einem Durchgang durch.
 
 Danach sollte unter **Table Editor** die Tabelle `shipments` sichtbar sein.
 
 <details>
-<summary>Alternative: die sechs Migrationen einzeln ausführen</summary>
+<summary>Alternative: die sieben Migrationen einzeln ausführen</summary>
 
 Inhalt einfügen → **Run**, in **dieser Reihenfolge**:
 
@@ -122,6 +122,7 @@ Inhalt einfügen → **Run**, in **dieser Reihenfolge**:
 4. `supabase/migrations/20260809093000_storage.sql` — Storage-Buckets
 5. `supabase/migrations/20260809094000_hardening.sql` — zusätzliche Schutzregeln
 6. `supabase/migrations/20260810090000_history_lifecycle.sql` — Konten und Sendungen löschbar
+7. `supabase/migrations/20260810120000_brand_azd_transport.sql` — Marke und Nummernpräfix
 
 Oder mit der Supabase CLI:
 ```bash
@@ -195,7 +196,7 @@ Nur für die Entwicklung, **niemals in der Produktionsdatenbank**:
 
 SQL Editor → Inhalt von `supabase/seed.sql` einfügen → **Run**.
 
-Damit hast du acht Beispielsendungen (u. a. `MC-260809-0042`: 25 kg, Frankfurt → Nador, 60 €,
+Damit hast du acht Beispielsendungen (u. a. `AZD-260809-0042`: 25 kg, Frankfurt → Nador, 60 €,
 Sicherheitsnummer `SEC-583921`, Status „Unterwegs“), drei Fahrzeuge, drei Touren und zwei
 Sperrgut-Anfragen.
 
@@ -361,7 +362,7 @@ Setze die Variable erst, wenn du eine eigene Domain hast.
 ### 6.3 Domain erzeugen
 
 **Settings → Networking → Generate Domain**. Du bekommst z. B.
-`marocargo-production.up.railway.app`. Einen Port musst du nicht angeben — Railway setzt `PORT`,
+`azd-transport-production.up.railway.app`. Einen Port musst du nicht angeben — Railway setzt `PORT`,
 der Container übernimmt ihn.
 
 ### 6.4 Supabase nachziehen
@@ -400,14 +401,14 @@ noch der alte Container.
 Der identische Build, den Railway ausführt:
 
 ```bash
-docker build -t marocargo \
+docker build -t azd-transport \
   --build-arg NEXT_PUBLIC_SUPABASE_URL=https://DEINPROJEKT.supabase.co \
   --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=DEIN_ANON_KEY \
   .
 
 docker run -p 3000:3000 \
   -e SUPABASE_SERVICE_ROLE_KEY=DEIN_SERVICE_ROLE_KEY \
-  marocargo
+  azd-transport
 ```
 
 ### 6.7 Wenn etwas nicht läuft
@@ -427,7 +428,7 @@ docker run -p 3000:3000 \
 
 ```bash
 git add -A
-git commit -m "MaroCargo"
+git commit -m "AZD Transport"
 git push -u origin main
 ```
 
@@ -454,7 +455,7 @@ Im Import-Bildschirm (oder später unter **Settings → Environment Variables**)
 | `NEXT_PUBLIC_APP_URL` | `https://deine-domain.de` | ✅ |
 | `EMAIL_PROVIDER` | `resend` oder `postmark` | empfohlen |
 | `EMAIL_API_KEY` | API-Key des Anbieters | empfohlen |
-| `EMAIL_FROM` | `MaroCargo <info@deine-domain.de>` | empfohlen |
+| `EMAIL_FROM` | `AZD Transport <info@deine-domain.de>` | empfohlen |
 | `WHATSAPP_PHONE_NUMBER_ID` | Meta Cloud API | optional |
 | `WHATSAPP_ACCESS_TOKEN` | Meta Cloud API | optional |
 
@@ -492,10 +493,10 @@ Nach dem ersten Deployment in Supabase → **Authentication → URL Configuratio
 
 ### Railway
 
-1. **Settings → Networking → Custom Domain** → deine Domain eintragen, z. B. `marocargo.de`
+1. **Settings → Networking → Custom Domain** → deine Domain eintragen, z. B. `azd-transport.com`
 2. Railway zeigt einen **CNAME**-Eintrag, den du beim Domain-Anbieter setzt
 3. Das TLS-Zertifikat stellt Railway automatisch aus
-4. Danach `NEXT_PUBLIC_APP_URL=https://marocargo.de` als Variable setzen und **neu deployen** —
+4. Danach `NEXT_PUBLIC_APP_URL=https://azd-transport.com` als Variable setzen und **neu deployen** —
    sonst zeigen QR-Codes und E-Mail-Links weiter auf die `.up.railway.app`-Adresse
 5. In Supabase die neue Domain bei **Site URL** und **Redirect URLs** ergänzen
 
@@ -542,7 +543,7 @@ src/
 └─ proxy.ts              Session-Refresh + Schutz der internen Bereiche
 
 supabase/
-├─ migrations/           6 SQL-Dateien — die einzige Quelle des Schemas
+├─ migrations/           7 SQL-Dateien — die einzige Quelle des Schemas
 ├─ setup.sql             alle Migrationen in einer Datei — für ein frisches Projekt
 ├─ reinstall.sql         reset + setup in einer Datei — für eine benutzte Datenbank
 ├─ update.sql            Nachtrag für eine schon eingerichtete Datenbank
@@ -640,14 +641,29 @@ Sendungen behalten ihren gebuchten Preis.
 
 ### Marke umbenennen
 
-`src/config/brand.ts` anpassen. Wenn du auch das Nummernpräfix änderst (`MC` → z. B. `AZ`),
-zusätzlich in Supabase:
+Die Marke steht an **zwei** Stellen, und beide müssen zusammenpassen: im Code für alles
+Sichtbare, in der Datenbank für die Vergabe der Sendungsnummern.
+
+1. `src/config/brand.ts` anpassen — Name, Rechtsform, Kontaktdaten und `trackingPrefix`.
+   Beispielnummern in Platzhaltern und Fehlermeldungen leiten sich daraus ab
+   (`exampleTrackingNumber`), du musst sie nirgends einzeln nachziehen.
+2. In Supabase:
 
 ```sql
-update public.app_settings set tracking_prefix = 'AZ';
+update public.app_settings
+   set brand_name = 'Neuer Name', tracking_prefix = 'NEU', updated_at = now();
 ```
 
-Bereits vergebene Nummern bleiben unverändert — das ist beabsichtigt.
+Das Präfix muss aus zwei bis fünf Großbuchstaben bestehen — eine Prüfregel in der Datenbank
+lässt nichts anderes zu.
+
+**Bereits vergebene Nummern bleiben unverändert.** Das ist beabsichtigt: eine Sendungsnummer
+steht auf dem aufgeklebten Etikett und ist die Referenz, unter der eine Kundin ihr Paket
+sucht. Alte und neue laufen deshalb nebeneinander, die Sendungsverfolgung akzeptiert beide.
+Der Tageszähler ist über `(prefix, day)` eindeutig, mit einem neuen Präfix beginnt die
+laufende Nummer des Tages also wieder bei `0001`.
+
+Am saubersten ist ein Wechsel deshalb, **bevor die erste echte Sendung gebucht wurde**.
 
 ### Verbotene Waren pflegen
 
@@ -708,7 +724,7 @@ PGHOST=/tmp PGPORT=5433 npm run test:db
 ```
 
 Das Skript fasst dein Supabase-Projekt nicht an — es arbeitet ausschließlich in einer
-Datenbank namens `marocargo_test`.
+Datenbank namens `azd_transport_test`.
 
 ---
 

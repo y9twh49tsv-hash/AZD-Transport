@@ -1,5 +1,5 @@
 # =============================================================================
-# MaroCargo — Container image for Railway (or any Docker host)
+# AZD Transport — Container image for Railway (or any Docker host)
 # =============================================================================
 # Three stages so the final image ships only what it needs to run: no source,
 # no dev dependencies, no build cache. Measured result: about 430 MB.

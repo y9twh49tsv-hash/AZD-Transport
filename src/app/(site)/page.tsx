@@ -13,7 +13,7 @@ import {
 import { PriceCalculator } from '@/components/booking/price-calculator';
 import { SetupNotice } from '@/components/layout/setup-notice';
 import { Button } from '@/components/ui/button';
-import { brand } from '@/config/brand';
+import { brand, exampleTrackingNumber } from '@/config/brand';
 import { pricingConfig } from '@/config/pricing';
 import { formatCents } from '@/lib/pricing';
 import { cities } from '@/config/regions';
@@ -28,7 +28,7 @@ const advantages = [
   {
     icon: Hash,
     title: 'Feste Sendungsnummer',
-    text: 'Jede Sendung bekommt sofort eine eindeutige Nummer wie MC-260809-0042. Damit findest du sie jederzeit wieder.',
+    text: `Jede Sendung bekommt sofort eine eindeutige Nummer wie ${exampleTrackingNumber}. Damit findest du sie jederzeit wieder.`,
   },
   {
     icon: QrCode,

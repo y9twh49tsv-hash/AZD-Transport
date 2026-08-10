@@ -1,5 +1,5 @@
 -- =============================================================================
--- MaroCargo — DEVELOPMENT SEED DATA
+-- AZD Transport — DEVELOPMENT SEED DATA
 -- =============================================================================
 --  ⚠  NEVER run this against a production project.
 --
@@ -11,7 +11,7 @@
 --
 --  The tracking-number trigger is switched off for the duration of the insert
 --  so the demo shipments keep the stable numbers used in the documentation
---  (MC-260809-0042 …). Real bookings always go through the trigger.
+--  (AZD-260809-0042 …). Real bookings always go through the trigger.
 -- =============================================================================
 
 begin;
@@ -91,7 +91,7 @@ insert into public.shipments (
 )
 select v.* from (values
   (
-    'MC-260809-0042', 'standard'::public.shipment_type, 'IN_TRANSIT'::public.shipment_status,
+    'AZD-260809-0042', 'standard'::public.shipment_type, 'IN_TRANSIT'::public.shipment_status,
     (select id from public.customers where email = 'yassin.demo@example.com'),
     'Yassin', 'El Amrani', '+49 176 1111111', 'yassin.demo@example.com',
     'Kaiserstraße 12', '60329', 'Frankfurt am Main', 'DE'::public.country_code,
@@ -104,7 +104,7 @@ select v.* from (values
     'paid_cash'::public.payment_status, now() - interval '7 days', now() - interval '7 days', now() - interval '7 days'
   ),
   (
-    'MC-260809-0043', 'standard'::public.shipment_type, 'BOOKED'::public.shipment_status,
+    'AZD-260809-0043', 'standard'::public.shipment_type, 'BOOKED'::public.shipment_status,
     (select id from public.customers where email = 'fatima.demo@example.com'),
     'Fatima', 'Benali', '+49 160 2222222', 'fatima.demo@example.com',
     'Bahnhofstraße 4', '63065', 'Offenbach am Main', 'DE'::public.country_code,
@@ -117,7 +117,7 @@ select v.* from (values
     'unpaid'::public.payment_status, now() - interval '1 day', now() - interval '1 day', now() - interval '1 day'
   ),
   (
-    'MC-260809-0044', 'standard'::public.shipment_type, 'PICKUP_SCHEDULED'::public.shipment_status,
+    'AZD-260809-0044', 'standard'::public.shipment_type, 'PICKUP_SCHEDULED'::public.shipment_status,
     (select id from public.customers where email = 'karim.demo@example.com'),
     'Karim', 'Ouazzani', '+49 151 3333333', 'karim.demo@example.com',
     'Mainzer Str. 88', '65189', 'Wiesbaden', 'DE'::public.country_code,
@@ -130,7 +130,7 @@ select v.* from (values
     'unpaid'::public.payment_status, now() - interval '2 days', now() - interval '2 days', now() - interval '2 days'
   ),
   (
-    'MC-260809-0045', 'standard'::public.shipment_type, 'AT_GERMANY_HUB'::public.shipment_status,
+    'AZD-260809-0045', 'standard'::public.shipment_type, 'AT_GERMANY_HUB'::public.shipment_status,
     null,
     'Mohamed', 'Tazi', '+49 172 4444444', 'mohamed.demo@example.com',
     'Berliner Str. 3', '63450', 'Hanau', 'DE'::public.country_code,
@@ -143,7 +143,7 @@ select v.* from (values
     'paid_online'::public.payment_status, now() - interval '4 days', now() - interval '4 days', now() - interval '4 days'
   ),
   (
-    'MC-260809-0046', 'standard'::public.shipment_type, 'DELIVERED'::public.shipment_status,
+    'AZD-260809-0046', 'standard'::public.shipment_type, 'DELIVERED'::public.shipment_status,
     null,
     'Leila', 'Bouzid', '+49 175 5555555', 'leila.demo@example.com',
     'Rheinstraße 21', '64283', 'Darmstadt', 'DE'::public.country_code,
@@ -156,7 +156,7 @@ select v.* from (values
     'paid_cash'::public.payment_status, now() - interval '21 days', now() - interval '21 days', now() - interval '21 days'
   ),
   (
-    'MC-260809-0047', 'standard'::public.shipment_type, 'EXCEPTION'::public.shipment_status,
+    'AZD-260809-0047', 'standard'::public.shipment_type, 'EXCEPTION'::public.shipment_status,
     null,
     'Omar', 'Chakir', '+49 179 6666666', null,
     'Frankfurter Str. 100', '63067', 'Offenbach am Main', 'DE'::public.country_code,
@@ -169,7 +169,7 @@ select v.* from (values
     'unpaid'::public.payment_status, now() - interval '9 days', now() - interval '9 days', now() - interval '9 days'
   ),
   (
-    'MC-260809-0048', 'standard'::public.shipment_type, 'OUT_FOR_DELIVERY'::public.shipment_status,
+    'AZD-260809-0048', 'standard'::public.shipment_type, 'OUT_FOR_DELIVERY'::public.shipment_status,
     null,
     'Nora', 'Idrissi', '+49 178 7777777', 'nora.demo@example.com',
     'Louisenstraße 40', '61348', 'Bad Homburg', 'DE'::public.country_code,
@@ -182,7 +182,7 @@ select v.* from (values
     'paid_cash'::public.payment_status, now() - interval '11 days', now() - interval '11 days', now() - interval '11 days'
   ),
   (
-    'MC-260809-0049', 'standard'::public.shipment_type, 'BOOKED'::public.shipment_status,
+    'AZD-260809-0049', 'standard'::public.shipment_type, 'BOOKED'::public.shipment_status,
     null,
     'Samira', 'Haddadi', '+212 6 55 44 33 22', null,
     'Hay El Matar 7', '62000', 'Nador', 'MA'::public.country_code,
@@ -221,13 +221,13 @@ on conflict (prefix, day) do update
 insert into public.security_seals (shipment_id, seal_number, sealed_at, note)
 select s.id, 'SEC-583921', now() - interval '6 days', 'Großer Sicherheitsbeutel, versiegelt im Depot Frankfurt'
   from public.shipments s
- where s.tracking_number = 'MC-260809-0042'
+ where s.tracking_number = 'AZD-260809-0042'
    and not exists (select 1 from public.security_seals where seal_number = 'SEC-583921');
 
 insert into public.security_seals (shipment_id, seal_number, sealed_at, note)
 select s.id, 'SEC-583944', now() - interval '11 days', 'Versiegelt im Depot Frankfurt'
   from public.shipments s
- where s.tracking_number = 'MC-260809-0048'
+ where s.tracking_number = 'AZD-260809-0048'
    and not exists (select 1 from public.security_seals where seal_number = 'SEC-583944');
 
 -- --------------------------------------------------------------------------
@@ -237,33 +237,33 @@ insert into public.tracking_events (shipment_id, status, occurred_at, location, 
 select s.id, e.status, e.occurred_at, e.location, e.message
   from public.shipments s
   join (values
-    ('MC-260809-0042', 'PICKUP_SCHEDULED'::public.shipment_status, now() - interval '7 days', 'Frankfurt am Main', 'Die Abholung deiner Sendung ist eingeplant.'),
-    ('MC-260809-0042', 'PICKED_UP',        now() - interval '6 days', 'Frankfurt am Main', 'Deine Sendung wurde abgeholt.'),
-    ('MC-260809-0042', 'AT_GERMANY_HUB',   now() - interval '6 days' + interval '4 hours', 'Depot Frankfurt', 'Deine Sendung ist in unserem Depot in Deutschland eingetroffen.'),
-    ('MC-260809-0042', 'LOADED',           now() - interval '4 days', 'Depot Frankfurt', 'Deine Sendung wurde für den Transport nach Marokko verladen.'),
-    ('MC-260809-0042', 'DEPARTED_GERMANY', now() - interval '3 days', 'Frankfurt am Main', 'Deine Sendung ist unterwegs nach Marokko.'),
-    ('MC-260809-0042', 'IN_TRANSIT',       now() - interval '1 day',  'Spanien', 'Deine Sendung befindet sich auf dem Transportweg.'),
+    ('AZD-260809-0042', 'PICKUP_SCHEDULED'::public.shipment_status, now() - interval '7 days', 'Frankfurt am Main', 'Die Abholung deiner Sendung ist eingeplant.'),
+    ('AZD-260809-0042', 'PICKED_UP',        now() - interval '6 days', 'Frankfurt am Main', 'Deine Sendung wurde abgeholt.'),
+    ('AZD-260809-0042', 'AT_GERMANY_HUB',   now() - interval '6 days' + interval '4 hours', 'Depot Frankfurt', 'Deine Sendung ist in unserem Depot in Deutschland eingetroffen.'),
+    ('AZD-260809-0042', 'LOADED',           now() - interval '4 days', 'Depot Frankfurt', 'Deine Sendung wurde für den Transport nach Marokko verladen.'),
+    ('AZD-260809-0042', 'DEPARTED_GERMANY', now() - interval '3 days', 'Frankfurt am Main', 'Deine Sendung ist unterwegs nach Marokko.'),
+    ('AZD-260809-0042', 'IN_TRANSIT',       now() - interval '1 day',  'Spanien', 'Deine Sendung befindet sich auf dem Transportweg.'),
 
-    ('MC-260809-0044', 'PICKUP_SCHEDULED', now() - interval '1 day', 'Wiesbaden', 'Die Abholung deiner Sendung ist eingeplant.'),
+    ('AZD-260809-0044', 'PICKUP_SCHEDULED', now() - interval '1 day', 'Wiesbaden', 'Die Abholung deiner Sendung ist eingeplant.'),
 
-    ('MC-260809-0045', 'PICKED_UP',      now() - interval '3 days', 'Hanau', 'Deine Sendung wurde abgeholt.'),
-    ('MC-260809-0045', 'AT_GERMANY_HUB', now() - interval '3 days' + interval '5 hours', 'Depot Frankfurt', 'Deine Sendung ist in unserem Depot in Deutschland eingetroffen.'),
+    ('AZD-260809-0045', 'PICKED_UP',      now() - interval '3 days', 'Hanau', 'Deine Sendung wurde abgeholt.'),
+    ('AZD-260809-0045', 'AT_GERMANY_HUB', now() - interval '3 days' + interval '5 hours', 'Depot Frankfurt', 'Deine Sendung ist in unserem Depot in Deutschland eingetroffen.'),
 
-    ('MC-260809-0046', 'AT_GERMANY_HUB',   now() - interval '20 days', 'Depot Frankfurt', 'Deine Sendung ist in unserem Depot in Deutschland eingetroffen.'),
-    ('MC-260809-0046', 'DEPARTED_GERMANY', now() - interval '18 days', 'Frankfurt am Main', 'Deine Sendung ist unterwegs nach Marokko.'),
-    ('MC-260809-0046', 'ARRIVED_MOROCCO',  now() - interval '14 days', 'Nador', 'Deine Sendung ist in Marokko angekommen.'),
-    ('MC-260809-0046', 'OUT_FOR_DELIVERY', now() - interval '13 days', 'Berkane', 'Deine Sendung ist in Zustellung.'),
-    ('MC-260809-0046', 'DELIVERED',        now() - interval '13 days' + interval '3 hours', 'Berkane', 'Deine Sendung wurde zugestellt.'),
+    ('AZD-260809-0046', 'AT_GERMANY_HUB',   now() - interval '20 days', 'Depot Frankfurt', 'Deine Sendung ist in unserem Depot in Deutschland eingetroffen.'),
+    ('AZD-260809-0046', 'DEPARTED_GERMANY', now() - interval '18 days', 'Frankfurt am Main', 'Deine Sendung ist unterwegs nach Marokko.'),
+    ('AZD-260809-0046', 'ARRIVED_MOROCCO',  now() - interval '14 days', 'Nador', 'Deine Sendung ist in Marokko angekommen.'),
+    ('AZD-260809-0046', 'OUT_FOR_DELIVERY', now() - interval '13 days', 'Berkane', 'Deine Sendung ist in Zustellung.'),
+    ('AZD-260809-0046', 'DELIVERED',        now() - interval '13 days' + interval '3 hours', 'Berkane', 'Deine Sendung wurde zugestellt.'),
 
-    ('MC-260809-0047', 'PICKED_UP',      now() - interval '8 days', 'Offenbach am Main', 'Deine Sendung wurde abgeholt.'),
-    ('MC-260809-0047', 'AT_GERMANY_HUB', now() - interval '8 days' + interval '6 hours', 'Depot Frankfurt', 'Deine Sendung ist in unserem Depot in Deutschland eingetroffen.'),
-    ('MC-260809-0047', 'EXCEPTION',      now() - interval '2 days', 'Depot Frankfurt', 'Bei deiner Sendung gibt es eine Rückfrage. Wir melden uns bei dir.'),
+    ('AZD-260809-0047', 'PICKED_UP',      now() - interval '8 days', 'Offenbach am Main', 'Deine Sendung wurde abgeholt.'),
+    ('AZD-260809-0047', 'AT_GERMANY_HUB', now() - interval '8 days' + interval '6 hours', 'Depot Frankfurt', 'Deine Sendung ist in unserem Depot in Deutschland eingetroffen.'),
+    ('AZD-260809-0047', 'EXCEPTION',      now() - interval '2 days', 'Depot Frankfurt', 'Bei deiner Sendung gibt es eine Rückfrage. Wir melden uns bei dir.'),
 
-    ('MC-260809-0048', 'AT_GERMANY_HUB',   now() - interval '10 days', 'Depot Frankfurt', 'Deine Sendung ist in unserem Depot in Deutschland eingetroffen.'),
-    ('MC-260809-0048', 'DEPARTED_GERMANY', now() - interval '8 days',  'Frankfurt am Main', 'Deine Sendung ist unterwegs nach Marokko.'),
-    ('MC-260809-0048', 'ARRIVED_MOROCCO',  now() - interval '3 days',  'Nador', 'Deine Sendung ist in Marokko angekommen.'),
-    ('MC-260809-0048', 'AT_MOROCCO_HUB',   now() - interval '2 days',  'Depot Nador', 'Deine Sendung ist in unserem Depot in Marokko eingetroffen.'),
-    ('MC-260809-0048', 'OUT_FOR_DELIVERY', now() - interval '3 hours', 'Beni Ensar', 'Deine Sendung ist in Zustellung.')
+    ('AZD-260809-0048', 'AT_GERMANY_HUB',   now() - interval '10 days', 'Depot Frankfurt', 'Deine Sendung ist in unserem Depot in Deutschland eingetroffen.'),
+    ('AZD-260809-0048', 'DEPARTED_GERMANY', now() - interval '8 days',  'Frankfurt am Main', 'Deine Sendung ist unterwegs nach Marokko.'),
+    ('AZD-260809-0048', 'ARRIVED_MOROCCO',  now() - interval '3 days',  'Nador', 'Deine Sendung ist in Marokko angekommen.'),
+    ('AZD-260809-0048', 'AT_MOROCCO_HUB',   now() - interval '2 days',  'Depot Nador', 'Deine Sendung ist in unserem Depot in Marokko eingetroffen.'),
+    ('AZD-260809-0048', 'OUT_FOR_DELIVERY', now() - interval '3 hours', 'Beni Ensar', 'Deine Sendung ist in Zustellung.')
   ) as e(tracking_number, status, occurred_at, location, message)
     on e.tracking_number = s.tracking_number
  where not exists (
@@ -277,14 +277,14 @@ select s.id, e.status, e.occurred_at, e.location, e.message
 insert into public.trip_shipments (trip_id, shipment_id)
 select t.id, s.id
   from public.trips t
-  join public.shipments s on s.tracking_number in ('MC-260809-0042', 'MC-260809-0048')
+  join public.shipments s on s.tracking_number in ('AZD-260809-0042', 'AZD-260809-0048')
  where t.code = 'TRIP-2026-001'
 on conflict do nothing;
 
 insert into public.trip_shipments (trip_id, shipment_id)
 select t.id, s.id
   from public.trips t
-  join public.shipments s on s.tracking_number in ('MC-260809-0043', 'MC-260809-0044')
+  join public.shipments s on s.tracking_number in ('AZD-260809-0043', 'AZD-260809-0044')
  where t.code = 'TRIP-2026-002'
 on conflict do nothing;
 
@@ -294,13 +294,13 @@ on conflict do nothing;
 insert into public.pickup_assignments (shipment_id, scheduled_date, time_window_start, time_window_end, status, note)
 select s.id, current_date + 1, '09:00', '13:00', 'scheduled', 'Klingeln bei „Ouazzani", 3. Stock'
   from public.shipments s
- where s.tracking_number = 'MC-260809-0044'
+ where s.tracking_number = 'AZD-260809-0044'
    and not exists (select 1 from public.pickup_assignments p where p.shipment_id = s.id);
 
 insert into public.pickup_assignments (shipment_id, scheduled_date, time_window_start, time_window_end, status, note)
 select s.id, current_date, '14:00', '18:00', 'scheduled', 'Kunde ruft vorher an'
   from public.shipments s
- where s.tracking_number = 'MC-260809-0043'
+ where s.tracking_number = 'AZD-260809-0043'
    and not exists (select 1 from public.pickup_assignments p where p.shipment_id = s.id);
 
 -- --------------------------------------------------------------------------

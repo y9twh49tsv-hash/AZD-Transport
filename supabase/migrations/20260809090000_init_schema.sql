@@ -1,5 +1,5 @@
 -- =============================================================================
--- MaroCargo — initial schema
+-- AZD Transport — initial schema
 -- =============================================================================
 -- Money is stored in integer euro cents. Weights are numeric(9,2) kilograms.
 -- Every table uses uuid primary keys and created_at / updated_at timestamps.

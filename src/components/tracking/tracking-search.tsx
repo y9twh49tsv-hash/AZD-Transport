@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { normaliseTrackingNumber } from '@/lib/utils';
 import { t } from '@/lib/i18n';
+import { exampleTrackingNumber } from '@/config/brand';
 
 export function TrackingSearch({
   initialValue = '',
@@ -24,7 +25,7 @@ export function TrackingSearch({
     const normalised = normaliseTrackingNumber(value);
 
     if (!/^[A-Z]{2,5}-\d{6}-\d{4,}$/.test(normalised)) {
-      setError('Bitte gib eine gültige Sendungsnummer ein, z. B. MC-260809-0042.');
+      setError(`Bitte gib eine gültige Sendungsnummer ein, z. B. ${exampleTrackingNumber}.`);
       return;
     }
 
@@ -46,7 +47,7 @@ export function TrackingSearch({
           autoComplete="off"
           autoCapitalize="characters"
           spellCheck={false}
-          placeholder={t('tracking.placeholder')}
+          placeholder={`${t('tracking.placeholder')}${exampleTrackingNumber}`}
           aria-invalid={!!error}
           aria-describedby={error ? 'tracking-error' : undefined}
           onChange={(event) => {

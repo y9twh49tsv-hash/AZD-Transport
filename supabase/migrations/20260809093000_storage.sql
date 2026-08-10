@@ -1,5 +1,5 @@
 -- =============================================================================
--- MaroCargo — Storage buckets
+-- AZD Transport — Storage buckets
 -- =============================================================================
 -- All three buckets are PRIVATE. They hold photos of people's belongings,
 -- delivery proofs and signatures, so nothing is served from a public URL.

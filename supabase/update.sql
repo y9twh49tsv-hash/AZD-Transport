@@ -1,5 +1,5 @@
 -- =============================================================================
--- MaroCargo — Nachtrag für eine bereits eingerichtete Datenbank
+-- AZD Transport — Nachtrag für eine bereits eingerichtete Datenbank
 -- =============================================================================
 -- Für den Fall, dass setup.sql schon einmal erfolgreich lief. Dieses Skript
 -- bringt die Datenbank auf den aktuellen Stand und vergibt die Admin-Rolle.

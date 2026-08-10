@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { fetchPublicTracking } from '@/lib/tracking-server';
 import { normaliseTrackingNumber } from '@/lib/utils';
 import { t } from '@/lib/i18n';
+import { exampleTrackingNumber } from '@/config/brand';
 
 type Props = { params: Promise<{ number: string }> };
 
@@ -50,7 +51,7 @@ export default async function TrackingDetailPage({ params }: Props) {
         {lookup.state === 'invalid' && (
           <NotFound
             trackingNumber={trackingNumber}
-            message="Das sieht nicht nach einer gültigen Sendungsnummer aus. Sie hat die Form MC-260809-0042."
+            message={`Das sieht nicht nach einer gültigen Sendungsnummer aus. Sie hat die Form ${exampleTrackingNumber}.`}
           />
         )}
 

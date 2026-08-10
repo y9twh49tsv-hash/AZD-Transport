@@ -14,7 +14,7 @@ import type { EmailAdapter, EmailMessage, SendResult } from './types';
  */
 
 function fromAddress(): string {
-  return process.env.EMAIL_FROM || 'MaroCargo <onboarding@resend.dev>';
+  return process.env.EMAIL_FROM || 'AZD Transport <onboarding@resend.dev>';
 }
 
 /**

@@ -7,6 +7,7 @@ import { cityName } from '@/config/regions';
 import { formatWeight } from '@/lib/pricing';
 import { escapeFilterValue, normaliseTrackingNumber } from '@/lib/utils';
 import type { ShipmentStatus } from '@/lib/shipment-status';
+import { exampleTrackingNumber } from '@/config/brand';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,7 +73,7 @@ export default async function DriverSearchPage({
           id="driver-q"
           name="q"
           defaultValue={raw}
-          placeholder="MC-260809-0042"
+          placeholder={exampleTrackingNumber}
           autoCapitalize="characters"
           autoComplete="off"
           className="min-h-14 w-full rounded-xl border border-input bg-card px-4 font-mono text-lg focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"

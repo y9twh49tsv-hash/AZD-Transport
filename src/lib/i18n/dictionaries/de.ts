@@ -92,7 +92,9 @@ export const de = {
   tracking: {
     title: 'Sendungsverfolgung',
     subtitle: 'Gib deine Sendungsnummer ein, um den aktuellen Status zu sehen.',
-    placeholder: 'z. B. MC-260809-0042',
+    // Beispielnummer bewusst nicht hier: sie hängt am Nummernpräfix der Marke
+    // und stünde sonst irgendwann im Widerspruch zu den echten Nummern.
+    placeholder: 'z. B. ',
     notFound:
       'Zu dieser Sendungsnummer haben wir nichts gefunden. Bitte prüfe die Nummer und versuche es erneut.',
     lastUpdate: 'Letztes Update',

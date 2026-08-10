@@ -7,7 +7,7 @@
 #   PGHOST=/tmp PGPORT=5433 ./scripts/verify-db.sh
 #
 # Requires a running PostgreSQL 15+ and psql on the PATH. It never touches your
-# Supabase project — everything happens in a database called `marocargo_test`
+# Supabase project — everything happens in a database called `azd_transport_test`
 # that is dropped and recreated on every run.
 #
 set -euo pipefail
@@ -15,7 +15,7 @@ set -euo pipefail
 PGHOST="${PGHOST:-/tmp}"
 PGPORT="${PGPORT:-5433}"
 PGUSER="${PGUSER:-postgres}"
-DB="${DB:-marocargo_test}"
+DB="${DB:-azd_transport_test}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 export PGHOST PGPORT PGUSER

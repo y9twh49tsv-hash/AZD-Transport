@@ -1,5 +1,5 @@
 -- =============================================================================
--- MaroCargo — Datenbank komplett neu aufbauen
+-- AZD Transport — Datenbank komplett neu aufbauen
 -- =============================================================================
 --   ⚠️  ALLE DATEN WERDEN GELÖSCHT: Sendungen, Kunden, Fahrten, Historie.
 --       Nur benutzen, solange noch keine echten Aufträge erfasst sind.
@@ -24,7 +24,7 @@
 -- ###########################################################################
 
 -- =============================================================================
--- MaroCargo — Datenbank zurücksetzen
+-- AZD Transport — Datenbank zurücksetzen
 -- =============================================================================
 -- Löscht ALLES, was setup.sql angelegt hat, damit setup.sql danach wieder auf
 -- einem sauberen Stand laufen kann.
@@ -97,7 +97,7 @@ alter default privileges in schema public
 -- ###########################################################################
 
 -- =============================================================================
--- MaroCargo — initial schema
+-- AZD Transport — initial schema
 -- =============================================================================
 -- Money is stored in integer euro cents. Weights are numeric(9,2) kilograms.
 -- Every table uses uuid primary keys and created_at / updated_at timestamps.
@@ -766,7 +766,7 @@ create table public.tracking_counters (
 -- ###########################################################################
 
 -- =============================================================================
--- MaroCargo — server-side business functions
+-- AZD Transport — server-side business functions
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
@@ -1202,7 +1202,7 @@ grant execute on function public.admin_dashboard_stats() to authenticated;
 -- ###########################################################################
 
 -- =============================================================================
--- MaroCargo — Row Level Security
+-- AZD Transport — Row Level Security
 -- =============================================================================
 -- Threat model
 -- ------------
@@ -1500,7 +1500,7 @@ create policy "admins read audit logs"
 -- ###########################################################################
 
 -- =============================================================================
--- MaroCargo — Storage buckets
+-- AZD Transport — Storage buckets
 -- =============================================================================
 -- All three buckets are PRIVATE. They hold photos of people's belongings,
 -- delivery proofs and signatures, so nothing is served from a public URL.
@@ -1638,7 +1638,7 @@ $$;
 -- ###########################################################################
 
 -- =============================================================================
--- MaroCargo — Trackinghistorie: unveränderlich, aber nicht unlöschbar
+-- AZD Transport — Trackinghistorie: unveränderlich, aber nicht unlöschbar
 -- =============================================================================
 -- Die ursprüngliche Regel war zu grob. Sie verbot jedes UPDATE und jedes DELETE
 -- auf tracking_events und machte damit zwei völlig legitime Vorgänge unmöglich:
@@ -1708,3 +1708,39 @@ begin
     using errcode = '42501';
 end;
 $$;
+
+
+-- ###########################################################################
+-- ## 20260810120000_brand_azd_transport.sql
+-- ###########################################################################
+
+-- =============================================================================
+-- AZD Transport — Marke und Nummernpräfix angleichen
+-- =============================================================================
+-- Sendungsnummern werden in der Datenbank vergeben, nicht in der Anwendung.
+-- Marke und Präfix stehen deshalb in app_settings und müssen beim Umbenennen
+-- mitgezogen werden — sonst zeigt die Website „AZD Transport“, während die
+-- Nummern weiter mit MC- beginnen.
+--
+-- Bereits vergebene Nummern bleiben unverändert. Eine Sendungsnummer ist die
+-- Referenz, unter der eine Kundin ihr Paket sucht und die auf dem aufgeklebten
+-- Etikett steht; sie nachträglich umzuschreiben würde jedes gedruckte Etikett
+-- entwerten. Die Sendungsverfolgung akzeptiert jedes Präfix aus zwei bis fünf
+-- Großbuchstaben, alte und neue Nummern funktionieren also nebeneinander.
+-- =============================================================================
+
+alter table public.app_settings
+  alter column brand_name set default 'AZD Transport',
+  alter column tracking_prefix set default 'AZD';
+
+update public.app_settings
+   set brand_name = 'AZD Transport',
+       tracking_prefix = 'AZD',
+       updated_at = now()
+ where tracking_prefix = 'MC';
+
+-- Der Tageszähler in tracking_counters ist über (prefix, day) eindeutig. Mit
+-- einem neuen Präfix beginnt die laufende Nummer des Tages deshalb wieder bei
+-- 0001 — AZD-260810-0001 kann neben einem schon vergebenen MC-260810-0003
+-- stehen. Das ist unkritisch: die Eindeutigkeit hängt an der vollständigen
+-- Nummer, und die enthält das Präfix.

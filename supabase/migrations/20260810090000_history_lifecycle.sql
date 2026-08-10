@@ -1,5 +1,5 @@
 -- =============================================================================
--- MaroCargo — Trackinghistorie: unveränderlich, aber nicht unlöschbar
+-- AZD Transport — Trackinghistorie: unveränderlich, aber nicht unlöschbar
 -- =============================================================================
 -- Die ursprüngliche Regel war zu grob. Sie verbot jedes UPDATE und jedes DELETE
 -- auf tracking_events und machte damit zwei völlig legitime Vorgänge unmöglich:

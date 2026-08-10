@@ -1,5 +1,5 @@
 -- =============================================================================
--- MaroCargo — Ist die Datenbank richtig eingerichtet?
+-- AZD Transport — Ist die Datenbank richtig eingerichtet?
 -- =============================================================================
 -- Liest nur, ändert nichts. Im Supabase SQL Editor einfügen und ausführen.
 --

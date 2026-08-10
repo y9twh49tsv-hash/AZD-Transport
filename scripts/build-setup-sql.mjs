@@ -17,7 +17,7 @@ const files = readdirSync(dir).filter((f) => f.endsWith('.sql')).sort();
 const count = files.length;
 
 const setupHeader = `-- =============================================================================
--- MaroCargo — komplette Einrichtung in einem Durchgang
+-- AZD Transport — komplette Einrichtung in einem Durchgang
 -- =============================================================================
 -- Diese Datei ist die Aneinanderreihung aller ${count} Migrationen aus
 -- supabase/migrations/ in der richtigen Reihenfolge. Sie existiert nur der
@@ -38,7 +38,7 @@ const setupHeader = `-- ========================================================
 `;
 
 const reinstallHeader = `-- =============================================================================
--- MaroCargo — Datenbank komplett neu aufbauen
+-- AZD Transport — Datenbank komplett neu aufbauen
 -- =============================================================================
 --   ⚠️  ALLE DATEN WERDEN GELÖSCHT: Sendungen, Kunden, Fahrten, Historie.
 --       Nur benutzen, solange noch keine echten Aufträge erfasst sind.

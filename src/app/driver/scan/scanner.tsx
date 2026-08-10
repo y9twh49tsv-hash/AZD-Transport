@@ -8,6 +8,7 @@ import { Alert } from '@/components/ui/alert';
 import { Field, Input } from '@/components/ui/input';
 import { resolveScanToken } from '@/app/driver/actions';
 import { normaliseTrackingNumber } from '@/lib/utils';
+import { exampleTrackingNumber } from '@/config/brand';
 
 /**
  * QR scanning.
@@ -153,7 +154,7 @@ export function Scanner() {
       return;
     }
 
-    setError('Bitte gib eine Sendungsnummer (MC-260809-0042) oder einen Scan-Link ein.');
+    setError(`Bitte gib eine Sendungsnummer (${exampleTrackingNumber}) oder einen Scan-Link ein.`);
   }
 
   return (
@@ -228,7 +229,7 @@ export function Scanner() {
             id="manual-code"
             value={manual}
             onChange={(e) => setManual(e.target.value)}
-            placeholder="MC-260809-0042"
+            placeholder={exampleTrackingNumber}
             autoCapitalize="characters"
             autoComplete="off"
             spellCheck={false}

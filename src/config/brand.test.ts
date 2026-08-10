@@ -23,8 +23,8 @@ describe('appUrl', () => {
   it('prefers the explicit setting over the host defaults', () => {
     clearAll();
     process.env.RAILWAY_PUBLIC_DOMAIN = 'auto.up.railway.app';
-    process.env.NEXT_PUBLIC_APP_URL = 'https://marocargo.de';
-    expect(appUrl()).toBe('https://marocargo.de');
+    process.env.NEXT_PUBLIC_APP_URL = 'https://azd-transport.com';
+    expect(appUrl()).toBe('https://azd-transport.com');
   });
 
   it('uses the Railway domain when no explicit URL is set', () => {
@@ -36,15 +36,15 @@ describe('appUrl', () => {
   it('adds the missing scheme instead of producing an invalid URL', () => {
     // The mistake a dashboard invites: pasting a bare domain.
     clearAll();
-    process.env.NEXT_PUBLIC_APP_URL = 'marocargo.de';
-    expect(appUrl()).toBe('https://marocargo.de');
+    process.env.NEXT_PUBLIC_APP_URL = 'azd-transport.com';
+    expect(appUrl()).toBe('https://azd-transport.com');
     expect(() => new URL(appUrl())).not.toThrow();
   });
 
   it('strips trailing slashes so paths never get doubled up', () => {
     clearAll();
-    process.env.NEXT_PUBLIC_APP_URL = 'https://marocargo.de///';
-    expect(appUrl()).toBe('https://marocargo.de');
+    process.env.NEXT_PUBLIC_APP_URL = 'https://azd-transport.com///';
+    expect(appUrl()).toBe('https://azd-transport.com');
   });
 
   it('ignores empty or whitespace-only values', () => {

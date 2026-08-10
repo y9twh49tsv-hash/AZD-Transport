@@ -10,11 +10,11 @@
  * Supabase too (see README § "Marke umbenennen").
  */
 export const brand = {
-  name: process.env.NEXT_PUBLIC_BRAND_NAME || 'MaroCargo',
-  legalName: process.env.NEXT_PUBLIC_BRAND_LEGAL_NAME || 'MaroCargo (Einzelunternehmen)',
+  name: process.env.NEXT_PUBLIC_BRAND_NAME || 'AZD Transport',
+  legalName: process.env.NEXT_PUBLIC_BRAND_LEGAL_NAME || 'AZD Transport (Einzelunternehmen)',
   tagline: 'Transporte zwischen Deutschland und Marokko',
-  trackingPrefix: process.env.NEXT_PUBLIC_TRACKING_PREFIX || 'MC',
-  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'info@marocargo.de',
+  trackingPrefix: process.env.NEXT_PUBLIC_TRACKING_PREFIX || 'AZD',
+  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'azd-transport@outlook.com',
   phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || '+49 000 0000000',
   /** Digits only, international format — used for wa.me deep links. */
   whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '49000000000',
@@ -25,6 +25,17 @@ export const brand = {
     country: 'Deutschland',
   },
 } as const;
+
+/**
+ * The example shown in placeholders and error messages.
+ *
+ * Derived from the prefix rather than written out, because an example that
+ * contradicts the numbers actually issued is worse than none: it teaches the
+ * wrong shape to exactly the person who is already struggling to find their
+ * shipment. The date is fixed on purpose — a rolling one would look like a
+ * real number belonging to today.
+ */
+export const exampleTrackingNumber = `${brand.trackingPrefix}-260809-0042`;
 
 /**
  * The public base URL. Everything that has to work when opened on someone

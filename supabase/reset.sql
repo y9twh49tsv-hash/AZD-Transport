@@ -1,5 +1,5 @@
 -- =============================================================================
--- MaroCargo — Datenbank zurücksetzen
+-- AZD Transport — Datenbank zurücksetzen
 -- =============================================================================
 -- Löscht ALLES, was setup.sql angelegt hat, damit setup.sql danach wieder auf
 -- einem sauberen Stand laufen kann.
