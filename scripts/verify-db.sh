@@ -116,4 +116,60 @@ if grep -q ' | f$' "$LOG_DIR/check.log"; then
 fi
 sed 's/ | t$//; s/^/  ✓ /' "$LOG_DIR/check.log"
 
+# ---------------------------------------------------------------------------
+# make-admin.sql
+# ---------------------------------------------------------------------------
+# Das Skript, mit dem das erste Admin-Konto entsteht — der einzige Weg in den
+# Verwaltungsbereich. Geprüft werden die vier Situationen, in denen es benutzt
+# wird, samt der Zusage, dass ein gelöschtes Konto keine Sendungen mitnimmt.
+echo "▸ make-admin.sql"
+ADMIN_MAIL="$(sed -n "s/.*v_email *text *:= *'\([^']*\)'.*/\1/p" "$ROOT/supabase/make-admin.sql" | head -1)"
+
+# Nicht in eine Pipe schreiben: das Skript läuft mit `pipefail`, und beim
+# erwarteten Abbruch liefert psql einen Fehlercode, der dann die ganze
+# Pipeline scheitern lässt — auch wenn grep den gesuchten Text gefunden hat.
+admin_run() { psql -q -d "$DB" -f "$ROOT/supabase/make-admin.sql" > "$LOG_DIR/admin.log" 2>&1 || true; }
+admin_role() { psql -v ON_ERROR_STOP=1 -q -d "$DB" -At -c "select role from public.profiles;"; }
+expect() {
+  if [ "$2" != "$3" ]; then
+    echo "  ✗ $1: erwartet '$3', bekommen '$2'" >&2
+    exit 1
+  fi
+  echo "  ✓ $1"
+}
+
+psql -v ON_ERROR_STOP=1 -q -d "$DB" -c "delete from auth.users;" >/dev/null
+
+# 1) Ohne Konto muss es abbrechen statt stillschweigend nichts zu tun.
+admin_run
+if ! grep -q "Es gibt kein Konto" "$LOG_DIR/admin.log"; then
+  echo "  ✗ meldet ein fehlendes Konto nicht:" >&2
+  cat "$LOG_DIR/admin.log" >&2
+  exit 1
+fi
+echo "  ✓ fehlendes Konto wird gemeldet"
+
+# 2) Der Normalfall: Konto im Dashboard angelegt, Trigger legt das Profil an.
+psql -v ON_ERROR_STOP=1 -q -d "$DB" \
+  -c "insert into auth.users (email, email_confirmed_at) values ('$ADMIN_MAIL', now());" >/dev/null
+admin_run
+expect "customer wird zu admin" "$(admin_role)" "admin"
+
+# 3) Zweiter Lauf darf nichts kaputt machen.
+admin_run
+expect "zweiter Lauf bleibt folgenlos" "$(admin_role)" "admin"
+
+# 4) Konto ohne Profil — etwa älter als die Datenbank.
+psql -v ON_ERROR_STOP=1 -q -d "$DB" -c "delete from public.profiles;" >/dev/null
+admin_run
+expect "fehlendes Profil wird angelegt" "$(admin_role)" "admin"
+
+# 5) Ein gelöschtes Konto darf keine Geschäftsdaten mitnehmen: alle Verweise
+#    auf profiles stehen auf SET NULL. Sonst würde das Entfernen einer
+#    Mitarbeiterin deren Sendungen aus dem Bestand reißen.
+BEFORE="$(psql -At -d "$DB" -c "select count(*) from shipments;")"
+psql -v ON_ERROR_STOP=1 -q -d "$DB" -c "delete from auth.users;" >/dev/null
+expect "Sendungen überleben das Löschen des Kontos" \
+  "$(psql -At -d "$DB" -c "select count(*) from shipments;")" "$BEFORE"
+
 echo "▸ Alle Datenbankprüfungen bestanden"

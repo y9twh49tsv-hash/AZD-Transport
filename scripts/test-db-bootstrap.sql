@@ -43,6 +43,10 @@ create table if not exists auth.users (
   id                 uuid primary key default gen_random_uuid(),
   email              text unique,
   raw_user_meta_data jsonb not null default '{}'::jsonb,
+  -- Nur gesetzt, wenn die Adresse bestätigt wurde. make-admin.sql zeigt den
+  -- Wert an, weil ein unbestätigtes Konto sich nicht anmelden kann und das
+  -- sonst wie ein Fehler der Rollenvergabe aussieht.
+  email_confirmed_at timestamptz,
   created_at         timestamptz not null default now()
 );
 

@@ -107,12 +107,12 @@ node -v      # muss v20.x oder höher sein
 
 **Der einfache Weg (empfohlen):** Im Supabase-Dashboard → **SQL Editor** → **New query**.
 Den kompletten Inhalt von `supabase/setup.sql` einfügen → **Run**. Das ist genau die
-Aneinanderreihung aller fünf Migrationen und läuft in einem Durchgang durch.
+Aneinanderreihung aller sechs Migrationen und läuft in einem Durchgang durch.
 
 Danach sollte unter **Table Editor** die Tabelle `shipments` sichtbar sein.
 
 <details>
-<summary>Alternative: die fünf Migrationen einzeln ausführen</summary>
+<summary>Alternative: die sechs Migrationen einzeln ausführen</summary>
 
 Inhalt einfügen → **Run**, in **dieser Reihenfolge**:
 
@@ -121,6 +121,7 @@ Inhalt einfügen → **Run**, in **dieser Reihenfolge**:
 3. `supabase/migrations/20260809092000_rls.sql` — Row Level Security
 4. `supabase/migrations/20260809093000_storage.sql` — Storage-Buckets
 5. `supabase/migrations/20260809094000_hardening.sql` — zusätzliche Schutzregeln
+6. `supabase/migrations/20260810090000_history_lifecycle.sql` — Konten und Sendungen löschbar
 
 Oder mit der Supabase CLI:
 ```bash
@@ -231,16 +232,26 @@ sind deaktiviert — die Seiten laden aber trotzdem.
 
 Rollen werden **niemals** über das Registrierungsformular vergeben. So machst du dich zum Admin:
 
-1. Registriere dich ganz normal auf `http://localhost:3000/registrieren`.
-2. Bestätige die E-Mail (oder deaktiviere die Bestätigung wie in 3.4 beschrieben).
-3. Supabase → **SQL Editor** → dieses Statement mit deiner Adresse ausführen:
+1. Supabase → **Authentication → Users → Add user → Create new user**. E-Mail und Passwort
+   eintragen und **Auto Confirm User** einschalten.
 
-```sql
-update public.profiles set role = 'admin'
- where id = (select id from auth.users where email = 'du@example.com');
-```
+   > Warum nicht über `/registrieren`? Der eingebaute Mailversand von Supabase ist stark
+   > begrenzt und landet häufig im Spam. Für dein eigenes erstes Konto ist der Umweg über
+   > die Bestätigungsmail unnötiges Risiko — für deine Kundschaft brauchst du ohnehin einen
+   > richtigen Versanddienst (siehe Abschnitt 3.4).
 
-4. Neu laden — unter `/admin` ist jetzt das Dashboard erreichbar.
+2. Supabase → **SQL Editor** → Inhalt von `supabase/make-admin.sql` einfügen, oben die
+   E-Mail-Adresse eintragen → **Run**.
+
+   Das Skript findet das Konto, legt das Profil an, falls es fehlt, setzt die Rolle auf
+   `admin` und zeigt am Ende eine Zeile mit dem Ergebnis. Es darf beliebig oft laufen.
+
+3. Auf `/login` anmelden — unter `/admin` ist jetzt das Dashboard erreichbar.
+
+Ein Konto wieder loswerden? `delete from auth.users where lower(email) = 'du@example.com';`
+Sendungen, Kunden, Fahrten und das Änderungsprotokoll bleiben dabei erhalten — alle Verweise
+auf ein Profil stehen auf `SET NULL`, der Datensatz verliert also nur seine Zuordnung zur
+Person.
 
 Weitere Rollen legst du danach bequem unter **Verwaltung → Mitarbeiter** fest, oder per SQL:
 
@@ -477,9 +488,10 @@ src/
 └─ proxy.ts              Session-Refresh + Schutz der internen Bereiche
 
 supabase/
-├─ migrations/           5 SQL-Dateien — die einzige Quelle des Schemas
+├─ migrations/           6 SQL-Dateien — die einzige Quelle des Schemas
 ├─ setup.sql             alle Migrationen in einer Datei (aus migrations/ erzeugt)
 ├─ check.sql             liest nur: ist die Einrichtung vollständig?
+├─ make-admin.sql        ein Konto zum Admin machen
 ├─ reset.sql             räumt alles wieder ab, damit setup.sql neu laufen kann
 └─ seed.sql              Demodaten, nur für Entwicklung
 
@@ -620,7 +632,8 @@ ein und prüft anschließend die Zusagen, auf die sich die Anwendung verlässt:
 
 - Sendungsnummern haben das richtige Format, sind fortlaufend und eindeutig
 - weder Sendungsnummer noch QR-Token lassen sich vom Client bestimmen oder nachträglich ändern
-- die Trackinghistorie kann nicht verändert oder gelöscht werden
+- die Trackinghistorie kann nicht verändert und kein Eintrag einzeln gelöscht werden
+- ein Konto und eine Sendung lassen sich trotzdem löschen, ohne die Historie zu fälschen
 - die öffentliche Trackingfunktion gibt ausschließlich die 16 freigegebenen Felder zurück
 - ein Kunde sieht ausschließlich seine eigenen Sendungen, anonyme Zugriffe sehen gar nichts
 - niemand kann sich selbst zum Admin machen oder ein deaktiviertes Konto reaktivieren

@@ -113,6 +113,72 @@ end
 $$;
 
 -- --------------------------------------------------------------------------
+-- 3b. Unveränderlich heißt nicht unlöschbar
+-- --------------------------------------------------------------------------
+-- Die Sperre auf tracking_events verbot ursprünglich jedes UPDATE und DELETE
+-- und blockierte damit zwei Vorgänge, die stattfinden müssen: das Löschen
+-- eines Kontos (created_by wird per SET NULL genullt) und das Löschen einer
+-- Sendung (die Historie wird mitgelöscht). Beides fiel erst im Betrieb auf.
+do $$
+declare
+  v_shipment uuid;
+  v_event    uuid;
+  v_user     uuid := '99999999-9999-9999-9999-999999999999';
+  v_note     text;
+  v_status   public.shipment_status;
+begin
+  insert into auth.users (id, email) values (v_user, 'loeschtest@example.org');
+
+  select id into v_shipment from public.shipments order by created_at desc limit 1;
+
+  insert into public.tracking_events (shipment_id, status, created_by, internal_note)
+  values (v_shipment, 'IN_TRANSIT', v_user, 'Originaltext')
+  returning id into v_event;
+
+  -- Das Anonymisieren darf sich nicht als Einfallstor missbrauchen lassen:
+  -- zusammen mit irgendeiner anderen Änderung muss es scheitern.
+  begin
+    update public.tracking_events
+       set created_by = null, internal_note = 'manipuliert'
+     where id = v_event;
+    raise exception 'FAIL: Anonymisierung erlaubte gleichzeitig eine Textänderung!';
+  exception
+    when insufficient_privilege then null;
+  end;
+
+  begin
+    update public.tracking_events
+       set created_by = null, status = 'DELIVERED'
+     where id = v_event;
+    raise exception 'FAIL: Anonymisierung erlaubte gleichzeitig eine Statusfälschung!';
+  exception
+    when insufficient_privilege then null;
+  end;
+
+  -- Konto löschen: muss durchgehen und nur den Urheber entfernen.
+  delete from auth.users where id = v_user;
+
+  select internal_note, status into v_note, v_status
+    from public.tracking_events where id = v_event;
+
+  if v_note is distinct from 'Originaltext' or v_status is distinct from 'IN_TRANSIT' then
+    raise exception 'FAIL: Das Löschen des Kontos hat den Eintrag inhaltlich verändert!';
+  end if;
+  if (select created_by from public.tracking_events where id = v_event) is not null then
+    raise exception 'FAIL: Der Urheber wurde beim Löschen des Kontos nicht entfernt!';
+  end if;
+
+  -- Sendung löschen: die Historie muss mitgehen.
+  delete from public.shipments where id = v_shipment;
+  if exists (select 1 from public.tracking_events where id = v_event) then
+    raise exception 'FAIL: Die Historie überlebte das Löschen ihrer Sendung!';
+  end if;
+
+  raise notice 'OK  Konten und Sendungen lassen sich löschen, ohne Historie zu fälschen';
+end
+$$;
+
+-- --------------------------------------------------------------------------
 -- 4. Public tracking exposes only the whitelisted fields
 -- --------------------------------------------------------------------------
 do $$
