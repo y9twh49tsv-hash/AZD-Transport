@@ -28,23 +28,30 @@ export function Badge({
   );
 }
 
+/**
+ * `label` overrides the German default. The staff areas are German by design
+ * and pass nothing; the public tracking page passes the translated label so a
+ * French visitor does not get one German word in an otherwise French page.
+ */
 export function StatusBadge({
   status,
+  label,
   withIcon = true,
   className,
 }: {
   status: ShipmentStatus;
+  label?: string;
   withIcon?: boolean;
   className?: string;
 }) {
   const meta = statusMeta[status];
-  if (!meta) return <Badge className={className}>{status}</Badge>;
+  if (!meta) return <Badge className={className}>{label ?? status}</Badge>;
   const Icon = meta.icon;
 
   return (
     <span className={cn(base, meta.tone, className)}>
       {withIcon && <Icon className="size-3.5" aria-hidden />}
-      {meta.label}
+      {label ?? meta.label}
     </span>
   );
 }

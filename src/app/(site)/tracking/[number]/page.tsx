@@ -8,16 +8,18 @@ import { Button } from '@/components/ui/button';
 import { fetchPublicTracking } from '@/lib/tracking-server';
 import { normaliseTrackingNumber } from '@/lib/utils';
 import { getT } from '@/lib/i18n/server';
+import type { Translate } from '@/lib/i18n';
 import { exampleTrackingNumber } from '@/config/brand';
 
 type Props = { params: Promise<{ number: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const t = await getT();
   const { number } = await params;
   const trackingNumber = normaliseTrackingNumber(decodeURIComponent(number));
   return {
-    title: `Sendung ${trackingNumber}`,
-    description: 'Aktueller Status deiner Sendung zwischen Deutschland und Marokko.',
+    title: t('tracking.detailMetaTitle', { number: trackingNumber }),
+    description: t('tracking.detailMetaDescription'),
     // A tracking number is not a secret, but it should not end up in a search index.
     robots: { index: false, follow: false },
   };
@@ -39,33 +41,34 @@ export default async function TrackingDetailPage({ params }: Props) {
         className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-4" aria-hidden />
-        Andere Sendung suchen
+        {t('tracking.searchAnother')}
       </Link>
 
       <div className="mt-6">
         {lookup.state === 'found' && <TrackingResult data={lookup.data} />}
 
         {lookup.state === 'not_found' && (
-          <NotFound trackingNumber={trackingNumber} message={t('tracking.notFound')} />
+          <NotFound trackingNumber={trackingNumber} message={t('tracking.notFound')} t={t} />
         )}
 
         {lookup.state === 'invalid' && (
           <NotFound
             trackingNumber={trackingNumber}
-            message={`Das sieht nicht nach einer gültigen Sendungsnummer aus. Sie hat die Form ${exampleTrackingNumber}.`}
+            message={t('tracking.invalidFormat', { example: exampleTrackingNumber })}
+            t={t}
           />
         )}
 
         {lookup.state === 'rate_limited' && (
-          <Alert tone="warning" title="Zu viele Abfragen">
-            Bitte warte {lookup.retryAfterSeconds} Sekunden und versuche es dann erneut.
+          <Alert tone="warning" title={t('tracking.rateLimitedTitle')}>
+            {t('tracking.rateLimitedText', { seconds: lookup.retryAfterSeconds })}
           </Alert>
         )}
 
         {lookup.state === 'unconfigured' && (
-          <Alert tone="warning" title="Sendungsverfolgung noch nicht verfügbar">
-            Die Datenbankverbindung ist noch nicht eingerichtet. Bitte hinterlege die
-            Supabase-Zugangsdaten in <code className="font-mono text-xs">.env.local</code>.
+          <Alert tone="warning" title={t('tracking.unconfiguredTitle')}>
+            {t('tracking.unconfiguredText')}{' '}
+            <code className="font-mono text-xs">.env.local</code>
           </Alert>
         )}
       </div>
@@ -73,16 +76,26 @@ export default async function TrackingDetailPage({ params }: Props) {
   );
 }
 
-function NotFound({ trackingNumber, message }: { trackingNumber: string; message: string }) {
+function NotFound({
+  trackingNumber,
+  message,
+  t,
+}: {
+  trackingNumber: string;
+  message: string;
+  t: Translate;
+}) {
   return (
     <div className="surface p-6 text-center sm:p-10">
       <span className="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
         <SearchX className="size-6" aria-hidden />
       </span>
-      <h1 className="mt-5 text-2xl font-bold tracking-tight">Sendung nicht gefunden</h1>
+      <h1 className="mt-5 text-2xl font-bold tracking-tight">{t('tracking.notFoundTitle')}</h1>
       <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">{message}</p>
       {trackingNumber && (
-        <p className="mt-3 font-mono text-sm text-muted-foreground">Gesucht: {trackingNumber}</p>
+        <p className="mt-3 font-mono text-sm text-muted-foreground">
+          {t('tracking.searched', { number: trackingNumber })}
+        </p>
       )}
 
       <div className="mx-auto mt-8 max-w-md text-left">
@@ -90,14 +103,14 @@ function NotFound({ trackingNumber, message }: { trackingNumber: string; message
       </div>
 
       <p className="mt-6 text-sm text-muted-foreground">
-        Nummer verlegt?{' '}
+        {t('tracking.lostNumber')}{' '}
         <Link href="/kontakt" className="font-medium text-primary underline">
-          Schreib uns
+          {t('tracking.writeUs')}
         </Link>{' '}
-        — wir finden deine Sendung.
+        {t('tracking.weWillFind')}
       </p>
       <Link href="/" className="mt-6 inline-block">
-        <Button variant="ghost">Zur Startseite</Button>
+        <Button variant="ghost">{t('bulky.toHome')}</Button>
       </Link>
     </div>
   );

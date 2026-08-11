@@ -157,6 +157,21 @@ export function statusLabel(status: string): string {
   return statusMeta[status as ShipmentStatus]?.label ?? status;
 }
 
+/**
+ * Whether a stored `public_message` is just the standard sentence for its
+ * status, rather than something a member of staff typed.
+ *
+ * Tracking events keep the message that was written when the status changed, so
+ * an event from last month carries German text no matter which language the
+ * customer reads today. The standard sentences can be replaced by the
+ * translated ones; a hand-written note cannot — translating it would mean
+ * inventing words nobody wrote. So the two cases are told apart here.
+ */
+export function isDefaultPublicMessage(status: ShipmentStatus, message: string | null): boolean {
+  if (!message) return true;
+  return message.trim() === statusMeta[status]?.publicMessage;
+}
+
 export function isShipmentStatus(value: unknown): value is ShipmentStatus {
   return typeof value === 'string' && (SHIPMENT_STATUSES as readonly string[]).includes(value);
 }

@@ -5,10 +5,13 @@ import { SetupNotice } from '@/components/layout/setup-notice';
 import { statusMeta, HAPPY_PATH } from '@/lib/shipment-status';
 import { getT } from '@/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'Sendungsverfolgung',
-  description: 'Verfolge deine Sendung zwischen Deutschland und Marokko mit deiner Sendungsnummer.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: t('tracking.metaTitle'),
+    description: t('tracking.metaDescription'),
+  };
+}
 
 export default async function TrackingPage() {
   const t = await getT();
@@ -26,19 +29,16 @@ export default async function TrackingPage() {
 
       <div className="surface mt-8 p-5 sm:p-7">
         <TrackingSearch autoFocus />
-        <p className="mt-3 text-xs text-muted-foreground">
-          Die Sendungsnummer steht in deiner Buchungsbestätigung und auf dem Label.
-        </p>
+        <p className="mt-3 text-xs text-muted-foreground">{t('tracking.whereToFind')}</p>
       </div>
 
       <SetupNotice className="mt-6" />
 
       <section className="mt-12">
-        <h2 className="text-lg font-semibold tracking-tight">Diese Stationen durchläuft deine Sendung</h2>
+        <h2 className="text-lg font-semibold tracking-tight">{t('tracking.stationsTitle')}</h2>
         <ol className="mt-6 space-y-3">
           {HAPPY_PATH.map((status, index) => {
-            const meta = statusMeta[status];
-            const Icon = meta.icon;
+            const Icon = statusMeta[status].icon;
             return (
               <li key={status} className="flex items-center gap-4 rounded-xl border border-border bg-card p-3.5">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
@@ -46,10 +46,12 @@ export default async function TrackingPage() {
                 </span>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold">
-                    <span className="mr-2 text-muted-foreground tabular-nums">{index + 1}.</span>
-                    {meta.label}
+                    <span className="me-2 text-muted-foreground tabular-nums">{index + 1}.</span>
+                    {t(`status.${status}`)}
                   </p>
-                  <p className="text-xs text-muted-foreground">{meta.publicMessage}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t(`status.${status}_MESSAGE`)}
+                  </p>
                 </div>
               </li>
             );

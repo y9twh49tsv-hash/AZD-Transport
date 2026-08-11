@@ -2,7 +2,12 @@ import { Lock, MapPin, Package, ShieldCheck, Weight } from 'lucide-react';
 import { StatusBadge } from '@/components/ui/badge';
 import { Alert } from '@/components/ui/alert';
 import { cityName, countryFlags } from '@/config/regions';
-import { statusMeta, statusProgress, HAPPY_PATH } from '@/lib/shipment-status';
+import {
+  isDefaultPublicMessage,
+  statusMeta,
+  statusProgress,
+  HAPPY_PATH,
+} from '@/lib/shipment-status';
 import { formatDateTime, formatRelative } from '@/lib/utils';
 import { formatWeight } from '@/lib/pricing';
 import { cn } from '@/lib/utils';
@@ -31,17 +36,21 @@ export async function TrackingResult({ data }: { data: PublicTracking }) {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Sendungsnummer
+                {t('tracking.number')}
               </p>
               <p className="mt-1 font-mono text-2xl font-bold tracking-tight sm:text-3xl">
                 {data.trackingNumber}
               </p>
             </div>
-            <StatusBadge status={data.status} className="px-3 py-1.5 text-sm" />
+            <StatusBadge
+              status={data.status}
+              label={t(`status.${data.status}`)}
+              className="px-3 py-1.5 text-sm"
+            />
           </div>
 
           <p className="mt-4 text-base leading-relaxed text-foreground">
-            {statusMeta[data.status].publicMessage}
+            {t(`status.${data.status}_MESSAGE`)}
           </p>
 
           {!isCancelled && (
@@ -57,7 +66,7 @@ export async function TrackingResult({ data }: { data: PublicTracking }) {
                   aria-valuenow={progress}
                   aria-valuemin={0}
                   aria-valuemax={100}
-                  aria-label="Fortschritt der Sendung"
+                  aria-label={t('tracking.progressLabel')}
                 />
               </div>
               <div className="mt-2 flex justify-between text-xs font-medium text-muted-foreground">
@@ -74,15 +83,15 @@ export async function TrackingResult({ data }: { data: PublicTracking }) {
 
         {/* Facts */}
         <dl className="grid grid-cols-2 divide-x divide-y divide-border sm:grid-cols-4 sm:divide-y-0">
-          <Fact icon={MapPin} label="Route">
+          <Fact icon={MapPin} label={t('common.route')}>
             {cityName(data.originCity)}
             <span className="mx-1 text-muted-foreground">→</span>
             {cityName(data.destinationCity)}
           </Fact>
-          <Fact icon={Package} label="Gepäckstücke">
+          <Fact icon={Package} label={t('tracking.factPieces')}>
             {data.pieceCount}
           </Fact>
-          <Fact icon={Weight} label="Gesamtgewicht">
+          <Fact icon={Weight} label={t('tracking.factWeight')}>
             {formatWeight(data.weightKg)}
           </Fact>
           <Fact icon={Lock} label={t('tracking.lastUpdate')}>
@@ -93,13 +102,11 @@ export async function TrackingResult({ data }: { data: PublicTracking }) {
 
       {/* Security seal */}
       {data.sealNumber && (
-        <Alert tone="success" title="Versiegelte Sendung" icon={false}>
+        <Alert tone="success" title={t('tracking.sealedTitle')} icon={false}>
           <span className="flex items-start gap-2.5">
             <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
             <span>
-              {t('tracking.sealed', { seal: data.sealNumber })}. Prüfe bei der Übergabe, dass die
-              Nummer auf dem Sicherheitsbeutel mit dieser Nummer übereinstimmt und der Verschluss
-              unbeschädigt ist.
+              {t('tracking.sealed', { seal: data.sealNumber })}. {t('tracking.sealedCheck')}
             </span>
           </span>
         </Alert>
@@ -110,15 +117,17 @@ export async function TrackingResult({ data }: { data: PublicTracking }) {
         <h2 className="text-lg font-semibold tracking-tight">{t('tracking.history')}</h2>
 
         {data.events.length === 0 ? (
-          <p className="mt-4 text-sm text-muted-foreground">
-            Für diese Sendung liegen noch keine Statusmeldungen vor.
-          </p>
+          <p className="mt-4 text-sm text-muted-foreground">{t('tracking.noEvents')}</p>
         ) : (
           <ol className="mt-6 space-y-0">
             {data.events.map((event, index) => {
-              const meta = statusMeta[event.status];
-              const Icon = meta.icon;
+              const Icon = statusMeta[event.status].icon;
               const isLatest = index === 0;
+              // Standardsätze werden übersetzt, ein handgeschriebener Hinweis
+              // bleibt so stehen, wie ihn jemand vom Team formuliert hat.
+              const message = isDefaultPublicMessage(event.status, event.message)
+                ? t(`status.${event.status}_MESSAGE`)
+                : event.message;
 
               return (
                 <li key={`${event.status}-${event.occurredAt}`} className="relative flex gap-4 pb-6 last:pb-0">
@@ -140,11 +149,11 @@ export async function TrackingResult({ data }: { data: PublicTracking }) {
                   </span>
                   <div className="min-w-0 flex-1 pt-1">
                     <p className={cn('text-sm font-semibold', isLatest && 'text-primary')}>
-                      {meta.label}
+                      {t(`status.${event.status}`)}
                     </p>
-                    {event.message && (
+                    {message && (
                       <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
-                        {event.message}
+                        {message}
                       </p>
                     )}
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -160,9 +169,9 @@ export async function TrackingResult({ data }: { data: PublicTracking }) {
 
         {currentIndex >= 0 && currentIndex < HAPPY_PATH.length - 1 && (
           <p className="mt-6 border-t border-border pt-4 text-sm text-muted-foreground">
-            Nächster Schritt:{' '}
+            {t('tracking.nextStep')}{' '}
             <span className="font-medium text-foreground">
-              {statusMeta[HAPPY_PATH[currentIndex + 1]].label}
+              {t(`status.${HAPPY_PATH[currentIndex + 1]}`)}
             </span>
           </p>
         )}

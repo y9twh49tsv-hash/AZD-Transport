@@ -26,7 +26,7 @@ export function TrackingSearch({
     const normalised = normaliseTrackingNumber(value);
 
     if (!/^[A-Z]{2,5}-\d{6}-\d{4,}$/.test(normalised)) {
-      setError(`Bitte gib eine gültige Sendungsnummer ein, z. B. ${exampleTrackingNumber}.`);
+      setError(t('tracking.searchInvalid', { example: exampleTrackingNumber }));
       return;
     }
 
@@ -38,7 +38,7 @@ export function TrackingSearch({
     <form onSubmit={submit} className="w-full" noValidate>
       <div className="flex flex-col gap-2.5 sm:flex-row">
         <label htmlFor="tracking-number" className="sr-only">
-          Sendungsnummer
+          {t('tracking.number')}
         </label>
         <Input
           id="tracking-number"

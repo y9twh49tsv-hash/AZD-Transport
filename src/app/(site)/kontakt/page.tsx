@@ -4,26 +4,38 @@ import { Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { brand } from '@/config/brand';
 import { whatsappLink } from '@/lib/notifications/whatsapp';
+import { getT } from '@/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'Kontakt',
-  description: `So erreichst du ${brand.name} — telefonisch, per WhatsApp oder E-Mail.`,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: t('contact.metaTitle'),
+    description: t('contact.metaDescription', { brand: brand.name }),
+  };
+}
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const t = await getT();
+
+  // In der Funktion: auf Modulebene stünden die Fragen für immer in der
+  // Sprache, die beim Laden des Moduls galt.
+  const faq = [1, 2, 3, 4].map((n) => ({
+    q: t(`contact.faq${n}Q`),
+    a: t(`contact.faq${n}A`),
+  }));
+
   return (
     <div className="container max-w-3xl py-10 sm:py-16">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Kontakt</h1>
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t('contact.title')}</h1>
         <p className="mt-3 max-w-xl text-base leading-relaxed text-muted-foreground">
-          Fragen zu einer Sendung, zu einem Preis oder zu einer Stadt, die noch nicht in der Liste
-          steht? Melde dich einfach — am schnellsten per WhatsApp oder Telefon.
+          {t('contact.intro')}
         </p>
       </header>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         <a
-          href={whatsappLink(brand.whatsapp, `Hallo ${brand.name}, ich habe eine Frage zu `)}
+          href={whatsappLink(brand.whatsapp, t('contact.whatsappGreeting', { brand: brand.name }))}
           target="_blank"
           rel="noopener noreferrer"
           className="surface flex items-start gap-4 p-5 transition-shadow hover:shadow-lift"
@@ -34,7 +46,7 @@ export default function ContactPage() {
           <span className="min-w-0">
             <span className="block font-semibold">WhatsApp</span>
             <span className="block text-sm text-muted-foreground">
-              Schnellste Antwort — meist innerhalb weniger Stunden.
+              {t('contact.whatsappHint')}
             </span>
           </span>
         </a>
@@ -47,7 +59,7 @@ export default function ContactPage() {
             <Phone className="size-5" aria-hidden />
           </span>
           <span className="min-w-0">
-            <span className="block font-semibold">Telefon</span>
+            <span className="block font-semibold">{t('contact.phone')}</span>
             <span className="block text-sm text-muted-foreground">{brand.phone}</span>
           </span>
         </a>
@@ -60,7 +72,7 @@ export default function ContactPage() {
             <Mail className="size-5" aria-hidden />
           </span>
           <span className="min-w-0">
-            <span className="block font-semibold">E-Mail</span>
+            <span className="block font-semibold">{t('fields.email')}</span>
             <span className="block break-all text-sm text-muted-foreground">{brand.email}</span>
           </span>
         </a>
@@ -70,7 +82,7 @@ export default function ContactPage() {
             <MapPin className="size-5" aria-hidden />
           </span>
           <span className="min-w-0">
-            <span className="block font-semibold">Annahmestelle</span>
+            <span className="block font-semibold">{t('contact.dropOffPoint')}</span>
             <span className="block text-sm text-muted-foreground">
               {brand.address.street}
               <br />
@@ -81,26 +93,9 @@ export default function ContactPage() {
       </div>
 
       <section className="surface mt-8 p-6">
-        <h2 className="text-lg font-semibold tracking-tight">Häufige Fragen</h2>
+        <h2 className="text-lg font-semibold tracking-tight">{t('contact.faqTitle')}</h2>
         <dl className="mt-5 space-y-5 text-sm">
-          {[
-            {
-              q: 'Wie lange dauert der Transport?',
-              a: 'Die Laufzeit hängt von der jeweiligen Tour und vom Zoll ab. Den genauen Stand siehst du jederzeit in der Sendungsverfolgung.',
-            },
-            {
-              q: 'Meine Stadt steht nicht in der Liste — geht es trotzdem?',
-              a: 'Oft ja. Schreib uns kurz, wir prüfen, ob wir sie auf einer der nächsten Touren mitnehmen können.',
-            },
-            {
-              q: 'Wie bezahle ich?',
-              a: 'Aktuell bar bei Abgabe oder Abholung, per Überweisung oder nach Absprache auf Rechnung. Online-Zahlung ist in Vorbereitung.',
-            },
-            {
-              q: 'Was kostet Sperrgut?',
-              a: 'Das hängt von Größe, Gewicht und Aufwand ab. Lade Fotos und Maße hoch, dann bekommst du einen Festpreis.',
-            },
-          ].map((item) => (
+          {faq.map((item) => (
             <div key={item.q}>
               <dt className="font-semibold text-foreground">{item.q}</dt>
               <dd className="mt-1 leading-relaxed text-muted-foreground">{item.a}</dd>
@@ -111,12 +106,12 @@ export default function ContactPage() {
         <div className="mt-6 flex flex-col gap-3 border-t border-border pt-6 sm:flex-row">
           <Link href="/preisrechner">
             <Button block className="sm:w-auto">
-              Preis berechnen
+              {t('common.calculatePrice')}
             </Button>
           </Link>
           <Link href="/sperrgut">
             <Button variant="outline" block className="sm:w-auto">
-              Sperrgut anfragen
+              {t('bulky.title')}
             </Button>
           </Link>
         </div>
