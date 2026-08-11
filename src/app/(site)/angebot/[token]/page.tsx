@@ -10,11 +10,15 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { formatCents } from '@/lib/pricing';
 import { cityName, countryFlags } from '@/config/regions';
 import { formatDate } from '@/lib/utils';
+import { getT } from '@/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'Dein Angebot',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: t('offer.metaTitle'),
+    robots: { index: false, follow: false },
+  };
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +32,7 @@ type Props = { params: Promise<{ token: string }> };
  * price) are rendered — no internal notes, no other requests.
  */
 export default async function OfferPage({ params }: Props) {
+  const t = await getT();
   const { token } = await params;
 
   if (!/^[a-f0-9]{16,64}$/.test(token) || !isSupabaseConfigured()) {
@@ -69,37 +74,43 @@ export default async function OfferPage({ params }: Props) {
           <FileText className="size-6" aria-hidden />
         </span>
         <p className="mt-5 text-sm font-medium text-muted-foreground">
-          Angebot {request.reference}
+          {t('offer.reference', { reference: request.reference })}
         </p>
         <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">
-          Hallo {request.contact_first_name}, hier ist dein Preis
+          {t('offer.greeting', { name: request.contact_first_name })}
         </h1>
       </header>
 
       <div className="surface mt-8 overflow-hidden">
         <div className="corridor-gradient border-b border-border p-6 text-center">
-          <p className="text-sm font-medium text-muted-foreground">Festpreis für deinen Transport</p>
+          <p className="text-sm font-medium text-muted-foreground">{t('offer.fixedPrice')}</p>
           <p className="mt-2 text-5xl font-bold tracking-tight tabular-nums">
             {request.quoted_price_cents != null ? formatCents(request.quoted_price_cents) : '—'}
           </p>
           {request.quoted_at && (
             <p className="mt-2 text-xs text-muted-foreground">
-              Erstellt am {formatDate(request.quoted_at)}
+              {t('offer.createdOn', { date: formatDate(request.quoted_at) })}
             </p>
           )}
         </div>
 
         <dl className="divide-y divide-border">
-          <Row label="Gegenstand">{request.item_type}</Row>
-          {request.item_description && <Row label="Beschreibung">{request.item_description}</Row>}
-          <Row label="Route">
+          <Row label={t('offer.rowItem')}>{request.item_type}</Row>
+          {request.item_description && (
+            <Row label={t('booking.descriptionLabel')}>{request.item_description}</Row>
+          )}
+          <Row label={t('common.route')}>
             {countryFlags[request.origin_country]} {cityName(request.origin_city)}
             <span className="mx-2 text-muted-foreground">→</span>
             {cityName(request.destination_city)} {countryFlags[request.destination_country]}
           </Row>
-          {request.approx_weight_kg && <Row label="Gewicht (ca.)">{request.approx_weight_kg} kg</Row>}
-          {dimensions && <Row label="Maße">{dimensions}</Row>}
-          <Row label="Abholung">{request.pickup_requested ? 'Ja, im Preis enthalten' : 'Nein'}</Row>
+          {request.approx_weight_kg && (
+            <Row label={t('offer.rowWeightApprox')}>{request.approx_weight_kg} kg</Row>
+          )}
+          {dimensions && <Row label={t('offer.rowDimensions')}>{dimensions}</Row>}
+          <Row label={t('common.pickup')}>
+            {request.pickup_requested ? t('offer.pickupIncluded') : t('common.nope')}
+          </Row>
         </dl>
 
         {request.quote_note && (
@@ -113,37 +124,36 @@ export default async function OfferPage({ params }: Props) {
         {request.status === 'QUOTED' && <OfferActions token={token} />}
 
         {request.status === 'ACCEPTED' && (
-          <Alert tone="success" title="Du hast dieses Angebot angenommen." icon={false}>
+          <Alert tone="success" title={t('offer.acceptedTitle')} icon={false}>
             <span className="flex items-start gap-2.5">
               <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
               <span>
-                Wir haben deine Sendung angelegt
+                {t('offer.acceptedText')}
                 {trackingNumber && (
                   <>
                     {' '}
-                    — Sendungsnummer{' '}
+                    {t('offer.acceptedNumber')}{' '}
                     <span className="font-mono font-semibold text-foreground">{trackingNumber}</span>
                   </>
                 )}
-                . Wir melden uns zur Terminabstimmung bei dir.
+                {t('offer.acceptedFollowUp')}
               </span>
             </span>
           </Alert>
         )}
 
         {request.status === 'REJECTED' && (
-          <Alert tone="warning" title="Du hast dieses Angebot abgelehnt." icon={false}>
+          <Alert tone="warning" title={t('offer.rejectedTitle')} icon={false}>
             <span className="flex items-start gap-2.5">
               <XCircle className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
-              <span>Schade! Du kannst uns jederzeit eine neue Anfrage schicken.</span>
+              <span>{t('offer.rejectedText')}</span>
             </span>
           </Alert>
         )}
 
         {(request.status === 'NEW' || request.status === 'IN_REVIEW') && (
-          <Alert tone="info" title="Wir prüfen deine Anfrage noch">
-            Sobald dein Festpreis feststeht, findest du ihn genau hier. Du bekommst zusätzlich eine
-            E-Mail von uns.
+          <Alert tone="info" title={t('offer.pendingTitle')}>
+            {t('offer.pendingText')}
           </Alert>
         )}
       </div>
@@ -152,7 +162,7 @@ export default async function OfferPage({ params }: Props) {
         <Link href={`/tracking/${trackingNumber}`} className="mt-6 inline-block">
           <Button variant="outline">
             <Package aria-hidden />
-            Sendung verfolgen
+            {t('common.trackShipment')}
           </Button>
         </Link>
       )}

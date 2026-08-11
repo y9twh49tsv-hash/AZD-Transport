@@ -9,17 +9,21 @@ import { createServerSupabase } from '@/lib/supabase/server';
 import { cityName } from '@/config/regions';
 import { formatCents, formatWeight } from '@/lib/pricing';
 import { formatDate, formatRelative } from '@/lib/utils';
-import { roleLabels } from '@/lib/shipment-status';
 import { SignOutButton } from '@/components/layout/sign-out-button';
+import { getT } from '@/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'Mein Konto',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: t('account.metaTitle'),
+    robots: { index: false, follow: false },
+  };
+}
 
 export const dynamic = 'force-dynamic';
 
 export default async function AccountPage() {
+  const t = await getT();
   const user = await requireUser();
 
   // Deliberately the *user-scoped* client: row level security decides what is
@@ -39,28 +43,31 @@ export default async function AccountPage() {
     <div className="container max-w-4xl py-10 sm:py-14">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Mein Konto</h1>
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t('account.title')}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Angemeldet als {user.fullName || user.email} · {roleLabels[user.role]}
+            {t('account.signedInAs', {
+              name: user.fullName || user.email || '',
+              role: t(`roles.${user.role}`),
+            })}
           </p>
         </div>
         <SignOutButton />
       </header>
 
       {(user.role === 'admin' || user.role === 'staff' || user.role === 'driver') && (
-        <Alert tone="info" title="Du hast erweiterte Rechte" className="mt-6">
+        <Alert tone="info" title={t('account.elevatedTitle')} className="mt-6">
           <div className="mt-2 flex flex-wrap gap-2">
             {(user.role === 'admin' || user.role === 'staff') && (
               <Link href="/admin">
                 <Button size="sm" variant="outline">
-                  Zum Dashboard
+                  {t('account.toDashboard')}
                   <ArrowRight aria-hidden />
                 </Button>
               </Link>
             )}
             <Link href="/driver">
               <Button size="sm" variant="outline">
-                Zur Fahreransicht
+                {t('account.toDriver')}
                 <ArrowRight aria-hidden />
               </Button>
             </Link>
@@ -70,11 +77,11 @@ export default async function AccountPage() {
 
       <section className="mt-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-xl font-semibold tracking-tight">Meine Sendungen</h2>
+          <h2 className="text-xl font-semibold tracking-tight">{t('account.myShipments')}</h2>
           <Link href="/buchen">
             <Button size="sm">
               <Plus aria-hidden />
-              Neue Sendung
+              {t('account.newShipment')}
             </Button>
           </Link>
         </div>
@@ -84,21 +91,20 @@ export default async function AccountPage() {
             <span className="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
               <Package className="size-6" aria-hidden />
             </span>
-            <h3 className="mt-5 text-lg font-semibold">Noch keine Sendungen</h3>
+            <h3 className="mt-5 text-lg font-semibold">{t('account.emptyTitle')}</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
-              Sendungen, die du mit dieser E-Mail-Adresse buchst, erscheinen hier automatisch. Ältere
-              Buchungen ohne Konto findest du über die Sendungsverfolgung.
+              {t('account.emptyText')}
             </p>
             <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
               <Link href="/buchen">
                 <Button block className="sm:w-auto">
-                  Sendung buchen
+                  {t('common.bookShipment')}
                 </Button>
               </Link>
               <Link href="/tracking">
                 <Button variant="outline" block className="sm:w-auto">
                   <PackageSearch aria-hidden />
-                  Sendung suchen
+                  {t('account.findShipment')}
                 </Button>
               </Link>
             </div>
@@ -116,23 +122,29 @@ export default async function AccountPage() {
                       <span className="font-mono text-sm font-semibold">
                         {shipment.tracking_number}
                       </span>
-                      <StatusBadge status={shipment.status} />
+                      <StatusBadge
+                        status={shipment.status}
+                        label={t(`status.${shipment.status}`)}
+                      />
                     </div>
                     <p className="mt-1.5 text-sm text-muted-foreground">
                       {cityName(shipment.origin_city)} → {cityName(shipment.destination_city)} ·{' '}
-                      {formatWeight(shipment.weight_kg)} · {shipment.piece_count} Stück
+                      {formatWeight(shipment.weight_kg)} ·{' '}
+                      {t('account.pieces', { count: shipment.piece_count })}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      Gebucht am {formatDate(shipment.created_at)} · zuletzt aktualisiert{' '}
-                      {formatRelative(shipment.updated_at)}
+                      {t('account.bookedOn', { date: formatDate(shipment.created_at) })} ·{' '}
+                      {t('account.lastUpdated', { when: formatRelative(shipment.updated_at) })}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <p className="font-semibold tabular-nums">
                       {formatCents(shipment.price_total_cents)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {shipment.payment_status === 'unpaid' ? 'offen' : 'bezahlt'}
+                      {shipment.payment_status === 'unpaid'
+                        ? t('account.unpaid')
+                        : t('account.paid')}
                     </p>
                   </div>
                 </Link>

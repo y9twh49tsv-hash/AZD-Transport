@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 import { Field, Input } from '@/components/ui/input';
 import { signUp } from '@/app/(auth)/login/actions';
+import { useT } from '@/lib/i18n/client';
 
 export function RegisterForm() {
+  const t = useT();
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -18,7 +20,7 @@ export function RegisterForm() {
     startTransition(async () => {
       const result = await signUp(formData);
       if (result.ok) {
-        setDone(result.message ?? 'Registrierung erfolgreich.');
+        setDone(result.message ?? t('auth.createdFallback'));
       } else {
         setError(result.error);
       }
@@ -28,12 +30,12 @@ export function RegisterForm() {
   if (done) {
     return (
       <div className="surface p-6 sm:p-8">
-        <Alert tone="success" title="Konto angelegt">
+        <Alert tone="success" title={t('auth.createdTitle')}>
           {done}
         </Alert>
         <Link href="/login" className="mt-6 block">
           <Button block size="lg">
-            Zur Anmeldung
+            {t('auth.toLogin')}
           </Button>
         </Link>
       </div>
@@ -42,10 +44,8 @@ export function RegisterForm() {
 
   return (
     <form action={handleSubmit} className="surface p-6 sm:p-8">
-      <h1 className="text-2xl font-bold tracking-tight">Konto erstellen</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Mit einem Konto siehst du alle deine Sendungen auf einen Blick.
-      </p>
+      <h1 className="text-2xl font-bold tracking-tight">{t('auth.registerTitle')}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">{t('auth.registerSubtitle')}</p>
 
       {error && (
         <Alert tone="error" className="mt-5">
@@ -54,11 +54,11 @@ export function RegisterForm() {
       )}
 
       <div className="mt-6 space-y-4">
-        <Field label="Vor- und Nachname" htmlFor="fullName" required>
+        <Field label={t('auth.fullName')} htmlFor="fullName" required>
           <Input id="fullName" name="fullName" autoComplete="name" required minLength={2} />
         </Field>
 
-        <Field label="E-Mail" htmlFor="email" required>
+        <Field label={t('fields.email')} htmlFor="email" required>
           <Input
             id="email"
             name="email"
@@ -70,11 +70,11 @@ export function RegisterForm() {
           />
         </Field>
 
-        <Field label="Telefonnummer" htmlFor="phone" hint="Optional, hilft uns bei Rückfragen.">
+        <Field label={t('fields.phone')} htmlFor="phone" hint={t('auth.phoneHint')}>
           <Input id="phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" />
         </Field>
 
-        <Field label="Passwort" htmlFor="password" hint="Mindestens 8 Zeichen." required>
+        <Field label={t('auth.password')} htmlFor="password" hint={t('auth.passwordHint')} required>
           <Input
             id="password"
             name="password"
@@ -87,26 +87,26 @@ export function RegisterForm() {
 
         <Button type="submit" block size="lg" disabled={pending}>
           <UserPlus aria-hidden />
-          {pending ? 'Wird erstellt …' : 'Konto erstellen'}
+          {pending ? t('auth.creating') : t('auth.createAccount')}
         </Button>
 
         <p className="text-xs leading-relaxed text-muted-foreground">
-          Mit der Registrierung akzeptierst du unsere{' '}
+          {t('auth.acceptPrefix')}{' '}
           <Link href="/agb" className="underline">
-            AGB
+            {t('footer.terms')}
           </Link>{' '}
-          und die{' '}
+          {t('auth.acceptAnd')}{' '}
           <Link href="/datenschutz" className="underline">
-            Datenschutzhinweise
+            {t('booking.termsPrivacy')}
           </Link>
           .
         </p>
       </div>
 
       <p className="mt-6 border-t border-border pt-6 text-center text-sm text-muted-foreground">
-        Schon ein Konto?{' '}
+        {t('auth.haveAccount')}{' '}
         <Link href="/login" className="font-medium text-primary underline-offset-4 hover:underline">
-          Anmelden
+          {t('auth.loginTitle')}
         </Link>
       </p>
     </form>

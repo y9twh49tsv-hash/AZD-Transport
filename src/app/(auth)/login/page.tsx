@@ -3,11 +3,15 @@ import { redirect } from 'next/navigation';
 import { LoginForm } from './login-form';
 import { SetupNotice } from '@/components/layout/setup-notice';
 import { getSessionUser, homeRouteFor } from '@/lib/auth';
+import { getT } from '@/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'Anmelden',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: t('auth.loginMetaTitle'),
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function LoginPage({
   searchParams,
