@@ -10,20 +10,24 @@ import { Alert } from '@/components/ui/alert';
 import { Checkbox, Field, Input, Select, Textarea } from '@/components/ui/input';
 import { PhotoUpload, type UploadedPhoto } from '@/components/booking/photo-upload';
 import { bulkyRequestSchema, type BulkyRequestInput } from '@/lib/validation';
-import { citiesByCountry, countryFlags, countryLabels, type CountryCode } from '@/config/regions';
+import { citiesByCountry, countryFlags, type CountryCode } from '@/config/regions';
 import { createBulkyRequest } from '@/app/(site)/sperrgut/actions';
 import { useT } from '@/lib/i18n/client';
 
-const COMMON_ITEMS = [
-  'Waschmaschine',
-  'Kühlschrank',
-  'Fahrrad',
-  'Möbel',
-  'Autoteile',
-  'Fernseher',
-  'Kinderwagen',
-  'Sonstiges',
-];
+/**
+ * Suggestions for the item field. Keys only — the words are looked up in the
+ * request locale, so the datalist a French visitor sees is French.
+ */
+const COMMON_ITEM_KEYS = [
+  'itemWashingMachine',
+  'itemFridge',
+  'itemBicycle',
+  'itemFurniture',
+  'itemCarParts',
+  'itemTv',
+  'itemPram',
+  'itemOther',
+] as const;
 
 export type BulkyDefaults = {
   originCountry?: CountryCode;
@@ -65,6 +69,7 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
     } as never,
   });
 
+  const commonItems = COMMON_ITEM_KEYS.map((key) => t(`bulky.${key}`));
   const { register, watch, setValue, formState } = form;
   const errors = formState.errors;
   const originCountry = watch('originCountry');
@@ -113,17 +118,16 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
 
         <div className="surface mt-8 p-6">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Deine Referenz
+            {t('bulky.reference')}
           </p>
           <p className="mt-2 font-mono text-2xl font-bold text-primary">{reference}</p>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-            Sobald wir deine Fotos geprüft haben, bekommst du von uns einen Festpreis — per E-Mail
-            und auf Wunsch telefonisch. Erst wenn du zusagst, entsteht eine Sendung.
+            {t('bulky.referenceNote')}
           </p>
         </div>
 
         <Link href="/" className="mt-6 inline-block">
-          <Button variant="outline">Zur Startseite</Button>
+          <Button variant="outline">{t('bulky.toHome')}</Button>
         </Link>
       </div>
     );
@@ -133,10 +137,9 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8" noValidate>
       {/* Photos first — that is what actually determines the price */}
       <section className="surface p-5 sm:p-7">
-        <h2 className="text-xl font-semibold tracking-tight">Fotos deines Gegenstands</h2>
+        <h2 className="text-xl font-semibold tracking-tight">{t('bulky.photosTitle')}</h2>
         <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-          Am besten von vorne und von der Seite, mit etwas Abstand. Je klarer die Fotos, desto
-          genauer unser Preis.
+          {t('bulky.photosHint')}
         </p>
         <div className="mt-5">
           <PhotoUpload photos={photos} onChange={setPhotos} disabled={pending} />
@@ -145,64 +148,69 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
 
       {/* Item */}
       <section className="surface space-y-5 p-5 sm:p-7">
-        <h2 className="text-xl font-semibold tracking-tight">Was soll transportiert werden?</h2>
+        <h2 className="text-xl font-semibold tracking-tight">{t('bulky.itemTitle')}</h2>
 
-        <Field label="Gegenstand" htmlFor="item-type" error={errors.itemType?.message} required>
+        <Field
+          label={t('bulky.itemLabel')}
+          htmlFor="item-type"
+          error={errors.itemType?.message}
+          required
+        >
           <Input
             id="item-type"
             list="common-items"
-            placeholder="z. B. Waschmaschine"
+            placeholder={t('bulky.itemPlaceholder')}
             aria-invalid={!!errors.itemType}
             {...register('itemType')}
           />
           <datalist id="common-items">
-            {COMMON_ITEMS.map((item) => (
+            {commonItems.map((item) => (
               <option key={item} value={item} />
             ))}
           </datalist>
         </Field>
 
         <Field
-          label="Beschreibung"
+          label={t('booking.descriptionLabel')}
           htmlFor="item-description"
           error={errors.itemDescription?.message}
-          hint="Marke, Zustand, Verpackung — alles, was uns hilft."
+          hint={t('bulky.itemDescriptionHint')}
         >
           <Textarea
             id="item-description"
             rows={3}
-            placeholder="Bosch Serie 6, in Originalverpackung"
+            placeholder={t('bulky.itemDescriptionPlaceholder')}
             {...register('itemDescription')}
           />
         </Field>
 
         <Field
-          label="Ungefähres Gewicht in kg"
+          label={t('bulky.approxWeightLabel')}
           htmlFor="approx-weight"
           error={errors.approxWeightKg?.message}
-          hint="Eine Schätzung reicht — wir wiegen bei der Abholung nach."
+          hint={t('bulky.approxWeightHint')}
           required
         >
           <Input
             id="approx-weight"
             type="text"
             inputMode="decimal"
-            placeholder="z. B. 75"
+            placeholder={t('bulky.approxWeightPlaceholder')}
             aria-invalid={!!errors.approxWeightKg}
             {...register('approxWeightKg')}
           />
         </Field>
 
         <fieldset>
-          <legend className="field-label">Maße in cm</legend>
+          <legend className="field-label">{t('bulky.dimensionsLabel')}</legend>
           <div className="grid grid-cols-3 gap-3">
-            <Field label="Länge" htmlFor="length" error={errors.lengthCm?.message}>
+            <Field label={t('bulky.length')} htmlFor="length" error={errors.lengthCm?.message}>
               <Input id="length" type="number" inputMode="numeric" min={1} placeholder="60" {...register('lengthCm')} />
             </Field>
-            <Field label="Breite" htmlFor="width" error={errors.widthCm?.message}>
+            <Field label={t('bulky.width')} htmlFor="width" error={errors.widthCm?.message}>
               <Input id="width" type="number" inputMode="numeric" min={1} placeholder="60" {...register('widthCm')} />
             </Field>
-            <Field label="Höhe" htmlFor="height" error={errors.heightCm?.message}>
+            <Field label={t('bulky.height')} htmlFor="height" error={errors.heightCm?.message}>
               <Input id="height" type="number" inputMode="numeric" min={1} placeholder="85" {...register('heightCm')} />
             </Field>
           </div>
@@ -211,7 +219,7 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
 
       {/* Route */}
       <section className="surface space-y-5 p-5 sm:p-7">
-        <h2 className="text-xl font-semibold tracking-tight">Von wo nach wo?</h2>
+        <h2 className="text-xl font-semibold tracking-tight">{t('bulky.routeTitle')}</h2>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t('common.from')} htmlFor="b-origin-country" required>
@@ -222,7 +230,7 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
             >
               {(['DE', 'MA'] as CountryCode[]).map((c) => (
                 <option key={c} value={c}>
-                  {countryFlags[c]} {countryLabels[c]}
+                  {countryFlags[c]} {t(`countries.${c}`)}
                 </option>
               ))}
             </Select>
@@ -235,12 +243,12 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
             >
               {(['DE', 'MA'] as CountryCode[]).map((c) => (
                 <option key={c} value={c}>
-                  {countryFlags[c]} {countryLabels[c]}
+                  {countryFlags[c]} {t(`countries.${c}`)}
                 </option>
               ))}
             </Select>
           </Field>
-          <Field label="Abholort" htmlFor="b-origin-city" error={errors.originCity?.message} required>
+          <Field label={t('bulky.originLabel')} htmlFor="b-origin-city" error={errors.originCity?.message} required>
             <Select id="b-origin-city" {...register('originCity')}>
               {citiesByCountry(originCountry).map((city) => (
                 <option key={city.slug} value={city.slug}>
@@ -249,7 +257,7 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
               ))}
             </Select>
           </Field>
-          <Field label="Zielort" htmlFor="b-destination-city" error={errors.destinationCity?.message} required>
+          <Field label={t('bulky.destinationLabel')} htmlFor="b-destination-city" error={errors.destinationCity?.message} required>
             <Select id="b-destination-city" {...register('destinationCity')}>
               {citiesByCountry(destinationCountry).map((city) => (
                 <option key={city.slug} value={city.slug}>
@@ -263,10 +271,8 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
         <Checkbox
           label={
             <>
-              <span className="font-medium">Abholung gewünscht</span>
-              <span className="block text-muted-foreground">
-                Bei Sperrgut kalkulieren wir die Abholung individuell in den Festpreis ein.
-              </span>
+              <span className="font-medium">{t('bulky.pickupTitle')}</span>
+              <span className="block text-muted-foreground">{t('bulky.pickupText')}</span>
             </>
           }
           {...register('pickupRequested')}
@@ -275,16 +281,16 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
 
       {/* Contact */}
       <section className="surface space-y-5 p-5 sm:p-7">
-        <h2 className="text-xl font-semibold tracking-tight">Wie erreichen wir dich?</h2>
+        <h2 className="text-xl font-semibold tracking-tight">{t('bulky.contactTitle')}</h2>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Vorname" htmlFor="b-first" error={errors.contactFirstName?.message} required>
+          <Field label={t('fields.firstName')} htmlFor="b-first" error={errors.contactFirstName?.message} required>
             <Input id="b-first" autoComplete="given-name" aria-invalid={!!errors.contactFirstName} {...register('contactFirstName')} />
           </Field>
-          <Field label="Nachname" htmlFor="b-last" error={errors.contactLastName?.message} required>
+          <Field label={t('fields.lastName')} htmlFor="b-last" error={errors.contactLastName?.message} required>
             <Input id="b-last" autoComplete="family-name" aria-invalid={!!errors.contactLastName} {...register('contactLastName')} />
           </Field>
-          <Field label="Telefonnummer" htmlFor="b-phone" error={errors.phone?.message} required>
+          <Field label={t('fields.phone')} htmlFor="b-phone" error={errors.phone?.message} required>
             <Input
               id="b-phone"
               type="tel"
@@ -296,26 +302,30 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
             />
           </Field>
           <Field
-            label="E-Mail"
+            label={t('fields.email')}
             htmlFor="b-email"
             error={errors.email?.message}
-            hint="Für dein Angebot — empfohlen."
+            hint={t('bulky.emailHint')}
           >
             <Input id="b-email" type="email" inputMode="email" autoComplete="email" {...register('email')} />
           </Field>
         </div>
 
-        <Field label="Anmerkungen" htmlFor="b-notes" error={errors.notes?.message}>
-          <Textarea id="b-notes" rows={3} placeholder="Bitte im Erdgeschoss abholen" {...register('notes')} />
+        <Field label={t('bulky.notesLabel')} htmlFor="b-notes" error={errors.notes?.message}>
+          <Textarea
+            id="b-notes"
+            rows={3}
+            placeholder={t('bulky.notesPlaceholder')}
+            {...register('notes')}
+          />
         </Field>
 
         <Checkbox
           label={
             <>
-              Ich bestätige, dass die Sendung keine verbotenen oder nicht deklarierten Waren
-              enthält.{' '}
+              {t('bulky.prohibitedConfirm')}{' '}
               <Link href="/verbotene-waren" target="_blank" className="font-medium text-primary underline">
-                Liste ansehen
+                {t('booking.prohibitedLink')}
               </Link>
             </>
           }
@@ -325,13 +335,13 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
       </section>
 
       {serverError && (
-        <Alert tone="error" title="Anfrage nicht möglich">
+        <Alert tone="error" title={t('bulky.errorTitle')}>
           {serverError}
         </Alert>
       )}
 
       <Button type="submit" size="lg" block disabled={pending} className="sm:w-auto">
-        {pending ? 'Wird gesendet …' : 'Anfrage senden'}
+        {pending ? t('bulky.sending') : t('bulky.send')}
         {!pending && <Send aria-hidden />}
       </Button>
     </form>

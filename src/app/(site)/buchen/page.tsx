@@ -4,11 +4,13 @@ import { SetupNotice } from '@/components/layout/setup-notice';
 import { findCity, type CountryCode } from '@/config/regions';
 import { getT } from '@/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'Sendung buchen',
-  description:
-    'Buche deine Sendung von Deutschland nach Marokko in wenigen Minuten — mit sofortiger Sendungsnummer.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: t('booking.metaTitle'),
+    description: t('booking.metaDescription'),
+  };
+}
 
 /**
  * Prefills come from the calculator via query parameters. Everything is
@@ -60,8 +62,7 @@ export default async function BookingPage({
       <header className="mb-8 max-w-2xl">
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t('booking.title')}</h1>
         <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-          Vier kurze Schritte. Du bekommst sofort eine feste Sendungsnummer und eine Bestätigung per
-          E-Mail — ein Konto brauchst du dafür nicht.
+          {t('booking.intro')}
         </p>
       </header>
 

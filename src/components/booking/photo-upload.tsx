@@ -7,6 +7,7 @@ import { createSignedUpload } from '@/app/(site)/sperrgut/actions';
 import { createClient } from '@/lib/supabase/client';
 import { isImageFile, prepareImage } from '@/lib/image';
 import { cn } from '@/lib/utils';
+import { useT } from '@/lib/i18n/client';
 
 export type UploadedPhoto = {
   path: string;
@@ -32,6 +33,7 @@ export function PhotoUpload({
   max?: number;
   disabled?: boolean;
 }) {
+  const t = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +54,7 @@ export function PhotoUpload({
           break;
         }
         if (!isImageFile(file)) {
-          setError('Bitte lade nur Bilddateien hoch.');
+          setError(t('photos.onlyImages'));
           continue;
         }
 
@@ -78,7 +80,7 @@ export function PhotoUpload({
           });
 
         if (uploadError) {
-          setError('Ein Foto konnte nicht hochgeladen werden. Bitte versuche es erneut.');
+          setError(t('photos.uploadFailed'));
           continue;
         }
 
@@ -90,7 +92,7 @@ export function PhotoUpload({
 
       if (accepted.length > 0) onChange([...photos, ...accepted]);
     } catch {
-      setError('Ein Foto konnte nicht verarbeitet werden. Bitte versuche ein anderes Bild.');
+      setError(t('photos.processingFailed'));
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = '';
@@ -127,14 +129,14 @@ export function PhotoUpload({
             {/* eslint-disable-next-line @next/next/no-img-element -- local blob preview, not a remote asset */}
             <img
               src={photo.previewUrl}
-              alt={`Foto ${index + 1}`}
+              alt={t('photos.photoAlt', { n: index + 1 })}
               className="size-full object-cover"
             />
             <button
               type="button"
               onClick={() => remove(index)}
               className="absolute right-1.5 top-1.5 inline-flex size-7 items-center justify-center rounded-full bg-foreground/70 text-background backdrop-blur transition-colors hover:bg-destructive"
-              aria-label={`Foto ${index + 1} entfernen`}
+              aria-label={t('photos.removePhoto', { n: index + 1 })}
             >
               <X className="size-3.5" aria-hidden />
             </button>
@@ -157,7 +159,9 @@ export function PhotoUpload({
             ) : (
               <Camera className="size-6" aria-hidden />
             )}
-            <span className="text-xs font-medium">{busy ? 'Lädt …' : 'Foto'}</span>
+            <span className="text-xs font-medium">
+              {busy ? t('photos.uploading') : t('photos.addPhoto')}
+            </span>
           </button>
         )}
       </div>
@@ -171,10 +175,10 @@ export function PhotoUpload({
           disabled={disabled || busy || full}
         >
           <ImagePlus aria-hidden />
-          Fotos auswählen
+          {t('photos.choosePhotos')}
         </Button>
         <span className="text-xs text-muted-foreground">
-          {photos.length}/{max} · Wir verkleinern die Bilder automatisch.
+          {photos.length}/{max} · {t('photos.resizeNote')}
         </span>
       </div>
 

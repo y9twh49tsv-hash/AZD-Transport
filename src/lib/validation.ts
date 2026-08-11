@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { pricingConfig } from '@/config/pricing';
+import { exampleTrackingNumber } from '@/config/brand';
 import { cities, COUNTRIES } from '@/config/regions';
 import {
   BULKY_STATUSES,
@@ -311,7 +312,12 @@ export const trackingNumberSchema = z
   .string()
   .trim()
   .toUpperCase()
-  .regex(/^[A-Z]{2,5}-\d{6}-\d{4,}$/, 'Bitte gib eine gültige Sendungsnummer ein (z. B. MC-260809-0042).');
+  .regex(
+    /^[A-Z]{2,5}-\d{6}-\d{4,}$/,
+    // Aus dem Präfix der Marke abgeleitet — ein festes Beispiel wäre nach der
+    // Umbenennung stehen geblieben und hätte die falsche Form gezeigt.
+    `Bitte gib eine gültige Sendungsnummer ein (z. B. ${exampleTrackingNumber}).`,
+  );
 
 export const uuidSchema = z.string().uuid('Ungültige ID.');
 

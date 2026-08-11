@@ -21,18 +21,13 @@ import { Checkbox, Field, Input, Select, Textarea } from '@/components/ui/input'
 import { bookingSchema, type BookingInput } from '@/lib/validation';
 import { calculatePrice, formatCents, formatWeight } from '@/lib/pricing';
 import { pricingConfig } from '@/config/pricing';
-import {
-  citiesByCountry,
-  cityName,
-  countryFlags,
-  countryLabels,
-  type CountryCode,
-} from '@/config/regions';
+import { citiesByCountry, cityName, countryFlags, type CountryCode } from '@/config/regions';
 import { prohibitedShortList } from '@/config/prohibited-items';
 import { cn, todayIso } from '@/lib/utils';
 import { whatsappShareLink } from '@/lib/notifications/whatsapp';
 import { createBooking } from '@/app/(site)/buchen/actions';
 import { useT } from '@/lib/i18n/client';
+import type { Translate } from '@/lib/i18n';
 
 
 /** Which fields must be valid before the user may move to the next step. */
@@ -72,43 +67,51 @@ const STEP_FIELDS: Record<number, FieldPath<BookingInput>[]> = {
 };
 
 /**
- * Plain German names for the error summary on the last step.
+ * Readable names for the error summary on the last step.
  *
  * Without them a rejected field shows only its message, and a message can be
  * as unhelpful as "Invalid input" — leaving someone staring at a form where
  * every visible field looks correct, because the offending one lives two steps
  * back and is not on screen.
+ *
+ * Built from the request locale rather than written out per language: the side
+ * ("Absender"/"Empfänger") is already a translated step name, so the 27 labels
+ * come from eleven keys instead of a hundred.
  */
-const FIELD_LABELS: Partial<Record<FieldPath<BookingInput>, string>> = {
-  originCountry: 'Startland',
-  originCity: 'Abholstadt',
-  destinationCountry: 'Zielland',
-  destinationCity: 'Zielstadt',
-  shipmentType: 'Art der Sendung',
-  weightKg: 'Gewicht',
-  pieceCount: 'Gepäckstücke',
-  contentType: 'Art des Inhalts',
-  description: 'Beschreibung',
-  pickupRequested: 'Abholung',
-  pickupDate: 'Abholdatum',
-  senderFirstName: 'Vorname (Absender)',
-  senderLastName: 'Nachname (Absender)',
-  senderPhone: 'Telefon (Absender)',
-  senderEmail: 'E-Mail (Absender)',
-  senderAddress: 'Adresse (Absender)',
-  senderPostalCode: 'PLZ (Absender)',
-  senderCity: 'Stadt (Absender)',
-  senderCountry: 'Land (Absender)',
-  recipientFirstName: 'Vorname (Empfänger)',
-  recipientLastName: 'Nachname (Empfänger)',
-  recipientPhone: 'Telefon (Empfänger)',
-  recipientAddress: 'Adresse (Empfänger)',
-  recipientCity: 'Stadt (Empfänger)',
-  recipientCountry: 'Land (Empfänger)',
-  detailsConfirmed: 'Bestätigung der Angaben',
-  prohibitedConfirmed: 'Bestätigung zu verbotenen Waren',
-  termsAccepted: 'Versandbedingungen',
-};
+function fieldLabels(t: Translate): Partial<Record<FieldPath<BookingInput>, string>> {
+  const sender = t('booking.stepSender');
+  const recipient = t('booking.stepRecipient');
+  return {
+    originCountry: t('booking.fieldOriginCountry'),
+    originCity: t('calculator.originCity'),
+    destinationCountry: t('booking.fieldDestinationCountry'),
+    destinationCity: t('calculator.destinationCity'),
+    shipmentType: t('calculator.typeLabel'),
+    weightKg: t('common.weight'),
+    pieceCount: t('common.pieces'),
+    contentType: t('booking.contentLabel'),
+    description: t('booking.descriptionLabel'),
+    pickupRequested: t('common.pickup'),
+    pickupDate: t('booking.pickupDateLabel'),
+    senderFirstName: `${t('fields.firstName')} (${sender})`,
+    senderLastName: `${t('fields.lastName')} (${sender})`,
+    senderPhone: `${t('fields.phone')} (${sender})`,
+    senderEmail: `${t('fields.email')} (${sender})`,
+    senderAddress: `${t('fields.address')} (${sender})`,
+    senderPostalCode: `${t('fields.postalCode')} (${sender})`,
+    senderCity: `${t('fields.city')} (${sender})`,
+    senderCountry: `${t('fields.country')} (${sender})`,
+    recipientFirstName: `${t('fields.firstName')} (${recipient})`,
+    recipientLastName: `${t('fields.lastName')} (${recipient})`,
+    recipientPhone: `${t('fields.phone')} (${recipient})`,
+    recipientAddress: `${t('fields.address')} (${recipient})`,
+    recipientCity: `${t('fields.city')} (${recipient})`,
+    recipientCountry: `${t('fields.country')} (${recipient})`,
+    detailsConfirmed: t('booking.fieldDetailsConfirmed'),
+    prohibitedConfirmed: t('booking.fieldProhibitedConfirmed'),
+    termsAccepted: t('footer.shippingTerms'),
+  };
+}
 
 /** In welchem Schritt das Feld steht — für den Sprung dorthin. */
 function stepOfField(field: string): number {
@@ -185,6 +188,7 @@ export function BookingForm({ defaults }: { defaults?: BookingDefaults }) {
 
   const values = form.watch();
   const errors = form.formState.errors;
+  const labels = fieldLabels(t);
 
   const price = useMemo(
     () =>
@@ -234,7 +238,7 @@ export function BookingForm({ defaults }: { defaults?: BookingDefaults }) {
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
         {/* Stepper */}
-        <ol className="mb-8 flex items-center gap-1.5" aria-label="Fortschritt">
+        <ol className="mb-8 flex items-center gap-1.5" aria-label={t('booking.progress')}>
           {STEPS.map((s, index) => (
             <li key={s.id} className="flex flex-1 flex-col gap-1.5">
               <span
@@ -262,18 +266,18 @@ export function BookingForm({ defaults }: { defaults?: BookingDefaults }) {
           {step === 3 && <ConfirmStep form={form} price={price} />}
 
           {serverError && (
-            <Alert tone="error" title="Buchung nicht möglich" className="mt-6">
+            <Alert tone="error" title={t('booking.errorTitle')} className="mt-6">
               {serverError}
             </Alert>
           )}
 
           {step === 3 && Object.keys(errors).length > 0 && (
-            <Alert tone="error" title="Bitte prüfe deine Angaben" className="mt-6">
+            <Alert tone="error" title={t('booking.checkTitle')} className="mt-6">
               <ul className="list-disc space-y-1 pl-5">
                 {Object.entries(errors)
                   .slice(0, 6)
                   .map(([field, error]) => {
-                    const label = FIELD_LABELS[field as FieldPath<BookingInput>];
+                    const label = labels[field as FieldPath<BookingInput>];
                     const targetStep = stepOfField(field);
                     return (
                       <li key={field}>
@@ -315,7 +319,7 @@ export function BookingForm({ defaults }: { defaults?: BookingDefaults }) {
               </Button>
             ) : (
               <Button type="submit" size="lg" disabled={pending} className="sm:min-w-56">
-                {pending ? 'Wird gebucht …' : 'Jetzt verbindlich buchen'}
+                {pending ? t('booking.submitting') : t('booking.submitFinal')}
                 {!pending && <Check aria-hidden />}
               </Button>
             )}
@@ -326,27 +330,30 @@ export function BookingForm({ defaults }: { defaults?: BookingDefaults }) {
       {/* Sticky price summary */}
       <aside className="lg:sticky lg:top-24">
         <div className="surface p-5">
-          <h2 className="text-sm font-semibold text-muted-foreground">Zusammenfassung</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground">
+            {t('booking.summaryTitle')}
+          </h2>
           <p className="mt-3 text-3xl font-bold tracking-tight tabular-nums">
             {values.weightKg ? formatCents(price.totalCents) : '—'}
           </p>
 
           <dl className="mt-4 space-y-2 border-t border-border pt-4 text-sm">
-            <Row label="Route">
+            <Row label={t('common.route')}>
               {cityName(values.originCity)} → {cityName(values.destinationCity)}
             </Row>
-            <Row label="Gewicht">{values.weightKg ? formatWeight(Number(values.weightKg)) : '—'}</Row>
-            <Row label="Gepäckstücke">{values.pieceCount || '—'}</Row>
-            <Row label="Abholung">
+            <Row label={t('common.weight')}>
+              {values.weightKg ? formatWeight(Number(values.weightKg)) : '—'}
+            </Row>
+            <Row label={t('common.pieces')}>{values.pieceCount || '—'}</Row>
+            <Row label={t('common.pickup')}>
               {values.pickupRequested
-                ? `Ja (+${formatCents(pricingConfig.pickupFeeCents)})`
-                : 'Nein — Abgabe bei uns'}
+                ? t('booking.pickupYes', { fee: formatCents(pricingConfig.pickupFeeCents) })
+                : t('booking.pickupNo')}
             </Row>
           </dl>
 
           <p className="mt-4 border-t border-border pt-4 text-xs leading-relaxed text-muted-foreground">
-            Der endgültige Preis wird bei der Annahme anhand des tatsächlichen Gewichts geprüft.
-            Abweichungen besprechen wir immer vorher mit dir.
+            {t('booking.priceNote')}
           </p>
         </div>
       </aside>
@@ -397,11 +404,17 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
   return (
     <div className="space-y-5">
       <header>
-        <h2 className="text-xl font-semibold tracking-tight">Was möchtest du versenden?</h2>
+        <h2 className="text-xl font-semibold tracking-tight">{t('booking.shipmentTitle')}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           {shipmentType === 'documents'
-            ? `Dokumente kosten pauschal ${formatCents(pricingConfig.documentsPriceCents)} bis ${pricingConfig.maxDocumentsWeightKg} kg.`
-            : `Der Preis berechnet sich automatisch: ${formatCents(pricingConfig.pricePerKgCents)} pro kg, mindestens ${formatCents(pricingConfig.minimumPriceCents)}.`}
+            ? t('booking.shipmentHintDocuments', {
+                price: formatCents(pricingConfig.documentsPriceCents),
+                max: pricingConfig.maxDocumentsWeightKg,
+              })
+            : t('booking.shipmentHintStandard', {
+                perKg: formatCents(pricingConfig.pricePerKgCents),
+                minimum: formatCents(pricingConfig.minimumPriceCents),
+              })}
         </p>
       </header>
 
@@ -420,7 +433,9 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
                 value: 'documents' as const,
                 icon: FileText,
                 label: t('calculator.typeDocuments'),
-                hint: `${formatCents(pricingConfig.documentsPriceCents)} pauschal`,
+                hint: t('booking.documentsFlat', {
+                  price: formatCents(pricingConfig.documentsPriceCents),
+                }),
               },
             ]
           ).map((option) => {
@@ -461,7 +476,7 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
           >
             {(['DE', 'MA'] as CountryCode[]).map((c) => (
               <option key={c} value={c}>
-                {countryFlags[c]} {countryLabels[c]}
+                {countryFlags[c]} {t(`countries.${c}`)}
               </option>
             ))}
           </Select>
@@ -475,7 +490,7 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
           >
             {(['DE', 'MA'] as CountryCode[]).map((c) => (
               <option key={c} value={c}>
-                {countryFlags[c]} {countryLabels[c]}
+                {countryFlags[c]} {t(`countries.${c}`)}
               </option>
             ))}
           </Select>
@@ -491,7 +506,7 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
             {citiesByCountry(originCountry).map((city) => (
               <option key={city.slug} value={city.slug}>
                 {city.name}
-                {city.active ? '' : ' (auf Anfrage)'}
+                {city.active ? '' : ` (${t('calculator.cityOnRequest')})`}
               </option>
             ))}
           </Select>
@@ -507,7 +522,7 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
             {citiesByCountry(destinationCountry).map((city) => (
               <option key={city.slug} value={city.slug}>
                 {city.name}
-                {city.active ? '' : ' (auf Anfrage)'}
+                {city.active ? '' : ` (${t('calculator.cityOnRequest')})`}
               </option>
             ))}
           </Select>
@@ -516,13 +531,15 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
-          label="Gewicht in kg"
+          label={t('calculator.weightLabel')}
           htmlFor="weight"
           error={errors.weightKg?.message}
           hint={
             weight
-              ? `Transport: ${formatCents(price.basePriceCents)}`
-              : `Mindestpreis ${formatCents(pricingConfig.minimumPriceCents)}`
+              ? t('booking.transportHint', { price: formatCents(price.basePriceCents) })
+              : t('booking.minimumHint', {
+                  minimum: formatCents(pricingConfig.minimumPriceCents),
+                })
           }
           required
         >
@@ -530,7 +547,7 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
             id="weight"
             type="text"
             inputMode="decimal"
-            placeholder="z. B. 25"
+            placeholder={t('calculator.weightPlaceholder')}
             aria-invalid={!!errors.weightKg}
             className="text-lg font-semibold"
             {...register('weightKg')}
@@ -538,10 +555,10 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
         </Field>
 
         <Field
-          label="Anzahl Gepäckstücke"
+          label={t('booking.piecesLabel')}
           htmlFor="pieces"
           error={errors.pieceCount?.message}
-          hint="Kartons, Taschen oder Koffer zusammengezählt"
+          hint={t('booking.piecesHint')}
           required
         >
           <Input
@@ -557,30 +574,30 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
       </div>
 
       <Field
-        label="Art des Inhalts"
+        label={t('booking.contentLabel')}
         htmlFor="content-type"
         error={errors.contentType?.message}
-        hint="z. B. Kleidung, Haushaltswaren, Geschenke"
+        hint={t('booking.contentHint')}
         required
       >
         <Input
           id="content-type"
-          placeholder="Kleidung & Haushaltswaren"
+          placeholder={t('booking.contentPlaceholder')}
           aria-invalid={!!errors.contentType}
           {...register('contentType')}
         />
       </Field>
 
       <Field
-        label="Beschreibung"
+        label={t('booking.descriptionLabel')}
         htmlFor="description"
         error={errors.description?.message}
-        hint="Optional — hilft uns bei der Zollanmeldung und beim Verladen."
+        hint={t('booking.descriptionHint')}
       >
         <Textarea
           id="description"
           rows={3}
-          placeholder="2 Kartons Kleidung, 1 Reisetasche"
+          placeholder={t('booking.descriptionPlaceholder')}
           {...register('description')}
         />
       </Field>
@@ -588,10 +605,9 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
       <Checkbox
         label={
           <>
-            <span className="font-medium">Abholung bei mir zu Hause</span>
+            <span className="font-medium">{t('booking.pickupTitle')}</span>
             <span className="block text-muted-foreground">
-              Wir holen deine Sendung ab (+{formatCents(pricingConfig.pickupFeeCents)}). Ohne
-              Abholung gibst du sie bei uns ab.
+              {t('booking.pickupText', { fee: formatCents(pricingConfig.pickupFeeCents) })}
             </span>
           </>
         }
@@ -600,10 +616,10 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
 
       {pickupRequested && (
         <Field
-          label="Gewünschtes Abholdatum"
+          label={t('booking.pickupDateLabel')}
           htmlFor="pickup-date"
           error={errors.pickupDate?.message}
-          hint="Wir bestätigen dir den genauen Zeitraum telefonisch."
+          hint={t('booking.pickupDateHint')}
           required
         >
           <Input
@@ -620,26 +636,25 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
 }
 
 function SenderStep({ form }: { form: FormApi }) {
+  const t = useT();
   const { register, formState } = form;
   const errors = formState.errors;
 
   return (
     <div className="space-y-5">
       <header>
-        <h2 className="text-xl font-semibold tracking-tight">Deine Kontaktdaten</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Wir brauchen sie für die Bestätigung und für Rückfragen zur Sendung.
-        </p>
+        <h2 className="text-xl font-semibold tracking-tight">{t('booking.senderTitle')}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t('booking.senderSubtitle')}</p>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Vorname" htmlFor="s-first" error={errors.senderFirstName?.message} required>
+        <Field label={t('fields.firstName')} htmlFor="s-first" error={errors.senderFirstName?.message} required>
           <Input id="s-first" autoComplete="given-name" aria-invalid={!!errors.senderFirstName} {...register('senderFirstName')} />
         </Field>
-        <Field label="Nachname" htmlFor="s-last" error={errors.senderLastName?.message} required>
+        <Field label={t('fields.lastName')} htmlFor="s-last" error={errors.senderLastName?.message} required>
           <Input id="s-last" autoComplete="family-name" aria-invalid={!!errors.senderLastName} {...register('senderLastName')} />
         </Field>
-        <Field label="Telefonnummer" htmlFor="s-phone" error={errors.senderPhone?.message} required>
+        <Field label={t('fields.phone')} htmlFor="s-phone" error={errors.senderPhone?.message} required>
           <Input
             id="s-phone"
             type="tel"
@@ -650,7 +665,7 @@ function SenderStep({ form }: { form: FormApi }) {
             {...register('senderPhone')}
           />
         </Field>
-        <Field label="E-Mail" htmlFor="s-email" error={errors.senderEmail?.message} required>
+        <Field label={t('fields.email')} htmlFor="s-email" error={errors.senderEmail?.message} required>
           <Input
             id="s-email"
             type="email"
@@ -663,30 +678,30 @@ function SenderStep({ form }: { form: FormApi }) {
         </Field>
       </div>
 
-      <Field label="Adresse" htmlFor="s-address" error={errors.senderAddress?.message} required>
+      <Field label={t('fields.address')} htmlFor="s-address" error={errors.senderAddress?.message} required>
         <Input
           id="s-address"
           autoComplete="street-address"
-          placeholder="Straße und Hausnummer"
+          placeholder={t('fields.streetPlaceholder')}
           aria-invalid={!!errors.senderAddress}
           {...register('senderAddress')}
         />
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-[8rem_1fr]">
-        <Field label="PLZ" htmlFor="s-zip" error={errors.senderPostalCode?.message}>
+        <Field label={t('fields.postalCode')} htmlFor="s-zip" error={errors.senderPostalCode?.message}>
           <Input id="s-zip" inputMode="numeric" autoComplete="postal-code" {...register('senderPostalCode')} />
         </Field>
-        <Field label="Stadt" htmlFor="s-city" error={errors.senderCity?.message} required>
+        <Field label={t('fields.city')} htmlFor="s-city" error={errors.senderCity?.message} required>
           <Input id="s-city" autoComplete="address-level2" aria-invalid={!!errors.senderCity} {...register('senderCity')} />
         </Field>
       </div>
 
-      <Field label="Land" htmlFor="s-country" error={errors.senderCountry?.message} required>
+      <Field label={t('fields.country')} htmlFor="s-country" error={errors.senderCountry?.message} required>
         <Select id="s-country" {...register('senderCountry')}>
           {(['DE', 'MA'] as CountryCode[]).map((c) => (
             <option key={c} value={c}>
-              {countryFlags[c]} {countryLabels[c]}
+              {countryFlags[c]} {t(`countries.${c}`)}
             </option>
           ))}
         </Select>
@@ -696,28 +711,27 @@ function SenderStep({ form }: { form: FormApi }) {
 }
 
 function RecipientStep({ form }: { form: FormApi }) {
+  const t = useT();
   const { register, formState } = form;
   const errors = formState.errors;
 
   return (
     <div className="space-y-5">
       <header>
-        <h2 className="text-xl font-semibold tracking-tight">Wer bekommt die Sendung?</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Die Telefonnummer des Empfängers ist wichtig — ohne sie können wir nicht zustellen.
-        </p>
+        <h2 className="text-xl font-semibold tracking-tight">{t('booking.recipientTitle')}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t('booking.recipientSubtitle')}</p>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Vorname" htmlFor="r-first" error={errors.recipientFirstName?.message} required>
+        <Field label={t('fields.firstName')} htmlFor="r-first" error={errors.recipientFirstName?.message} required>
           <Input id="r-first" aria-invalid={!!errors.recipientFirstName} {...register('recipientFirstName')} />
         </Field>
-        <Field label="Nachname" htmlFor="r-last" error={errors.recipientLastName?.message} required>
+        <Field label={t('fields.lastName')} htmlFor="r-last" error={errors.recipientLastName?.message} required>
           <Input id="r-last" aria-invalid={!!errors.recipientLastName} {...register('recipientLastName')} />
         </Field>
       </div>
 
-      <Field label="Telefonnummer" htmlFor="r-phone" error={errors.recipientPhone?.message} required>
+      <Field label={t('fields.phone')} htmlFor="r-phone" error={errors.recipientPhone?.message} required>
         <Input
           id="r-phone"
           type="tel"
@@ -728,24 +742,24 @@ function RecipientStep({ form }: { form: FormApi }) {
         />
       </Field>
 
-      <Field label="Adresse" htmlFor="r-address" error={errors.recipientAddress?.message} required>
+      <Field label={t('fields.address')} htmlFor="r-address" error={errors.recipientAddress?.message} required>
         <Input
           id="r-address"
-          placeholder="Straße, Hausnummer, Viertel"
+          placeholder={t('fields.streetPlaceholderMa')}
           aria-invalid={!!errors.recipientAddress}
           {...register('recipientAddress')}
         />
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Stadt" htmlFor="r-city" error={errors.recipientCity?.message} required>
+        <Field label={t('fields.city')} htmlFor="r-city" error={errors.recipientCity?.message} required>
           <Input id="r-city" aria-invalid={!!errors.recipientCity} {...register('recipientCity')} />
         </Field>
-        <Field label="Land" htmlFor="r-country" error={errors.recipientCountry?.message} required>
+        <Field label={t('fields.country')} htmlFor="r-country" error={errors.recipientCountry?.message} required>
           <Select id="r-country" {...register('recipientCountry')}>
             {(['DE', 'MA'] as CountryCode[]).map((c) => (
               <option key={c} value={c}>
-                {countryFlags[c]} {countryLabels[c]}
+                {countryFlags[c]} {t(`countries.${c}`)}
               </option>
             ))}
           </Select>
@@ -764,55 +778,55 @@ function ConfirmStep({ form, price }: { form: FormApi; price: ReturnType<typeof 
   return (
     <div className="space-y-6">
       <header>
-        <h2 className="text-xl font-semibold tracking-tight">Alles korrekt?</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Prüfe deine Angaben und bestätige die drei Punkte, dann ist deine Sendung gebucht.
-        </p>
+        <h2 className="text-xl font-semibold tracking-tight">{t('booking.confirmTitle')}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t('booking.confirmSubtitle')}</p>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <SummaryBlock title="Sendung">
-          <SummaryRow label="Route">
+        <SummaryBlock title={t('booking.stepShipment')}>
+          <SummaryRow label={t('common.route')}>
             {cityName(v.originCity)} → {cityName(v.destinationCity)}
           </SummaryRow>
-          <SummaryRow label="Gewicht">{formatWeight(Number(v.weightKg))}</SummaryRow>
-          <SummaryRow label="Gepäckstücke">{v.pieceCount}</SummaryRow>
-          <SummaryRow label="Inhalt">{v.contentType}</SummaryRow>
-          <SummaryRow label="Abholung">
-            {v.pickupRequested ? `Ja, am ${v.pickupDate}` : 'Nein'}
+          <SummaryRow label={t('common.weight')}>{formatWeight(Number(v.weightKg))}</SummaryRow>
+          <SummaryRow label={t('common.pieces')}>{v.pieceCount}</SummaryRow>
+          <SummaryRow label={t('booking.summaryContent')}>{v.contentType}</SummaryRow>
+          <SummaryRow label={t('common.pickup')}>
+            {v.pickupRequested
+              ? t('booking.pickupOnDate', { date: v.pickupDate ?? '' })
+              : t('common.nope')}
           </SummaryRow>
         </SummaryBlock>
 
-        <SummaryBlock title="Preis">
-          <SummaryRow label="Transport">{formatCents(price.basePriceCents)}</SummaryRow>
+        <SummaryBlock title={t('common.price')}>
+          <SummaryRow label={t('booking.summaryTransport')}>
+            {formatCents(price.basePriceCents)}
+          </SummaryRow>
           {price.pickupFeeCents > 0 && (
-            <SummaryRow label="Abholung">{formatCents(price.pickupFeeCents)}</SummaryRow>
+            <SummaryRow label={t('common.pickup')}>{formatCents(price.pickupFeeCents)}</SummaryRow>
           )}
-          <SummaryRow label="Gesamt">
+          <SummaryRow label={t('common.total')}>
             <strong className="text-base">{formatCents(price.totalCents)}</strong>
           </SummaryRow>
-          <p className="pt-2 text-xs text-muted-foreground">
-            Bezahlung bei Abgabe oder Abholung. Online-Zahlung folgt.
-          </p>
+          <p className="pt-2 text-xs text-muted-foreground">{t('booking.paymentNote')}</p>
         </SummaryBlock>
 
-        <SummaryBlock title="Absender">
-          <SummaryRow label="Name">
+        <SummaryBlock title={t('booking.stepSender')}>
+          <SummaryRow label={t('fields.name')}>
             {v.senderFirstName} {v.senderLastName}
           </SummaryRow>
-          <SummaryRow label="Telefon">{v.senderPhone}</SummaryRow>
-          <SummaryRow label="E-Mail">{v.senderEmail}</SummaryRow>
-          <SummaryRow label="Adresse">
+          <SummaryRow label={t('fields.phone')}>{v.senderPhone}</SummaryRow>
+          <SummaryRow label={t('fields.email')}>{v.senderEmail}</SummaryRow>
+          <SummaryRow label={t('fields.address')}>
             {v.senderAddress}, {v.senderPostalCode} {v.senderCity}
           </SummaryRow>
         </SummaryBlock>
 
-        <SummaryBlock title="Empfänger">
-          <SummaryRow label="Name">
+        <SummaryBlock title={t('booking.stepRecipient')}>
+          <SummaryRow label={t('fields.name')}>
             {v.recipientFirstName} {v.recipientLastName}
           </SummaryRow>
-          <SummaryRow label="Telefon">{v.recipientPhone}</SummaryRow>
-          <SummaryRow label="Adresse">
+          <SummaryRow label={t('fields.phone')}>{v.recipientPhone}</SummaryRow>
+          <SummaryRow label={t('fields.address')}>
             {v.recipientAddress}, {v.recipientCity}
           </SummaryRow>
         </SummaryBlock>
@@ -829,10 +843,12 @@ function ConfirmStep({ form, price }: { form: FormApi; price: ReturnType<typeof 
             <>
               {t('booking.confirmProhibited')}{' '}
               <Link href="/verbotene-waren" target="_blank" className="font-medium text-primary underline">
-                Liste ansehen
+                {t('booking.prohibitedLink')}
               </Link>
               <span className="mt-1 block text-xs text-muted-foreground">
-                Nicht erlaubt sind u. a.: {prohibitedShortList.slice(0, 4).join(', ')} …
+                {t('booking.prohibitedExamples', {
+                  items: prohibitedShortList.slice(0, 4).join(', '),
+                })}
               </span>
             </>
           }
@@ -842,13 +858,13 @@ function ConfirmStep({ form, price }: { form: FormApi; price: ReturnType<typeof 
         <Checkbox
           label={
             <>
-              Ich akzeptiere die{' '}
+              {t('booking.termsPrefix')}{' '}
               <Link href="/versandbedingungen" target="_blank" className="font-medium text-primary underline">
-                Versandbedingungen
+                {t('footer.shippingTerms')}
               </Link>{' '}
-              und die{' '}
+              {t('booking.termsAnd')}{' '}
               <Link href="/datenschutz" target="_blank" className="font-medium text-primary underline">
-                Datenschutzhinweise
+                {t('booking.termsPrivacy')}
               </Link>
               .
             </>
@@ -920,19 +936,19 @@ function BookingSuccess({
 
       <div className="surface mt-8 p-6">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Deine Sendungsnummer
+          {t('booking.yourNumber')}
         </p>
         <p className="mt-2 break-all font-mono text-3xl font-bold tracking-tight text-primary sm:text-4xl">
           {trackingNumber}
         </p>
         <Button variant="ghost" size="sm" className="mt-3" onClick={copy}>
           {copied ? <Check aria-hidden /> : <Copy aria-hidden />}
-          {copied ? 'Kopiert' : 'Nummer kopieren'}
+          {copied ? t('booking.copied') : t('booking.copyNumber')}
         </Button>
 
         <dl className="mt-6 border-t border-border pt-4 text-sm">
           <div className="flex justify-between gap-3">
-            <dt className="text-muted-foreground">Gesamtpreis</dt>
+            <dt className="text-muted-foreground">{t('booking.totalPrice')}</dt>
             <dd className="font-semibold tabular-nums">{formatCents(totalCents)}</dd>
           </div>
         </dl>
@@ -948,14 +964,12 @@ function BookingSuccess({
         <a href={whatsappShareLink(shareText)} target="_blank" rel="noopener noreferrer">
           <Button size="lg" variant="outline" block className="sm:w-auto">
             <Share2 aria-hidden />
-            Über WhatsApp teilen
+            {t('booking.shareWhatsapp')}
           </Button>
         </a>
       </div>
 
-      <p className="mt-8 text-sm text-muted-foreground">
-        Wir haben dir eine Bestätigung per E-Mail geschickt. Fragen? Melde dich einfach bei uns.
-      </p>
+      <p className="mt-8 text-sm text-muted-foreground">{t('booking.emailSent')}</p>
     </div>
   );
 }

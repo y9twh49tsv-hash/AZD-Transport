@@ -5,18 +5,15 @@ import { SetupNotice } from '@/components/layout/setup-notice';
 import { findCity, type CountryCode } from '@/config/regions';
 import { getT } from '@/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'Sperrgut anfragen',
-  description:
-    'Waschmaschine, Kühlschrank, Möbel oder Fahrrad nach Marokko? Lade Fotos hoch und erhalte einen Festpreis.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: t('bulky.metaTitle'),
+    description: t('bulky.metaDescription'),
+  };
+}
 
-const steps = [
-  'Fotos aufnehmen',
-  'Maße & Gewicht angeben',
-  'Abhol- und Zielort wählen',
-  'Anfrage senden',
-];
+const STEP_KEYS = ['stepPhotos', 'stepMeasures', 'stepRoute', 'stepSend'] as const;
 
 export default async function BulkyPage({
   searchParams,
@@ -24,6 +21,7 @@ export default async function BulkyPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const t = await getT();
+  const steps = STEP_KEYS.map((key) => t(`bulky.${key}`));
   const params = await searchParams;
   const get = (key: string) => {
     const value = params[key];
@@ -56,8 +54,7 @@ export default async function BulkyPage({
         </span>
         <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">{t('bulky.title')}</h1>
         <p className="mt-3 max-w-xl text-base leading-relaxed text-muted-foreground">
-          {t('bulky.subtitle')} Für sperrige oder besonders schwere Güter gibt es keinen
-          Kilopreis — du bekommst von uns einen verbindlichen Pauschalpreis.
+          {t('bulky.subtitle')} {t('bulky.intro')}
         </p>
 
         <ol className="mt-6 flex flex-wrap gap-x-2 gap-y-2 text-sm text-muted-foreground">
@@ -67,7 +64,7 @@ export default async function BulkyPage({
                 {index + 1}
               </span>
               {step}
-              {index < steps.length - 1 && <span className="ml-1 text-border">·</span>}
+              {index < steps.length - 1 && <span className="ms-1 text-border">·</span>}
             </li>
           ))}
         </ol>
