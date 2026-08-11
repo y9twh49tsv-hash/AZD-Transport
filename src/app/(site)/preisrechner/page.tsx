@@ -4,16 +4,22 @@ import { ArrowRight, Calculator } from 'lucide-react';
 import { PriceCalculator } from '@/components/booking/price-calculator';
 import { Button } from '@/components/ui/button';
 import { pricingConfig } from '@/config/pricing';
-import { formatCents } from '@/lib/pricing';
+import { calculatePrice, formatCents } from '@/lib/pricing';
 import { getT } from '@/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'Preisrechner',
-  description:
-    'Berechne den Preis für deine Sendung nach Marokko: 2 €/kg, Mindestpreis 20 €, Abholung +10 €.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: t('calculatorPage.metaTitle'),
+    description: t('calculatorPage.metaDescription', {
+      perKg: formatCents(pricingConfig.pricePerKgCents),
+      minimum: formatCents(pricingConfig.minimumPriceCents),
+      pickup: formatCents(pricingConfig.pickupFeeCents),
+    }),
+  };
+}
 
-const examples = [
+const exampleWeights = [
   { weight: 5, pickup: false },
   { weight: 10, pickup: false },
   { weight: 10, pickup: true },
@@ -22,8 +28,28 @@ const examples = [
   { weight: 50, pickup: true },
 ];
 
+/**
+ * The weight at which the per-kilo price overtakes the minimum price.
+ *
+ * Derived, never written down: if either number in `pricingConfig` changes, the
+ * sentence below changes with it instead of quietly becoming wrong.
+ */
+const breakEvenKg = pricingConfig.minimumPriceCents / pricingConfig.pricePerKgCents;
+
 export default async function CalculatorPage() {
   const t = await getT();
+
+  // Dieselbe Funktion, die auch der Server bei der Buchung benutzt — die
+  // Beispieltabelle darf die Preisformel nicht ein zweites Mal enthalten.
+  const examples = exampleWeights.map((example) => ({
+    ...example,
+    totalCents: calculatePrice({
+      weightKg: example.weight,
+      pickupRequested: example.pickup,
+      shipmentType: 'standard',
+    }).totalCents,
+  }));
+
   return (
     <div className="container max-w-5xl py-10 sm:py-14">
       <header className="mb-8 max-w-2xl">
@@ -34,8 +60,7 @@ export default async function CalculatorPage() {
           {t('calculator.title')}
         </h1>
         <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-          {t('calculator.subtitle')} Der angezeigte Preis ist der Preis, den du zahlst — wir prüfen
-          das Gewicht bei der Annahme und sprechen Abweichungen immer vorher mit dir ab.
+          {t('calculator.subtitle')} {t('calculatorPage.intro')}
         </p>
       </header>
 
@@ -44,76 +69,80 @@ export default async function CalculatorPage() {
 
         <aside className="space-y-6 lg:sticky lg:top-24">
           <div className="surface p-5">
-            <h2 className="text-base font-semibold">So rechnen wir</h2>
+            <h2 className="text-base font-semibold">{t('calculatorPage.howTitle')}</h2>
             <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
               <li className="flex justify-between gap-3">
-                <span>Preis pro Kilogramm</span>
+                <span>{t('calculatorPage.rowPerKilo')}</span>
                 <span className="font-semibold text-foreground tabular-nums">
                   {formatCents(pricingConfig.pricePerKgCents)}
                 </span>
               </li>
               <li className="flex justify-between gap-3">
-                <span>Mindestpreis</span>
+                <span>{t('calculatorPage.rowMinimum')}</span>
                 <span className="font-semibold text-foreground tabular-nums">
                   {formatCents(pricingConfig.minimumPriceCents)}
                 </span>
               </li>
               <li className="flex justify-between gap-3">
-                <span>Abholung beim Kunden</span>
+                <span>{t('calculatorPage.rowPickup')}</span>
                 <span className="font-semibold text-foreground tabular-nums">
                   +{formatCents(pricingConfig.pickupFeeCents)}
                 </span>
               </li>
+              <li className="flex justify-between gap-3">
+                <span>
+                  {t('calculatorPage.rowDocuments', { max: pricingConfig.maxDocumentsWeightKg })}
+                </span>
+                <span className="font-semibold text-foreground tabular-nums">
+                  {formatCents(pricingConfig.documentsPriceCents)}
+                </span>
+              </li>
               <li className="flex justify-between gap-3 border-t border-border pt-3">
-                <span>Sperrgut</span>
-                <span className="font-semibold text-foreground">Festpreis auf Anfrage</span>
+                <span>{t('calculatorPage.rowBulky')}</span>
+                <span className="font-semibold text-foreground">
+                  {t('calculatorPage.bulkyOnRequest')}
+                </span>
               </li>
             </ul>
             <p className="mt-4 border-t border-border pt-4 text-xs leading-relaxed text-muted-foreground">
-              Bis einschließlich 10 kg gilt der Mindestpreis von{' '}
-              {formatCents(pricingConfig.minimumPriceCents)}. Ab 10 kg zahlst du genau{' '}
-              {formatCents(pricingConfig.pricePerKgCents)} pro Kilo.
+              {t('calculatorPage.minimumNote', {
+                breakEven: breakEvenKg,
+                minimum: formatCents(pricingConfig.minimumPriceCents),
+                perKg: formatCents(pricingConfig.pricePerKgCents),
+              })}
             </p>
           </div>
 
           <div className="surface p-5">
-            <h2 className="text-base font-semibold">Beispiele</h2>
+            <h2 className="text-base font-semibold">{t('calculatorPage.examplesTitle')}</h2>
             <table className="mt-4 w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
-                  <th className="pb-2 font-medium">Gewicht</th>
-                  <th className="pb-2 font-medium">Abholung</th>
-                  <th className="pb-2 text-right font-medium">Preis</th>
+                <tr className="text-start text-xs uppercase tracking-wide text-muted-foreground">
+                  <th className="pb-2 text-start font-medium">{t('calculatorPage.colWeight')}</th>
+                  <th className="pb-2 text-start font-medium">{t('calculatorPage.colPickup')}</th>
+                  <th className="pb-2 text-end font-medium">{t('calculatorPage.colPrice')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {examples.map((example) => {
-                  const base = Math.max(
-                    pricingConfig.minimumPriceCents,
-                    example.weight * pricingConfig.pricePerKgCents,
-                  );
-                  const total = base + (example.pickup ? pricingConfig.pickupFeeCents : 0);
-                  return (
-                    <tr key={`${example.weight}-${example.pickup}`}>
-                      <td className="py-2 tabular-nums">{example.weight} kg</td>
-                      <td className="py-2 text-muted-foreground">
-                        {example.pickup ? 'ja' : 'nein'}
-                      </td>
-                      <td className="py-2 text-right font-semibold tabular-nums">
-                        {formatCents(total)}
-                      </td>
-                    </tr>
-                  );
-                })}
+                {examples.map((example) => (
+                  <tr key={`${example.weight}-${example.pickup}`}>
+                    <td className="py-2 tabular-nums">{example.weight} kg</td>
+                    <td className="py-2 text-muted-foreground">
+                      {example.pickup ? t('common.yes') : t('common.nope')}
+                    </td>
+                    <td className="py-2 text-end font-semibold tabular-nums">
+                      {formatCents(example.totalCents)}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
 
           <div className="surface p-5">
-            <h2 className="text-base font-semibold">Sperrig oder sehr schwer?</h2>
+            <h2 className="text-base font-semibold">{t('calculatorPage.bulkyTitle')}</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Für Waschmaschinen, Kühlschränke, Möbel, Fahrräder oder Autoteile machen wir dir einen
-              persönlichen Festpreis.
+              {t('calculatorPage.bulkyText')}
             </p>
             <Link href="/sperrgut" className="mt-4 inline-block">
               <Button variant="accent" block>

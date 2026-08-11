@@ -19,50 +19,46 @@ import { formatCents } from '@/lib/pricing';
 import { cities } from '@/config/regions';
 import { getT } from '@/lib/i18n/server';
 
-const advantages = [
-  {
-    icon: Truck,
-    title: 'Persönliche Abholung',
-    text: 'Auf Wunsch holen wir deine Sendung im Rhein-Main-Gebiet direkt bei dir zu Hause ab — für pauschal 10 €.',
-  },
-  {
-    icon: Hash,
-    title: 'Feste Sendungsnummer',
-    text: `Jede Sendung bekommt sofort eine eindeutige Nummer wie ${exampleTrackingNumber}. Damit findest du sie jederzeit wieder.`,
-  },
-  {
-    icon: QrCode,
-    title: 'QR-Code auf jedem Paket',
-    text: 'Ein aufgeklebtes Label mit QR-Code. Unser Team scannt es an jeder Station — ohne dass deine Daten auf dem Paket stehen.',
-  },
-  {
-    icon: PackageSearch,
-    title: 'Statusverfolgung',
-    text: 'Von „Gebucht“ bis „Zugestellt“: jeder Schritt wird protokolliert und ist für dich online sichtbar.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Sichere Dokumentation',
-    text: 'Große Sendungen versiegeln wir mit nummerierten Sicherheitsbeuteln. Die Plombennummer siehst du im Tracking.',
-  },
-  {
-    icon: BadgeEuro,
-    title: 'Transparente Preise',
-    text: 'Kein Kleingedrucktes: 2 € pro Kilo, mindestens 20 €, Abholung 10 €. Sperrgut bekommt einen Festpreis vorab.',
-  },
-];
-
-const steps = [
-  { title: 'Preis berechnen', text: 'Gewicht eingeben, Preis sofort sehen — ohne Anmeldung.' },
-  { title: 'Sendung buchen', text: 'Absender und Empfänger eintragen, fertig in wenigen Minuten.' },
-  { title: 'Abgeben oder abholen lassen', text: 'Du bringst sie vorbei oder wir kommen zu dir.' },
-  { title: 'Verfolgen bis zur Übergabe', text: 'Statusupdates bis die Sendung in Marokko ankommt.' },
-];
+/**
+ * The six advantage cards. Only the icons live here — the words come from the
+ * dictionary, so the list is built inside the component where the request
+ * locale is known.
+ */
+const advantageIcons = [Truck, Hash, QrCode, PackageSearch, ShieldCheck, BadgeEuro];
+const advantageKeys = ['Pickup', 'Number', 'Qr', 'Status', 'Seal', 'Price'] as const;
 
 export default async function HomePage() {
   const t = await getT();
   const activeDe = cities.filter((c) => c.country === 'DE' && c.active);
   const activeMa = cities.filter((c) => c.country === 'MA' && c.active);
+
+  const perKg = formatCents(pricingConfig.pricePerKgCents);
+  const minimum = formatCents(pricingConfig.minimumPriceCents);
+  const pickup = formatCents(pricingConfig.pickupFeeCents);
+
+  const advantages = advantageKeys.map((key, index) => ({
+    icon: advantageIcons[index],
+    title: t(`home.feature${key}Title`),
+    text: t(`home.feature${key}Text`, {
+      example: exampleTrackingNumber,
+      perKg,
+      minimum,
+      pickup,
+    }),
+  }));
+
+  const steps = [1, 2, 3, 4].map((n) => ({
+    title: t(`home.step${n}Title`),
+    text: t(`home.step${n}Text`),
+  }));
+
+  /**
+   * The headline highlights both country names in colour. The two names are
+   * placeholders in the dictionary rather than a fixed "A nach B" order,
+   * because the word order differs per language — French puts the preposition
+   * on the country, Darija puts "safely" at the end of the sentence.
+   */
+  const headlineParts = t('home.headline').split(/(\{from\}|\{to\})/);
 
   return (
     <>
@@ -79,9 +75,23 @@ export default async function HomePage() {
               </p>
 
               <h1 className="mt-6 text-[2.1rem] font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-[3.4rem]">
-                Deine Pakete sicher von{' '}
-                <span className="text-primary">Deutschland</span> nach{' '}
-                <span className="text-accent">Marokko</span>
+                {headlineParts.map((part, index) => {
+                  if (part === '{from}') {
+                    return (
+                      <span key={index} className="text-primary">
+                        {t('home.countryFrom')}
+                      </span>
+                    );
+                  }
+                  if (part === '{to}') {
+                    return (
+                      <span key={index} className="text-accent">
+                        {t('home.countryTo')}
+                      </span>
+                    );
+                  }
+                  return <span key={index}>{part}</span>;
+                })}
               </h1>
 
               <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
@@ -91,12 +101,9 @@ export default async function HomePage() {
               {/* Price facts — the three numbers people actually want */}
               <dl className="mt-8 grid gap-3 sm:grid-cols-3">
                 {[
-                  {
-                    label: 'Pakete ab',
-                    value: `${formatCents(pricingConfig.pricePerKgCents)}/kg`,
-                  },
-                  { label: 'Mindestpreis', value: formatCents(pricingConfig.minimumPriceCents) },
-                  { label: 'Abholung', value: `+${formatCents(pricingConfig.pickupFeeCents)}` },
+                  { label: t('home.factParcels'), value: `${perKg}/kg` },
+                  { label: t('home.factMinimum'), value: minimum },
+                  { label: t('home.factPickup'), value: `+${pickup}` },
                 ].map((fact) => (
                   <div key={fact.label} className="rounded-2xl border border-border bg-card/80 p-4 backdrop-blur">
                     <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -110,9 +117,12 @@ export default async function HomePage() {
               </dl>
 
               <p className="mt-3 text-sm text-muted-foreground">
-                Sperrige Gegenstände (Möbel, Geräte, Fahrräder): individueller Pauschalpreis nach Foto
-                und Maßen.
+                {t('home.documentsNote', {
+                  price: formatCents(pricingConfig.documentsPriceCents),
+                  max: pricingConfig.maxDocumentsWeightKg,
+                })}
               </p>
+              <p className="mt-1.5 text-sm text-muted-foreground">{t('home.bulkyNote')}</p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link href="/buchen">
@@ -179,7 +189,7 @@ export default async function HomePage() {
       {/* ----------------------------------------------------------------- Steps */}
       <section className="border-y border-border bg-secondary/40 py-16 sm:py-20">
         <div className="container">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">So einfach geht&apos;s</h2>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{t('home.stepsTitle')}</h2>
           <ol className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((step, index) => (
               <li key={step.title} className="relative">
@@ -198,14 +208,13 @@ export default async function HomePage() {
       <section className="container py-16 sm:py-20">
         <div className="grid gap-10 lg:grid-cols-2">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Unser Liniengebiet</h2>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{t('home.areaTitle')}</h2>
             <p className="mt-3 max-w-lg text-base leading-relaxed text-muted-foreground">
-              Wir starten im Rhein-Main-Gebiet und in der Region Nador. Weitere Städte kommen
-              laufend dazu — frag einfach nach, wenn deine Stadt noch fehlt.
+              {t('home.areaText')}
             </p>
             <Link href="/kontakt" className="mt-6 inline-block">
               <Button variant="outline">
-                Stadt anfragen
+                {t('home.areaCta')}
                 <ArrowRight aria-hidden />
               </Button>
             </Link>
@@ -213,8 +222,18 @@ export default async function HomePage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             {[
-              { flag: '🇩🇪', title: 'Deutschland', hint: 'Frankfurt & Rhein-Main', list: activeDe },
-              { flag: '🇲🇦', title: 'Marokko', hint: 'Nador & Umgebung', list: activeMa },
+              {
+                flag: '🇩🇪',
+                title: t('home.countryFrom'),
+                hint: t('home.areaFromHint'),
+                list: activeDe,
+              },
+              {
+                flag: '🇲🇦',
+                title: t('home.countryTo'),
+                hint: t('home.areaToHint'),
+                list: activeMa,
+              },
             ].map((group) => (
               <div key={group.title} className="surface p-5">
                 <div className="flex items-center gap-2">
@@ -245,10 +264,10 @@ export default async function HomePage() {
         <div className="relative overflow-hidden rounded-3xl border border-border corridor-gradient p-8 text-center sm:p-14">
           <ClipboardCheck className="mx-auto size-10 text-primary" aria-hidden />
           <h2 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
-            Bereit für deine Sendung?
+            {t('home.ctaTitle')}
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-muted-foreground">
-            Preis berechnen, buchen, Sendungsnummer erhalten — in wenigen Minuten erledigt.
+            {t('home.ctaText')}
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/preisrechner">

@@ -51,17 +51,68 @@ export const fr: Dictionary = {
     mainNavigation: 'Navigation principale',
     menu: 'Ouvrir le menu',
   },
+  meta: {
+    tagline: 'Transport entre l’Allemagne et le Maroc',
+    siteDescription:
+      'Colis, sacs et cartons entre l’Allemagne et le Maroc. À partir de {perKg}/kg, minimum {minimum}, enlèvement +{pickup}. Avec numéro d’envoi, QR code et suivi du statut.',
+    ogDescription:
+      'Transport entre Francfort/Rhin-Main et Nador. À partir de {perKg}/kg, minimum {minimum}, enlèvement +{pickup}.',
+    ogLocale: 'fr_FR',
+  },
+  countries: {
+    DE: 'Allemagne',
+    MA: 'Maroc',
+  },
   home: {
     eyebrow: 'Allemagne ↔ Maroc',
-    headline: 'Vos colis en toute sécurité d’Allemagne au Maroc',
+    headline: 'Vos colis en toute sécurité d’{from} au {to}',
     subline:
       'Nous récupérons vos colis, sacs et cartons dans la région Rhin-Main et les acheminons à Nador et ses environs — avec un numéro d’envoi fixe, un QR code et un suivi complet.',
-    pricePerKg: 'à partir de 2 € le kg',
-    minimumPrice: 'Minimum 20 €',
-    pickupPrice: 'Enlèvement +10 €',
-    bulkyPrice: 'Encombrants : prix forfaitaire individuel',
+    factParcels: 'Colis à partir de',
+    factMinimum: 'Prix minimum',
+    factPickup: 'Enlèvement',
+    documentsNote:
+      'Documents (passeports, actes, contrats) : forfait de {price} jusqu’à {max} kg — quel que soit le poids.',
+    bulkyNote:
+      'Objets encombrants (meubles, appareils, vélos) : prix forfaitaire individuel sur photos et dimensions.',
     whyTitle: 'Pourquoi {brand} ?',
     whySubtitle: 'Un service personnel, traçable et sans frais cachés.',
+    featurePickupTitle: 'Enlèvement à domicile',
+    featurePickupText:
+      'Sur demande, nous récupérons votre envoi dans la région Rhin-Main directement chez vous — forfait {pickup}.',
+    featureNumberTitle: 'Un numéro d’envoi fixe',
+    featureNumberText:
+      'Chaque envoi reçoit immédiatement un numéro unique comme {example}. Vous le retrouvez à tout moment.',
+    featureQrTitle: 'Un QR code sur chaque colis',
+    featureQrText:
+      'Une étiquette avec QR code. Notre équipe la scanne à chaque étape — sans que vos données figurent sur le colis.',
+    featureStatusTitle: 'Suivi du statut',
+    featureStatusText:
+      'De « Réservé » à « Livré » : chaque étape est enregistrée et visible en ligne.',
+    featureSealTitle: 'Documentation sécurisée',
+    featureSealText:
+      'Les envois volumineux sont scellés avec des sacs de sécurité numérotés. Le numéro de scellé apparaît dans le suivi.',
+    featurePriceTitle: 'Des prix transparents',
+    featurePriceText:
+      'Sans petits caractères : {perKg} le kilo, {minimum} minimum, {pickup} pour l’enlèvement. Les encombrants ont un prix fixe convenu à l’avance.',
+    stepsTitle: 'Comment ça marche',
+    step1Title: 'Calculer le prix',
+    step1Text: 'Saisissez le poids, voyez le prix aussitôt — sans inscription.',
+    step2Title: 'Réserver l’envoi',
+    step2Text: 'Indiquez expéditeur et destinataire, c’est fait en quelques minutes.',
+    step3Title: 'Déposer ou faire enlever',
+    step3Text: 'Vous nous l’apportez, ou nous venons chez vous.',
+    step4Title: 'Suivre jusqu’à la remise',
+    step4Text: 'Des mises à jour jusqu’à l’arrivée au Maroc.',
+    areaTitle: 'Nos zones desservies',
+    areaText:
+      'Nous démarrons dans la région Rhin-Main et dans la région de Nador. D’autres villes s’ajoutent régulièrement — demandez-nous si la vôtre manque encore.',
+    areaCta: 'Demander une ville',
+    areaFromHint: 'Francfort & Rhin-Main',
+    areaToHint: 'Nador & environs',
+    ctaTitle: 'Prêt pour votre envoi ?',
+    ctaText:
+      'Calculez le prix, réservez, recevez votre numéro d’envoi — c’est fait en quelques minutes.',
   },
   calculator: {
     title: 'Calculer le prix',
@@ -71,7 +122,7 @@ export const fr: Dictionary = {
     destinationCity: 'Ville d’arrivée',
     weightLabel: 'Poids en kg',
     pickupLabel: 'Enlèvement à mon domicile',
-    pickupHint: 'Nous venons chercher votre envoi (+10 €). Sinon, vous le déposez chez nous.',
+    pickupHint: 'Nous venons chercher votre envoi (+{pickup}). Sinon, vous le déposez chez nous.',
     typeLabel: 'Type d’envoi',
     typeStandard: 'Envoi normal',
     typeStandardHint: 'Colis, sacs, cartons',
@@ -79,16 +130,50 @@ export const fr: Dictionary = {
     typeDocumentsHint: 'Passeports, actes, contrats',
     typeBulky: 'Encombrant / lourd',
     typeBulkyHint: 'Meubles, appareils, vélo …',
+    cityOnRequest: 'sur demande',
+    swapDirection: 'Inverser la direction',
+    weightHintBulky: 'Un poids approximatif suffit — nous le vérifions à l’enlèvement.',
+    weightHintStandard: 'Minimum {minimum} · ensuite {perKg} le kg',
+    weightPlaceholder: 'ex. 25',
+    tooHeavyStandard: 'Au-delà de {max} kg, faites une demande pour objets encombrants.',
+    tooHeavyDocuments: 'Au-delà de {max} kg, réservez-le comme envoi normal.',
+    forWeight: 'pour {weight}',
+    inclPickup: 'enlèvement inclus',
+    dropOff: 'dépôt chez nous',
+    enterWeight: 'Saisissez un poids pour voir votre prix.',
     yourPrice: 'Votre prix',
     breakdownWeight: 'Transport ({weight})',
     breakdownMinimum: 'Prix minimum',
     breakdownDocuments: 'Documents (forfait)',
     documentsExplain:
-      'Forfait de 10 € jusqu’à {max} kg — quel que soit le poids. Pour passeports, actes, contrats et procurations. Plus lourd, ou plus d’une enveloppe ? Réservez-le alors comme envoi normal.',
+      'Forfait de {price} jusqu’à {max} kg — quel que soit le poids. Pour passeports, actes, contrats et procurations. Plus lourd, ou plus d’une enveloppe ? Réservez-le alors comme envoi normal.',
     breakdownPickup: 'Enlèvement',
     bulkyNotice: 'Devis individuel nécessaire',
     bulkyExplain:
       'Pour les objets encombrants ou particulièrement lourds, nous établissons un prix forfaitaire personnel. Envoyez des photos et les dimensions — vous recevez votre devis en général sous 24 heures.',
+  },
+  calculatorPage: {
+    metaTitle: 'Calculateur de prix',
+    metaDescription:
+      'Calculez le prix de votre envoi vers le Maroc : {perKg}/kg, minimum {minimum}, enlèvement +{pickup}.',
+    intro:
+      'Le prix affiché est le prix que vous payez — nous vérifions le poids à la prise en charge et discutons toujours d’un éventuel écart avec vous au préalable.',
+    howTitle: 'Notre calcul',
+    rowPerKilo: 'Prix par kilogramme',
+    rowMinimum: 'Prix minimum',
+    rowPickup: 'Enlèvement chez le client',
+    rowDocuments: 'Documents jusqu’à {max} kg',
+    rowBulky: 'Objets encombrants',
+    bulkyOnRequest: 'Prix fixe sur demande',
+    minimumNote:
+      'Jusqu’à {breakEven} kg inclus, le prix minimum de {minimum} s’applique. À partir de {breakEven} kg, vous payez exactement {perKg} le kilo.',
+    examplesTitle: 'Exemples',
+    colWeight: 'Poids',
+    colPickup: 'Enlèvement',
+    colPrice: 'Prix',
+    bulkyTitle: 'Encombrant ou très lourd ?',
+    bulkyText:
+      'Pour les machines à laver, réfrigérateurs, meubles, vélos ou pièces automobiles, nous établissons un prix fixe personnalisé.',
   },
   booking: {
     title: 'Réserver un envoi',
@@ -124,6 +209,9 @@ export const fr: Dictionary = {
     successHint: 'Vous recevez votre devis personnel en général sous 24 heures.',
   },
   footer: {
+    blurb: 'Un service personnel, transparent et suivi de bout en bout.',
+    rights: 'Tous droits réservés.',
+    vatNote: 'Prix TVA légale incluse, le cas échéant.',
     legal: 'Mentions légales',
     company: 'Entreprise',
     service: 'Service',

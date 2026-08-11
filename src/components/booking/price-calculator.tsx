@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Field, Input, Select } from '@/components/ui/input';
 import { calculatePrice, formatCents, formatWeight } from '@/lib/pricing';
 import { pricingConfig } from '@/config/pricing';
-import { citiesByCountry, countryFlags, countryLabels, type CountryCode } from '@/config/regions';
+import { citiesByCountry, countryFlags, type CountryCode } from '@/config/regions';
 import { cn } from '@/lib/utils';
 import { useT } from '@/lib/i18n/client';
+import type { Translate } from '@/lib/i18n';
 
 type ShipmentType = 'standard' | 'documents' | 'bulky';
 
@@ -33,14 +34,14 @@ const DEFAULT_STATE: CalculatorState = {
   shipmentType: 'standard',
 };
 
-function CityOptions({ country }: { country: CountryCode }) {
+function CityOptions({ country, t }: { country: CountryCode; t: Translate }) {
   return (
     <>
       {citiesByCountry(country).map((city) => (
         <option key={city.slug} value={city.slug}>
           {city.name}
           {city.region ? ` · ${city.region}` : ''}
-          {city.active ? '' : ' (auf Anfrage)'}
+          {city.active ? '' : ` (${t('calculator.cityOnRequest')})`}
         </option>
       ))}
     </>
@@ -206,7 +207,7 @@ export function PriceCalculator({
             >
               {(['DE', 'MA'] as CountryCode[]).map((c) => (
                 <option key={c} value={c}>
-                  {countryFlags[c]} {countryLabels[c]}
+                  {countryFlags[c]} {t(`countries.${c}`)}
                 </option>
               ))}
             </Select>
@@ -216,7 +217,7 @@ export function PriceCalculator({
             type="button"
             onClick={swapDirection}
             className="mb-0.5 hidden size-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:inline-flex"
-            aria-label="Richtung tauschen"
+            aria-label={t('calculator.swapDirection')}
           >
             <ArrowRightLeft className="size-4" aria-hidden />
           </button>
@@ -229,7 +230,7 @@ export function PriceCalculator({
             >
               {(['DE', 'MA'] as CountryCode[]).map((c) => (
                 <option key={c} value={c}>
-                  {countryFlags[c]} {countryLabels[c]}
+                  {countryFlags[c]} {t(`countries.${c}`)}
                 </option>
               ))}
             </Select>
@@ -243,7 +244,7 @@ export function PriceCalculator({
               value={state.originCity}
               onChange={(e) => setState((prev) => ({ ...prev, originCity: e.target.value }))}
             >
-              <CityOptions country={state.originCountry} />
+              <CityOptions country={state.originCountry} t={t} />
             </Select>
           </Field>
 
@@ -253,7 +254,7 @@ export function PriceCalculator({
               value={state.destinationCity}
               onChange={(e) => setState((prev) => ({ ...prev, destinationCity: e.target.value }))}
             >
-              <CityOptions country={state.destinationCountry} />
+              <CityOptions country={state.destinationCountry} t={t} />
             </Select>
           </Field>
         </div>
@@ -264,16 +265,22 @@ export function PriceCalculator({
           htmlFor="calc-weight"
           hint={
             state.shipmentType === 'bulky'
-              ? 'Ungefähres Gewicht genügt — wir prüfen es bei der Abholung.'
+              ? t('calculator.weightHintBulky')
               : state.shipmentType === 'documents'
-                ? t('calculator.documentsExplain', { max: pricingConfig.maxDocumentsWeightKg })
-                : `Mindestpreis ${formatCents(pricingConfig.minimumPriceCents)} · danach ${formatCents(pricingConfig.pricePerKgCents)} pro kg`
+                ? t('calculator.documentsExplain', {
+                    price: formatCents(pricingConfig.documentsPriceCents),
+                    max: pricingConfig.maxDocumentsWeightKg,
+                  })
+                : t('calculator.weightHintStandard', {
+                    minimum: formatCents(pricingConfig.minimumPriceCents),
+                    perKg: formatCents(pricingConfig.pricePerKgCents),
+                  })
           }
           error={
             tooHeavy && state.shipmentType === 'standard'
-              ? `Über ${pricingConfig.maxStandardWeightKg} kg bitte als Sperrgut anfragen.`
+              ? t('calculator.tooHeavyStandard', { max: pricingConfig.maxStandardWeightKg })
               : tooHeavyForDocuments
-                ? `Über ${pricingConfig.maxDocumentsWeightKg} kg bitte als normale Sendung buchen.`
+                ? t('calculator.tooHeavyDocuments', { max: pricingConfig.maxDocumentsWeightKg })
                 : null
           }
         >
@@ -283,7 +290,7 @@ export function PriceCalculator({
               type="text"
               inputMode="decimal"
               autoComplete="off"
-              placeholder="z. B. 25"
+              placeholder={t('calculator.weightPlaceholder')}
               value={state.weight}
               aria-invalid={tooHeavy && state.shipmentType === 'standard'}
               onChange={(e) =>
@@ -313,7 +320,7 @@ export function PriceCalculator({
           />
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold">{t('calculator.pickupLabel')}</span>
-            <span className="block text-xs text-muted-foreground">{t('calculator.pickupHint')}</span>
+            <span className="block text-xs text-muted-foreground">{t('calculator.pickupHint', { pickup: formatCents(pricingConfig.pickupFeeCents) })}</span>
           </span>
           <span
             className={cn(
@@ -362,9 +369,9 @@ export function PriceCalculator({
               </div>
               {hasWeight && !blocked && (
                 <p className="pb-1.5 text-right text-xs text-muted-foreground">
-                  für {formatWeight(weightNumber)}
+                  {t('calculator.forWeight', { weight: formatWeight(weightNumber) })}
                   <br />
-                  {state.pickup ? 'inkl. Abholung' : 'Abgabe bei uns'}
+                  {state.pickup ? t('calculator.inclPickup') : t('calculator.dropOff')}
                 </p>
               )}
             </div>
@@ -405,7 +412,7 @@ export function PriceCalculator({
 
             {!hasWeight && (
               <p className="text-center text-xs text-muted-foreground">
-                Gib ein Gewicht ein, um deinen Preis zu sehen.
+                {t('calculator.enterWeight')}
               </p>
             )}
           </div>

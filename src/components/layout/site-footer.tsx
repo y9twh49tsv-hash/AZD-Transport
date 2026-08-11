@@ -31,7 +31,7 @@ export async function SiteFooter() {
         <div className="lg:col-span-1">
           <Logo />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-            {brand.tagline}. Persönlich, transparent und mit lückenloser Sendungsverfolgung.
+            {t('meta.tagline')}. {t('footer.blurb')}
           </p>
         </div>
 
@@ -97,9 +97,9 @@ export async function SiteFooter() {
       <div className="border-t border-border">
         <div className="container flex flex-col gap-2 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>
-            © {new Date().getFullYear()} {brand.legalName}. Alle Rechte vorbehalten.
+            © {new Date().getFullYear()} {brand.legalName}. {t('footer.rights')}
           </p>
-          <p>Preise inkl. gesetzlicher Umsatzsteuer, sofern anwendbar.</p>
+          <p>{t('footer.vatNote')}</p>
         </div>
       </div>
     </footer>

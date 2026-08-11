@@ -51,17 +51,68 @@ export const en: Dictionary = {
     mainNavigation: 'Main navigation',
     menu: 'Open menu',
   },
+  meta: {
+    tagline: 'Transport between Germany and Morocco',
+    siteDescription:
+      'Parcels, bags and boxes between Germany and Morocco. From {perKg}/kg, minimum {minimum}, collection +{pickup}. With a shipment number, a QR code and status tracking.',
+    ogDescription:
+      'Transport between Frankfurt/Rhine-Main and Nador. From {perKg}/kg, minimum {minimum}, collection +{pickup}.',
+    ogLocale: 'en_GB',
+  },
+  countries: {
+    DE: 'Germany',
+    MA: 'Morocco',
+  },
   home: {
     eyebrow: 'Germany ↔ Morocco',
-    headline: 'Your parcels safely from Germany to Morocco',
+    headline: 'Your parcels safely from {from} to {to}',
     subline:
       'We collect your parcels, bags and boxes in the Rhine-Main area and bring them to Nador and the surrounding region — with a fixed shipment number, a QR code and status tracking from start to finish.',
-    pricePerKg: 'from €2 per kg',
-    minimumPrice: 'Minimum €20',
-    pickupPrice: 'Collection +€10',
-    bulkyPrice: 'Bulky goods: individual flat price',
+    factParcels: 'Parcels from',
+    factMinimum: 'Minimum price',
+    factPickup: 'Collection',
+    documentsNote:
+      'Documents (passports, certificates, contracts): a flat {price} up to {max} kg — regardless of weight.',
+    bulkyNote:
+      'Bulky items (furniture, appliances, bicycles): an individual flat price based on photos and dimensions.',
     whyTitle: 'Why {brand}?',
     whySubtitle: 'Personal, traceable and without hidden costs.',
+    featurePickupTitle: 'Personal collection',
+    featurePickupText:
+      'On request we collect your shipment in the Rhine-Main area directly from your home — for a flat {pickup}.',
+    featureNumberTitle: 'A fixed shipment number',
+    featureNumberText:
+      'Every shipment gets a unique number such as {example} straight away. You can always find it again with it.',
+    featureQrTitle: 'A QR code on every parcel',
+    featureQrText:
+      'A label with a QR code. Our team scans it at every stage — without your details being printed on the parcel.',
+    featureStatusTitle: 'Status tracking',
+    featureStatusText:
+      'From “Booked” to “Delivered”: every step is recorded and visible to you online.',
+    featureSealTitle: 'Documented and sealed',
+    featureSealText:
+      'Larger shipments are sealed with numbered security bags. You see the seal number in the tracking.',
+    featurePriceTitle: 'Transparent prices',
+    featurePriceText:
+      'No small print: {perKg} per kilo, {minimum} minimum, {pickup} for collection. Bulky goods get a fixed price up front.',
+    stepsTitle: 'How it works',
+    step1Title: 'Calculate the price',
+    step1Text: 'Enter the weight, see the price at once — no account needed.',
+    step2Title: 'Book the shipment',
+    step2Text: 'Enter sender and recipient, done in a few minutes.',
+    step3Title: 'Drop off or have it collected',
+    step3Text: 'You bring it to us, or we come to you.',
+    step4Title: 'Follow it to the door',
+    step4Text: 'Status updates until the shipment arrives in Morocco.',
+    areaTitle: 'Where we run',
+    areaText:
+      'We start in the Rhine-Main area and in the Nador region. More cities are added continuously — just ask if yours is missing.',
+    areaCta: 'Request a city',
+    areaFromHint: 'Frankfurt & Rhine-Main',
+    areaToHint: 'Nador & surroundings',
+    ctaTitle: 'Ready to send?',
+    ctaText:
+      'Calculate the price, book, receive your shipment number — done in a few minutes.',
   },
   calculator: {
     title: 'Calculate price',
@@ -71,7 +122,7 @@ export const en: Dictionary = {
     destinationCity: 'Destination city',
     weightLabel: 'Weight in kg',
     pickupLabel: 'Collect from my home',
-    pickupHint: 'We collect your shipment (+€10). Otherwise you drop it off with us.',
+    pickupHint: 'We collect your shipment (+{pickup}). Otherwise you drop it off with us.',
     typeLabel: 'Type of shipment',
     typeStandard: 'Normal shipment',
     typeStandardHint: 'Parcels, bags, boxes',
@@ -79,16 +130,50 @@ export const en: Dictionary = {
     typeDocumentsHint: 'Passports, certificates, contracts',
     typeBulky: 'Bulky / heavy',
     typeBulkyHint: 'Furniture, appliances, bicycle …',
+    cityOnRequest: 'on request',
+    swapDirection: 'Swap direction',
+    weightHintBulky: 'An approximate weight is enough — we check it at collection.',
+    weightHintStandard: 'Minimum {minimum} · then {perKg} per kg',
+    weightPlaceholder: 'e.g. 25',
+    tooHeavyStandard: 'Above {max} kg please request it as bulky goods.',
+    tooHeavyDocuments: 'Above {max} kg please book it as a normal shipment.',
+    forWeight: 'for {weight}',
+    inclPickup: 'incl. collection',
+    dropOff: 'drop-off with us',
+    enterWeight: 'Enter a weight to see your price.',
     yourPrice: 'Your price',
     breakdownWeight: 'Transport ({weight})',
     breakdownMinimum: 'Minimum price',
     breakdownDocuments: 'Documents (flat rate)',
     documentsExplain:
-      'A flat €10 up to {max} kg — regardless of weight. For passports, certificates, contracts and powers of attorney. Heavier, or more than one envelope? Then book it as a normal shipment.',
+      'A flat {price} up to {max} kg — regardless of weight. For passports, certificates, contracts and powers of attorney. Heavier, or more than one envelope? Then book it as a normal shipment.',
     breakdownPickup: 'Collection',
     bulkyNotice: 'Individual quote required',
     bulkyExplain:
       'For bulky or particularly heavy goods we prepare a personal flat price. Upload photos and dimensions — you will usually have your quote within 24 hours.',
+  },
+  calculatorPage: {
+    metaTitle: 'Price calculator',
+    metaDescription:
+      'Work out the price for your shipment to Morocco: {perKg}/kg, minimum {minimum}, collection +{pickup}.',
+    intro:
+      'The price shown is the price you pay — we check the weight when we accept the shipment and always discuss any difference with you first.',
+    howTitle: 'How we calculate',
+    rowPerKilo: 'Price per kilogram',
+    rowMinimum: 'Minimum price',
+    rowPickup: 'Collection from the customer',
+    rowDocuments: 'Documents up to {max} kg',
+    rowBulky: 'Bulky goods',
+    bulkyOnRequest: 'Fixed price on request',
+    minimumNote:
+      'Up to and including {breakEven} kg the minimum price of {minimum} applies. From {breakEven} kg you pay exactly {perKg} per kilo.',
+    examplesTitle: 'Examples',
+    colWeight: 'Weight',
+    colPickup: 'Collection',
+    colPrice: 'Price',
+    bulkyTitle: 'Bulky or very heavy?',
+    bulkyText:
+      'For washing machines, fridges, furniture, bicycles or car parts we quote you a personal fixed price.',
   },
   booking: {
     title: 'Book a shipment',
@@ -123,6 +208,9 @@ export const en: Dictionary = {
     successHint: 'You will usually receive your personal quote within 24 hours.',
   },
   footer: {
+    blurb: 'Personal, transparent and with tracking from start to finish.',
+    rights: 'All rights reserved.',
+    vatNote: 'Prices include statutory VAT where applicable.',
     legal: 'Legal',
     company: 'Company',
     service: 'Service',

@@ -1,35 +1,49 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { brand, appUrl } from '@/config/brand';
+import { pricingConfig } from '@/config/pricing';
+import { formatCents } from '@/lib/pricing';
 import { createT, dir, htmlLang } from '@/lib/i18n';
 import { currentLocale } from '@/lib/i18n/server';
 import { LocaleProvider } from '@/lib/i18n/client';
 
-export const metadata: Metadata = {
-  metadataBase: new URL(appUrl()),
-  title: {
-    default: `${brand.name} — ${brand.tagline}`,
-    template: `%s · ${brand.name}`,
-  },
-  description:
-    'Pakete, Taschen und Kartons zwischen Deutschland und Marokko. Ab 2 €/kg, Mindestpreis 20 €, ' +
-    'Abholung +10 €. Mit Sendungsnummer, QR-Code und Statusverfolgung.',
-  applicationName: brand.name,
-  formatDetection: { telephone: true, address: false, email: false },
-  openGraph: {
-    type: 'website',
-    locale: 'de_DE',
-    siteName: brand.name,
-    title: `${brand.name} — ${brand.tagline}`,
-    description:
-      'Transport zwischen Frankfurt/Rhein-Main und Nador. Ab 2 €/kg, Mindestpreis 20 €, ' +
-      'Abholung +10 €.',
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+/**
+ * Metadata follows the chosen language, so a French visitor who shares the page
+ * gets a French preview card. The prices come from `pricingConfig` rather than
+ * from the sentence, so a price change cannot leave a stale number in the
+ * search-engine snippet.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const t = createT(await currentLocale());
+  const prices = {
+    perKg: formatCents(pricingConfig.pricePerKgCents),
+    minimum: formatCents(pricingConfig.minimumPriceCents),
+    pickup: formatCents(pricingConfig.pickupFeeCents),
+  };
+  const title = `${brand.name} — ${t('meta.tagline')}`;
+
+  return {
+    metadataBase: new URL(appUrl()),
+    title: {
+      default: title,
+      template: `%s · ${brand.name}`,
+    },
+    description: t('meta.siteDescription', prices),
+    applicationName: brand.name,
+    formatDetection: { telephone: true, address: false, email: false },
+    openGraph: {
+      type: 'website',
+      locale: t('meta.ogLocale'),
+      siteName: brand.name,
+      title,
+      description: t('meta.ogDescription', prices),
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: [
