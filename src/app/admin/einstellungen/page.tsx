@@ -63,11 +63,22 @@ export default async function SettingsPage() {
           <Row label="Preis pro Kilogramm">{formatCents(pricingConfig.pricePerKgCents)}</Row>
           <Row label="Mindestpreis">{formatCents(pricingConfig.minimumPriceCents)}</Row>
           <Row label="Abholpauschale">{formatCents(pricingConfig.pickupFeeCents)}</Row>
+          <Row label="Mindestgewicht Paket">{pricingConfig.minWeightKg} kg</Row>
           <Row label="Maximalgewicht Standardsendung">
             {pricingConfig.maxStandardWeightKg} kg
           </Row>
+          <Row label="Dokumente (Pauschale)">
+            {formatCents(pricingConfig.documentsPriceCents)}
+          </Row>
+          <Row label="Dokumente bis">{pricingConfig.maxDocumentsWeightKg} kg</Row>
           <Row label="Sperrgut">Immer manueller Pauschalpreis</Row>
         </dl>
+        <p className="mt-4 border-t border-border pt-4 text-xs leading-relaxed text-muted-foreground">
+          Bei Dokumenten wird das Gewicht nicht abgefragt — der Preis ist pauschal. Gespeichert
+          werden {pricingConfig.documentsAssumedWeightKg} kg, damit die Auslastungsrechnung der
+          Touren eine Zahl hat. Alles in{' '}
+          <code className="rounded bg-secondary px-1">src/config/pricing.ts</code>.
+        </p>
       </section>
 
       <section className="surface p-5">
