@@ -1,4 +1,5 @@
 import type { Dictionary } from './de';
+import { legalAr } from './legal/ar';
 
 /**
  * Moroccan Darija in Arabic script — not Modern Standard Arabic.
@@ -511,6 +512,7 @@ export const ar: Dictionary = {
     successTitle: 'كنشوفو ف الطلب ديالك.',
     successHint: 'غادي توصلك العرض ديالك عادةً ف أقل من 24 ساعة.',
   },
+  legal: legalAr,
   footer: {
     blurb: 'خدمة قريبة منك، واضحة، وبتتبّع كامل للطرد.',
     rights: 'جميع الحقوق محفوظة.',

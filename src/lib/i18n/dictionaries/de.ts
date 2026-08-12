@@ -1,3 +1,5 @@
+import { legalDe } from './legal/de';
+
 export const de = {
   common: {
     calculatePrice: 'Preis berechnen',
@@ -518,6 +520,7 @@ export const de = {
     successTitle: 'Wir prüfen deine Anfrage.',
     successHint: 'Du bekommst dein persönliches Angebot in der Regel innerhalb von 24 Stunden.',
   },
+  legal: legalDe,
   footer: {
     blurb: 'Persönlich, transparent und mit lückenloser Sendungsverfolgung.',
     rights: 'Alle Rechte vorbehalten.',

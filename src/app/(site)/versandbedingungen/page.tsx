@@ -1,68 +1,63 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { LegalPage, Section } from '@/components/layout/legal-page';
+import { LegalPage, Section, Todo } from '@/components/layout/legal-page';
 import { pricingConfig } from '@/config/pricing';
 import { formatCents } from '@/lib/pricing';
+import { getT } from '@/lib/i18n/server';
 
-export const metadata: Metadata = { title: 'Versandbedingungen' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('legal.shipping.title') };
+}
 
-export default function ShippingTermsPage() {
+export default async function ShippingTermsPage() {
+  const t = await getT();
+
   return (
-    <LegalPage
-      title="Versandbedingungen"
-      intro="Was du vor dem Versand wissen solltest — praktisch und kurz."
-    >
-      <Section title="Was wir transportieren">
+    <LegalPage title={t('legal.shipping.title')} intro={t('legal.shipping.intro')}>
+      <Section title={t('legal.shipping.s1Title')}>
         <p>
-          Pakete, Taschen, Kartons, persönliche Gegenstände und nach Absprache Sperrgut wie Möbel,
-          Haushaltsgeräte oder Fahrräder. Ausgeschlossen sind die auf der Seite{' '}
+          {t('legal.shipping.s1p1')}{' '}
           <Link href="/verbotene-waren" className="font-medium text-primary underline">
-            Verbotene Waren
+            {t('footer.prohibited')}
           </Link>{' '}
-          genannten Gegenstände.
+          {t('legal.shipping.s1p2')}
         </p>
       </Section>
 
-      <Section title="Verpackung">
+      <Section title={t('legal.shipping.s2Title')}>
         <ul>
-          <li>Stabile Kartons oder feste Reisetaschen verwenden.</li>
-          <li>Zerbrechliches gut auspolstern — wir stapeln im Fahrzeug.</li>
-          <li>Jedes Gepäckstück außen mit Name und Telefonnummer des Empfängers beschriften.</li>
-          <li>Flüssigkeiten zusätzlich in einen dichten Beutel geben.</li>
+          <li>{t('legal.shipping.s2li1')}</li>
+          <li>{t('legal.shipping.s2li2')}</li>
+          <li>{t('legal.shipping.s2li3')}</li>
+          <li>{t('legal.shipping.s2li4')}</li>
         </ul>
       </Section>
 
-      <Section title="Abgabe oder Abholung">
+      <Section title={t('legal.shipping.s3Title')}>
+        <p>{t('legal.shipping.s3p', { pickup: formatCents(pricingConfig.pickupFeeCents) })}</p>
+      </Section>
+
+      <Section title={t('legal.shipping.s4Title')}>
         <p>
-          Du kannst deine Sendung bei uns abgeben oder sie für pauschal{' '}
-          {formatCents(pricingConfig.pickupFeeCents)} bei dir abholen lassen. Bei der Abholung
-          prüfen wir Gewicht und Anzahl gemeinsam mit dir und dokumentieren die Übernahme.
+          {t('legal.shipping.s4p', {
+            documents: formatCents(pricingConfig.documentsPriceCents),
+            documentsMax: pricingConfig.maxDocumentsWeightKg,
+          })}
         </p>
       </Section>
 
-      <Section title="Sicherheitsbeutel und Plomben">
-        <p>
-          Größere Sendungen versiegeln wir mit nummerierten Sicherheitsbeuteln. Die Nummer
-          (z. B. SEC-583921) wird gespeichert und ist in deiner Sendungsverfolgung sichtbar. Prüfe
-          bei der Übergabe, ob Nummer und Verschluss unversehrt sind.
-        </p>
+      <Section title={t('legal.shipping.s5Title')}>
+        <p>{t('legal.shipping.s5p')}</p>
       </Section>
 
-      <Section title="Zustellung">
-        <p>
-          Wir stellen an der angegebenen Adresse zu oder vereinbaren einen Übergabeort. Der
-          Empfänger muss telefonisch erreichbar sein. Bei der Übergabe dokumentieren wir die
-          Zustellung mit Foto und/oder Unterschrift.
-        </p>
+      <Section title={t('legal.shipping.s6Title')}>
+        <p>{t('legal.shipping.s6p')}</p>
       </Section>
 
-      <Section title="Zoll">
+      <Section title={t('legal.shipping.s7Title')}>
         <p>
-          <strong>
-            [Zollrechtliche Hinweise durch eine sachkundige Stelle ergänzen lassen: Welche
-            Warenmengen sind als Umzugs- oder Geschenkgut zulässig? Welche Dokumente muss der
-            Kunde beibringen? Wer trägt eventuelle Abgaben?]
-          </strong>
+          <Todo>{t('legal.shipping.s7todo')}</Todo>
         </p>
       </Section>
     </LegalPage>

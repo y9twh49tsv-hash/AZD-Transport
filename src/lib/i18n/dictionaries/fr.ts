@@ -1,4 +1,5 @@
 import type { Dictionary } from './de';
+import { legalFr } from './legal/fr';
 
 /**
  * French — the second language of Morocco and the one most Moroccan customers
@@ -523,6 +524,7 @@ export const fr: Dictionary = {
     successTitle: 'Nous examinons votre demande.',
     successHint: 'Vous recevez votre devis personnel en général sous 24 heures.',
   },
+  legal: legalFr,
   footer: {
     blurb: 'Un service personnel, transparent et suivi de bout en bout.',
     rights: 'Tous droits réservés.',

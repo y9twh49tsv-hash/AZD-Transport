@@ -1,101 +1,82 @@
 import type { Metadata } from 'next';
-import { LegalPage, Section } from '@/components/layout/legal-page';
+import { LegalPage, Section, Todo } from '@/components/layout/legal-page';
 import { pricingConfig } from '@/config/pricing';
 import { formatCents } from '@/lib/pricing';
 import { brand } from '@/config/brand';
+import { getT } from '@/lib/i18n/server';
 
-export const metadata: Metadata = { title: 'AGB' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('footer.terms') };
+}
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const t = await getT();
+
   return (
     <LegalPage
-      title="Allgemeine Geschäftsbedingungen"
-      intro={`Vertragsbedingungen für Transportleistungen von ${brand.name}.`}
+      title={t('legal.terms.title')}
+      intro={t('legal.terms.intro', { brand: brand.name })}
     >
-      <Section title="§ 1 Geltungsbereich">
-        <p>
-          Diese Bedingungen gelten für alle Transportleistungen zwischen {brand.legalName}{' '}
-          (nachfolgend „wir“) und dem Auftraggeber (nachfolgend „Kunde“) im Verkehr zwischen
-          Deutschland und Marokko.
-        </p>
+      <Section title={t('legal.terms.s1Title')}>
+        <p>{t('legal.terms.s1p', { legalName: brand.legalName })}</p>
       </Section>
 
-      <Section title="§ 2 Vertragsschluss">
-        <p>
-          Der Vertrag kommt mit der Bestätigung der Buchung durch uns zustande. Der Kunde erhält
-          eine Sendungsnummer, unter der die Sendung nachverfolgt werden kann.
-        </p>
+      <Section title={t('legal.terms.s2Title')}>
+        <p>{t('legal.terms.s2p')}</p>
       </Section>
 
-      <Section title="§ 3 Preise">
+      <Section title={t('legal.terms.s3Title')}>
         <ul>
-          <li>Normale Sendungen: {formatCents(pricingConfig.pricePerKgCents)} je angefangenes Kilogramm.</li>
-          <li>Mindestpreis je Sendung: {formatCents(pricingConfig.minimumPriceCents)}.</li>
-          <li>Abholung beim Kunden: pauschal {formatCents(pricingConfig.pickupFeeCents)}.</li>
+          <li>{t('legal.terms.s3li1', { perKg: formatCents(pricingConfig.pricePerKgCents) })}</li>
           <li>
-            Sperrige oder besonders schwere Güter: individueller Pauschalpreis nach vorheriger
-            Prüfung von Fotos, Maßen und Gewicht.
+            {t('legal.terms.s3li2', { minimum: formatCents(pricingConfig.minimumPriceCents) })}
           </li>
+          <li>{t('legal.terms.s3li3', { pickup: formatCents(pricingConfig.pickupFeeCents) })}</li>
+          <li>
+            {t('legal.terms.s3li4', {
+              documents: formatCents(pricingConfig.documentsPriceCents),
+              documentsMax: pricingConfig.maxDocumentsWeightKg,
+            })}
+          </li>
+          <li>{t('legal.terms.s3li5')}</li>
         </ul>
-        <p>
-          Maßgeblich ist das bei der Annahme festgestellte tatsächliche Gewicht. Weicht es von der
-          Angabe des Kunden ab, informieren wir ihn vor der Weiterbeförderung.
-        </p>
+        <p>{t('legal.terms.s3p')}</p>
       </Section>
 
-      <Section title="§ 4 Pflichten des Kunden">
+      <Section title={t('legal.terms.s4Title')}>
         <ul>
-          <li>vollständige und wahrheitsgemäße Angaben zu Inhalt, Gewicht und Empfänger</li>
-          <li>transportsichere Verpackung der Sendung</li>
-          <li>keine verbotenen oder nicht deklarierten Waren (siehe Seite „Verbotene Waren“)</li>
-          <li>Erreichbarkeit des Empfängers unter der angegebenen Telefonnummer</li>
+          <li>{t('legal.terms.s4li1')}</li>
+          <li>{t('legal.terms.s4li2')}</li>
+          <li>{t('legal.terms.s4li3')}</li>
+          <li>{t('legal.terms.s4li4')}</li>
         </ul>
       </Section>
 
-      <Section title="§ 5 Zahlung">
+      <Section title={t('legal.terms.s5Title')}>
+        <p>{t('legal.terms.s5p')}</p>
+      </Section>
+
+      <Section title={t('legal.terms.s6Title')}>
         <p>
-          Die Zahlung erfolgt derzeit bar bei Abgabe oder Abholung, per Überweisung oder auf
-          Rechnung nach Absprache. Eine Online-Zahlung ist in Vorbereitung.
+          <Todo>{t('legal.terms.s6todo')}</Todo> {t('legal.terms.s6p')}
         </p>
       </Section>
 
-      <Section title="§ 6 Laufzeiten">
+      <Section title={t('legal.terms.s7Title')}>
         <p>
-          <strong>
-            [Realistische Transportzeiten eintragen, z. B. „in der Regel 7–12 Tage ab Verladung“.
-            Verbindliche Zusagen nur machen, wenn sie eingehalten werden können.]
-          </strong>{' '}
-          Angegebene Laufzeiten sind unverbindliche Richtwerte. Verzögerungen durch Zoll, Fähre
-          oder höhere Gewalt begründen keinen Schadenersatzanspruch.
+          {t('legal.terms.s7p')} <Todo>{t('legal.terms.s7todo')}</Todo>
         </p>
       </Section>
 
-      <Section title="§ 7 Haftung">
+      <Section title={t('legal.terms.s8Title')}>
         <p>
-          Es gelten die Regelungen der Seite „Haftung &amp; Versicherung“.{' '}
-          <strong>
-            [Prüfen lassen, ob und in welchem Umfang die CMR (Übereinkommen über den
-            Beförderungsvertrag im internationalen Straßengüterverkehr) oder §§ 407 ff. HGB
-            Anwendung finden.]
-          </strong>
+          <Todo>{t('legal.terms.s8todo')}</Todo>
         </p>
       </Section>
 
-      <Section title="§ 8 Widerrufsrecht für Verbraucher">
-        <p>
-          <strong>
-            [Widerrufsbelehrung ergänzen. Bei Beförderungsverträgen gelten Besonderheiten — bitte
-            anwaltlich klären, ob § 312g Abs. 2 BGB einschlägig ist, und gegebenenfalls ein
-            Muster-Widerrufsformular bereitstellen.]
-          </strong>
-        </p>
-      </Section>
-
-      <Section title="§ 9 Schlussbestimmungen">
-        <p>
-          Es gilt deutsches Recht. Sollte eine Bestimmung unwirksam sein, bleibt die Wirksamkeit
-          der übrigen Bestimmungen unberührt.
-        </p>
+      <Section title={t('legal.terms.s9Title')}>
+        <p>{t('legal.terms.s9p')}</p>
       </Section>
     </LegalPage>
   );

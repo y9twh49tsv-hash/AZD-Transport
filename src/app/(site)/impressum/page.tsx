@@ -1,13 +1,23 @@
 import type { Metadata } from 'next';
-import { LegalPage, Section } from '@/components/layout/legal-page';
+import { LegalPage, Section, Todo } from '@/components/layout/legal-page';
 import { brand } from '@/config/brand';
+import { getT } from '@/lib/i18n/server';
 
-export const metadata: Metadata = { title: 'Impressum' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('legal.imprint.title') };
+}
 
-export default function ImprintPage() {
+export default async function ImprintPage() {
+  const t = await getT();
+
   return (
-    <LegalPage title="Impressum" intro="Angaben gemäß § 5 DDG (ehemals § 5 TMG).">
-      <Section title="Diensteanbieter">
+    <LegalPage title={t('legal.imprint.title')} intro={t('legal.imprint.intro')}>
+      <Section title={t('legal.imprint.s1Title')}>
+        {/*
+          Firmenname und Anschrift bleiben unübersetzt: Pflichtangaben nach
+          § 5 DDG müssen die Anschrift so nennen, wie sie tatsächlich lautet.
+        */}
         <p>
           {brand.legalName}
           <br />
@@ -19,46 +29,41 @@ export default function ImprintPage() {
         </p>
       </Section>
 
-      <Section title="Kontakt">
+      <Section title={t('legal.imprint.s2Title')}>
         <p>
-          Telefon: {brand.phone}
+          {t('legal.imprint.phone')}: {brand.phone}
           <br />
-          E-Mail: {brand.email}
+          {t('legal.imprint.email')}: {brand.email}
         </p>
       </Section>
 
-      <Section title="Vertretungsberechtigte Person">
+      <Section title={t('legal.imprint.s3Title')}>
         <p>
-          <strong>[Vor- und Nachname der Inhaberin / des Inhabers eintragen]</strong>
+          <Todo>{t('legal.imprint.s3todo')}</Todo>
         </p>
       </Section>
 
-      <Section title="Umsatzsteuer-Identifikationsnummer">
+      <Section title={t('legal.imprint.s4Title')}>
         <p>
-          <strong>[USt-IdNr. gemäß § 27 a UStG eintragen — oder Hinweis auf Kleinunternehmerregelung nach § 19 UStG]</strong>
+          <Todo>{t('legal.imprint.s4todo')}</Todo>
         </p>
       </Section>
 
-      <Section title="Registereintrag / Erlaubnis">
+      <Section title={t('legal.imprint.s5Title')}>
         <p>
-          <strong>
-            [Falls vorhanden: Handelsregister und Registernummer eintragen. Für gewerblichen
-            Güterkraftverkehr ist zusätzlich die Erlaubnis nach § 3 GüKG bzw. die
-            EU-Gemeinschaftslizenz nach VO (EG) 1072/2009 anzugeben. Bitte anwaltlich prüfen
-            lassen, welche Erlaubnis für dein konkretes Geschäftsmodell erforderlich ist.]
-          </strong>
+          <Todo>{t('legal.imprint.s5todo')}</Todo>
         </p>
       </Section>
 
-      <Section title="Redaktionell verantwortlich">
+      <Section title={t('legal.imprint.s6Title')}>
         <p>
-          <strong>[Name und Anschrift der verantwortlichen Person eintragen]</strong>
+          <Todo>{t('legal.imprint.s6todo')}</Todo>
         </p>
       </Section>
 
-      <Section title="EU-Streitschlichtung">
+      <Section title={t('legal.imprint.s7Title')}>
         <p>
-          Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:{' '}
+          {t('legal.imprint.s7p1')}{' '}
           <a
             href="https://ec.europa.eu/consumers/odr/"
             className="font-medium text-primary underline"
@@ -67,16 +72,13 @@ export default function ImprintPage() {
           >
             ec.europa.eu/consumers/odr
           </a>
-          . Unsere E-Mail-Adresse findest du oben.
+          {t('legal.imprint.s7p2')}
         </p>
       </Section>
 
-      <Section title="Verbraucherstreitbeilegung">
+      <Section title={t('legal.imprint.s8Title')}>
         <p>
-          <strong>
-            [Angabe ergänzen: Wir sind (nicht) bereit oder verpflichtet, an Streitbeilegungsverfahren
-            vor einer Verbraucherschlichtungsstelle teilzunehmen.]
-          </strong>
+          <Todo>{t('legal.imprint.s8todo')}</Todo>
         </p>
       </Section>
     </LegalPage>

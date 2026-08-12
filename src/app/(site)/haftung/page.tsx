@@ -1,72 +1,52 @@
 import type { Metadata } from 'next';
-import { LegalPage, Section } from '@/components/layout/legal-page';
+import { LegalPage, Section, Todo } from '@/components/layout/legal-page';
+import { getT } from '@/lib/i18n/server';
 
-export const metadata: Metadata = { title: 'Haftung & Versicherung' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('legal.liability.title') };
+}
 
-export default function LiabilityPage() {
+export default async function LiabilityPage() {
+  const t = await getT();
+
   return (
-    <LegalPage
-      title="Haftung & Versicherung"
-      intro="Wofür wir einstehen — und was du selbst absichern solltest."
-    >
-      <Section title="Grundsatz">
+    <LegalPage title={t('legal.liability.title')} intro={t('legal.liability.intro')}>
+      <Section title={t('legal.liability.s1Title')}>
         <p>
-          Wir haften für Verlust und Beschädigung der Sendung während der Zeit, in der wir sie in
-          Obhut haben.{' '}
-          <strong>
-            [Haftungsrahmen konkretisieren: Gilt die CMR mit 8,33 SZR je Kilogramm, gelten
-            §§ 407 ff. HGB mit 8,33 Rechnungseinheiten je Kilogramm, oder eine abweichende
-            vertragliche Regelung? Zwingend anwaltlich klären.]
-          </strong>
+          {t('legal.liability.s1p')} <Todo>{t('legal.liability.s1todo')}</Todo>
         </p>
       </Section>
 
-      <Section title="Höchstbetrag je Sendung">
+      <Section title={t('legal.liability.s2Title')}>
         <p>
-          <strong>
-            [Konkreten Höchstbetrag eintragen, abgestimmt mit deiner Transportversicherung, z. B.
-            „bis 500 € je Sendung“. Ohne abgeschlossene Versicherung hier keinen Betrag nennen.]
-          </strong>
+          <Todo>{t('legal.liability.s2todo')}</Todo>
         </p>
       </Section>
 
-      <Section title="Nicht versicherte Gegenstände">
+      <Section title={t('legal.liability.s3Title')}>
+        <p>{t('legal.liability.s3p')}</p>
+      </Section>
+
+      <Section title={t('legal.liability.s4Title')}>
+        <p>{t('legal.liability.s4p')}</p>
+      </Section>
+
+      <Section title={t('legal.liability.s5Title')}>
         <p>
-          Für Bargeld, Schmuck, Edelmetalle, Wertpapiere, Ausweisdokumente, elektronische Geräte
-          ohne Originalverpackung und leicht verderbliche Waren besteht kein Versicherungsschutz.
-          Bitte gib solche Gegenstände nicht mit.
+          {t('legal.liability.s5p1')} <strong>{t('legal.liability.s5strong')}</strong>{' '}
+          {t('legal.liability.s5p2')} <Todo>{t('legal.liability.s5todo')}</Todo>{' '}
+          {t('legal.liability.s5p3')}
         </p>
       </Section>
 
-      <Section title="Verpackung">
-        <p>
-          Für Schäden, die auf eine unzureichende Verpackung durch den Absender zurückgehen, können
-          wir nicht haften. Hinweise dazu findest du in den Versandbedingungen.
-        </p>
+      <Section title={t('legal.liability.s6Title')}>
+        <p>{t('legal.liability.s6p')}</p>
       </Section>
 
-      <Section title="Schadenmeldung">
+      <Section title={t('legal.liability.s7Title')}>
         <p>
-          Melde einen erkennbaren Schaden bitte <strong>direkt bei der Übergabe</strong> und lass
-          ihn auf dem Übergabeprotokoll vermerken. Verdeckte Schäden melde uns bitte innerhalb von{' '}
-          <strong>[Frist eintragen, z. B. 7 Tagen]</strong> mit Fotos.
-        </p>
-      </Section>
-
-      <Section title="Höhere Gewalt">
-        <p>
-          Für Verzögerungen oder Schäden durch Streik, Wetter, Grenzschließungen, Fährausfälle,
-          behördliche Maßnahmen oder Zollkontrollen haften wir nicht.
-        </p>
-      </Section>
-
-      <Section title="Erforderliche Versicherungen">
-        <p>
-          <strong>
-            [Vor Betriebsaufnahme klären und hier dokumentieren: Verkehrshaftungsversicherung,
-            Betriebshaftpflicht, ggf. Warentransportversicherung, sowie die Erlaubnis nach § 3 GüKG
-            bzw. die EU-Gemeinschaftslizenz für grenzüberschreitenden gewerblichen Güterverkehr.]
-          </strong>
+          <Todo>{t('legal.liability.s7todo')}</Todo>
         </p>
       </Section>
     </LegalPage>

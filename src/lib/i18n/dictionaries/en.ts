@@ -1,4 +1,5 @@
 import type { Dictionary } from './de';
+import { legalEn } from './legal/en';
 
 /**
  * English. The fallback for everyone whose language is not one of the other
@@ -518,6 +519,7 @@ export const en: Dictionary = {
     successTitle: 'We are reviewing your request.',
     successHint: 'You will usually receive your personal quote within 24 hours.',
   },
+  legal: legalEn,
   footer: {
     blurb: 'Personal, transparent and with tracking from start to finish.',
     rights: 'All rights reserved.',

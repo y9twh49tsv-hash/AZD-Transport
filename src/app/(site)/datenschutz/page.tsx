@@ -1,136 +1,123 @@
 import type { Metadata } from 'next';
-import { LegalPage, Section } from '@/components/layout/legal-page';
+import { LegalPage, Section, Todo } from '@/components/layout/legal-page';
 import { brand } from '@/config/brand';
+import { getT } from '@/lib/i18n/server';
 
-export const metadata: Metadata = { title: 'Datenschutzerklärung' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t('legal.privacy.title') };
+}
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const t = await getT();
+
   return (
-    <LegalPage
-      title="Datenschutzerklärung"
-      intro="Wie wir mit deinen personenbezogenen Daten umgehen — und welche Rechte du hast."
-    >
-      <Section title="1. Verantwortlicher">
+    <LegalPage title={t('legal.privacy.title')} intro={t('legal.privacy.intro')}>
+      <Section title={t('legal.privacy.s1Title')}>
         <p>
-          {brand.legalName}, {brand.address.street}, {brand.address.zip} {brand.address.city},{' '}
-          {brand.address.country}. E-Mail: {brand.email}, Telefon: {brand.phone}.
+          {t('legal.privacy.s1p', {
+            legalName: brand.legalName,
+            street: brand.address.street,
+            zip: brand.address.zip,
+            city: brand.address.city,
+            country: brand.address.country,
+            email: brand.email,
+            phone: brand.phone,
+          })}
         </p>
         <p>
-          <strong>
-            [Falls ein Datenschutzbeauftragter benannt werden muss, hier Name und Kontaktdaten
-            ergänzen.]
-          </strong>
+          <Todo>{t('legal.privacy.s1todo')}</Todo>
         </p>
       </Section>
 
-      <Section title="2. Welche Daten wir verarbeiten">
-        <p>Für die Abwicklung einer Sendung verarbeiten wir:</p>
+      <Section title={t('legal.privacy.s2Title')}>
+        <p>{t('legal.privacy.s2p')}</p>
         <ul>
-          <li>Vor- und Nachname von Absender und Empfänger</li>
-          <li>Anschrift von Absender und Empfänger</li>
-          <li>Telefonnummer und E-Mail-Adresse</li>
-          <li>Angaben zur Sendung: Gewicht, Anzahl, Inhalt, Beschreibung</li>
-          <li>Abhol- und Zustelltermine sowie Statusmeldungen</li>
-          <li>Zahlungsstatus und Betrag</li>
-          <li>bei Sperrgut: von dir hochgeladene Fotos</li>
-          <li>bei Abholung und Zustellung: Nachweisfotos und ggf. eine Unterschrift</li>
+          <li>{t('legal.privacy.s2li1')}</li>
+          <li>{t('legal.privacy.s2li2')}</li>
+          <li>{t('legal.privacy.s2li3')}</li>
+          <li>{t('legal.privacy.s2li4')}</li>
+          <li>{t('legal.privacy.s2li5')}</li>
+          <li>{t('legal.privacy.s2li6')}</li>
+          <li>{t('legal.privacy.s2li7')}</li>
+          <li>{t('legal.privacy.s2li8')}</li>
         </ul>
-        <p>
-          Wir erheben nur die Daten, die wir für den Transport tatsächlich brauchen. Sensible
-          Daten (z. B. Gesundheitsdaten) verarbeiten wir nicht.
-        </p>
+        <p>{t('legal.privacy.s2after')}</p>
       </Section>
 
-      <Section title="3. Rechtsgrundlagen">
+      <Section title={t('legal.privacy.s3Title')}>
         <ul>
           <li>
-            <strong>Art. 6 Abs. 1 lit. b DSGVO</strong> — Erfüllung des Transportvertrags
-            (Buchung, Abholung, Transport, Zustellung, Sendungsverfolgung).
+            <strong>{t('legal.privacy.s3li1Law')}</strong> {t('legal.privacy.s3li1')}
           </li>
           <li>
-            <strong>Art. 6 Abs. 1 lit. c DSGVO</strong> — gesetzliche Pflichten, insbesondere
-            handels- und steuerrechtliche Aufbewahrungspflichten sowie zollrechtliche Vorgaben.
+            <strong>{t('legal.privacy.s3li2Law')}</strong> {t('legal.privacy.s3li2')}
           </li>
           <li>
-            <strong>Art. 6 Abs. 1 lit. f DSGVO</strong> — berechtigtes Interesse an der Sicherheit
-            unserer Systeme, an der Dokumentation der Übergaben und an der Abwehr von Missbrauch.
+            <strong>{t('legal.privacy.s3li3Law')}</strong> {t('legal.privacy.s3li3')}
           </li>
         </ul>
       </Section>
 
-      <Section title="4. Empfänger und Auftragsverarbeiter">
-        <p>Wir setzen folgende Dienstleister ein:</p>
+      <Section title={t('legal.privacy.s4Title')}>
+        <p>{t('legal.privacy.s4p')}</p>
         <ul>
+          {/*
+            Die Anbieter stehen namentlich hier und nicht im Wörterbuch: sie
+            sind ein Fakt über den Betrieb, kein übersetzbarer Satz — und wenn
+            der Hoster wechselt, darf er nicht in vier Dateien stehen bleiben.
+          */}
           <li>
-            <strong>Vercel Inc.</strong> — Hosting der Website.{' '}
-            <strong>[Auftragsverarbeitungsvertrag abschließen und hier bestätigen.]</strong>
+            <strong>Railway Corp.</strong> {t('legal.privacy.s4li1')}{' '}
+            <Todo>{t('legal.privacy.s4li1todo')}</Todo>
           </li>
           <li>
-            <strong>Supabase</strong> — Datenbank, Authentifizierung und Dateispeicher.{' '}
-            <strong>
-              [Serverstandort in der EU wählen und Auftragsverarbeitungsvertrag abschließen.]
-            </strong>
+            <strong>Supabase</strong> {t('legal.privacy.s4li2')}{' '}
+            <Todo>{t('legal.privacy.s4li2todo')}</Todo>
           </li>
           <li>
-            <strong>E-Mail-Versanddienstleister</strong> für Transaktionsmails.{' '}
-            <strong>[Anbieter eintragen, sobald ausgewählt.]</strong>
+            <strong>Resend</strong> {t('legal.privacy.s4li3')}{' '}
+            <Todo>{t('legal.privacy.s4li3todo')}</Todo>
           </li>
         </ul>
         <p>
-          Eine Übermittlung in Drittländer erfolgt nur auf Grundlage geeigneter Garantien
-          (Art. 44 ff. DSGVO).{' '}
-          <strong>[Konkrete Garantien prüfen und benennen.]</strong>
+          {t('legal.privacy.s4after')} <Todo>{t('legal.privacy.s4todo')}</Todo>
         </p>
       </Section>
 
-      <Section title="5. Sendungsverfolgung">
+      <Section title={t('legal.privacy.s5Title')}>
         <p>
-          Über die öffentliche Sendungsverfolgung sind nur die Sendungsnummer, der Status, die
-          Route, die Anzahl der Gepäckstücke, das Gesamtgewicht, eine eventuelle Sicherheitsnummer
-          und der Verlauf einsehbar. <strong>Adressen, Telefonnummern, E-Mail-Adressen, Preise und
-          interne Notizen werden dort niemals angezeigt.</strong>
+          {t('legal.privacy.s5p')} <strong>{t('legal.privacy.s5strong')}</strong>
         </p>
       </Section>
 
-      <Section title="6. Speicherdauer">
+      <Section title={t('legal.privacy.s6Title')}>
         <p>
-          Sendungsdaten bewahren wir für die Dauer der Vertragsabwicklung und anschließend im
-          Rahmen der gesetzlichen Aufbewahrungsfristen auf (handels- und steuerrechtlich in der
-          Regel 6 bzw. 10 Jahre). Fotos von Sperrgut-Anfragen, die nicht zu einer Sendung führen,
-          löschen wir spätestens nach{' '}
-          <strong>[Frist festlegen, z. B. 6 Monate]</strong>.
+          {t('legal.privacy.s6p')} <Todo>{t('legal.privacy.s6todo')}</Todo>.
         </p>
       </Section>
 
-      <Section title="7. Deine Rechte">
+      <Section title={t('legal.privacy.s7Title')}>
         <ul>
-          <li>Auskunft über die zu dir gespeicherten Daten (Art. 15 DSGVO)</li>
-          <li>Berichtigung unrichtiger Daten (Art. 16 DSGVO)</li>
-          <li>Löschung (Art. 17 DSGVO), soweit keine Aufbewahrungspflicht entgegensteht</li>
-          <li>Einschränkung der Verarbeitung (Art. 18 DSGVO)</li>
-          <li>Datenübertragbarkeit (Art. 20 DSGVO)</li>
-          <li>Widerspruch gegen Verarbeitungen auf Grundlage berechtigter Interessen (Art. 21 DSGVO)</li>
-          <li>Beschwerde bei einer Datenschutz-Aufsichtsbehörde (Art. 77 DSGVO)</li>
+          <li>{t('legal.privacy.s7li1')}</li>
+          <li>{t('legal.privacy.s7li2')}</li>
+          <li>{t('legal.privacy.s7li3')}</li>
+          <li>{t('legal.privacy.s7li4')}</li>
+          <li>{t('legal.privacy.s7li5')}</li>
+          <li>{t('legal.privacy.s7li6')}</li>
+          <li>{t('legal.privacy.s7li7')}</li>
         </ul>
-        <p>Für alle Anliegen genügt eine E-Mail an {brand.email}.</p>
+        <p>{t('legal.privacy.s7after', { email: brand.email })}</p>
       </Section>
 
-      <Section title="8. Cookies und Reichweitenmessung">
+      <Section title={t('legal.privacy.s8Title')}>
         <p>
-          Wir setzen ausschließlich technisch notwendige Cookies ein — konkret das Sitzungs-Cookie
-          für angemeldete Nutzerinnen und Nutzer. Es findet kein Tracking und keine Werbeanalyse
-          statt. <strong>[Anpassen, falls später Analyse-Tools eingesetzt werden — dann ist eine
-          Einwilligungslösung erforderlich.]</strong>
+          {t('legal.privacy.s8p')} <Todo>{t('legal.privacy.s8todo')}</Todo>
         </p>
       </Section>
 
-      <Section title="9. Datensicherheit">
-        <p>
-          Die Übertragung erfolgt verschlüsselt über HTTPS. Der Zugriff auf Kundendaten ist
-          rollenbasiert beschränkt und wird zusätzlich auf Datenbankebene durchgesetzt. Fotos und
-          Zustellnachweise liegen in nicht-öffentlichen Speicherbereichen und sind ausschließlich
-          über zeitlich befristete, signierte Links erreichbar.
-        </p>
+      <Section title={t('legal.privacy.s9Title')}>
+        <p>{t('legal.privacy.s9p')}</p>
       </Section>
     </LegalPage>
   );

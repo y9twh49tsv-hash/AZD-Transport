@@ -6,9 +6,9 @@ import { brand } from '@/config/brand';
 import { pricingConfig } from '@/config/pricing';
 import { formatCents } from '@/lib/pricing';
 import { cities, countryLabels } from '@/config/regions';
-import { prohibitedCategories } from '@/config/prohibited-items';
+import { prohibitedCategoryIds } from '@/config/prohibited-items';
 import { isWhatsAppConfigured } from '@/lib/notifications/whatsapp';
-import { LOCALE_LABELS, LOCALES } from '@/lib/i18n';
+import { LOCALE_LABELS, LOCALES, t } from '@/lib/i18n';
 
 export const dynamic = 'force-dynamic';
 
@@ -116,17 +116,19 @@ export default async function SettingsPage() {
       <section className="surface p-5">
         <h2 className="font-semibold">Verbotene Waren</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          {prohibitedCategories.length} Kategorien, gepflegt in{' '}
-          <code className="rounded bg-secondary px-1 text-xs">src/config/prohibited-items.ts</code>.
-          Die Liste erscheint im Buchungsformular und auf der öffentlichen Seite.
+          {prohibitedCategoryIds.length} Kategorien. Die Kennungen stehen in{' '}
+          <code className="rounded bg-secondary px-1 text-xs">src/config/prohibited-items.ts</code>,
+          der Wortlaut in den vier Wörterbüchern unter{' '}
+          <code className="rounded bg-secondary px-1 text-xs">legal.prohibited</code>. Die Liste
+          erscheint im Buchungsformular und auf der öffentlichen Seite.
         </p>
         <ul className="mt-3 flex flex-wrap gap-2">
-          {prohibitedCategories.map((category) => (
+          {prohibitedCategoryIds.map((id) => (
             <li
-              key={category.id}
+              key={id}
               className="rounded-full border border-border bg-secondary px-2.5 py-1 text-xs"
             >
-              {category.title}
+              {t(`legal.prohibited.${id}Title`)}
             </li>
           ))}
         </ul>

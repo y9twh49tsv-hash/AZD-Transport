@@ -22,7 +22,7 @@ import { bookingSchema, type BookingInput } from '@/lib/validation';
 import { calculatePrice, formatCents, formatWeight } from '@/lib/pricing';
 import { pricingConfig } from '@/config/pricing';
 import { citiesByCountry, cityName, countryFlags, type CountryCode } from '@/config/regions';
-import { prohibitedShortList } from '@/config/prohibited-items';
+import { prohibitedCategoryIds } from '@/config/prohibited-items';
 import { cn, todayIso } from '@/lib/utils';
 import { whatsappShareLink } from '@/lib/notifications/whatsapp';
 import { createBooking } from '@/app/(site)/buchen/actions';
@@ -847,7 +847,10 @@ function ConfirmStep({ form, price }: { form: FormApi; price: ReturnType<typeof 
               </Link>
               <span className="mt-1 block text-xs text-muted-foreground">
                 {t('booking.prohibitedExamples', {
-                  items: prohibitedShortList.slice(0, 4).join(', '),
+                  items: prohibitedCategoryIds
+                    .slice(0, 4)
+                    .map((id) => t(`legal.prohibited.${id}Title`))
+                    .join(', '),
                 })}
               </span>
             </>
