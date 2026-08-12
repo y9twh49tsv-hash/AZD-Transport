@@ -322,6 +322,8 @@ export const en: Dictionary = {
     copyNumber: 'Copy number',
     totalPrice: 'Total price',
     shareWhatsapp: 'Share via WhatsApp',
+    emailNotSent:
+      'Please note down your shipment number: we could not deliver the confirmation email just now. Your shipment is booked all the same — just get in touch with us.',
     emailSent:
       'We have sent you a confirmation by email. Questions? Just get in touch.',
     title: 'Book a shipment',

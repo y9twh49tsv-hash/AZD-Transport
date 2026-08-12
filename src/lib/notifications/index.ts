@@ -54,15 +54,28 @@ async function logAttempt(input: {
   }
 }
 
+/**
+ * Whether the notification actually left the building.
+ *
+ * `emailDelivered` is false when there was no address, when the provider
+ * refused the message, and when the "provider" is the development log adapter.
+ * The caller needs to know: the booking page used to tell every customer
+ * "we have sent you a confirmation" whether or not one had been sent.
+ */
+export type DeliveryResult = { emailDelivered: boolean };
+
 async function deliverShipment(
   template: NotificationTemplate,
   channels: Channels,
   ctx: ShipmentNotificationContext,
   shipmentId?: string | null,
-): Promise<void> {
+): Promise<DeliveryResult> {
+  let emailDelivered = false;
+
   if (channels.email) {
     const message = buildShipmentEmail(template, channels.email, ctx);
     const result = await getEmailAdapter().send(message);
+    emailDelivered = result.ok && !result.skipped;
     if (!result.ok) {
       console.error(
         `[notifications] E-Mail "${template}" an ${maskEmail(channels.email)} fehlgeschlagen: ${result.error}`,
@@ -89,6 +102,8 @@ async function deliverShipment(
       result,
     });
   }
+
+  return { emailDelivered };
 }
 
 // --- Public API -------------------------------------------------------------
@@ -97,8 +112,8 @@ export async function sendBookingConfirmation(
   channels: Channels,
   ctx: ShipmentNotificationContext,
   shipmentId?: string,
-) {
-  await deliverShipment('booking_confirmation', channels, ctx, shipmentId);
+): Promise<DeliveryResult> {
+  return deliverShipment('booking_confirmation', channels, ctx, shipmentId);
 }
 
 export async function sendPickupScheduled(

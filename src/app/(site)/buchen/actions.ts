@@ -11,7 +11,12 @@ import { sendBookingConfirmation } from '@/lib/notifications';
 import { getT } from '@/lib/i18n/server';
 
 export type BookingResult =
-  | { ok: true; trackingNumber: string }
+  /**
+   * `confirmationSent` sagt, ob die Bestätigungsmail tatsächlich rausging.
+   * Die Erfolgsseite behauptete das bisher immer — auch wenn kein
+   * Versanddienst konfiguriert war oder der Anbieter die Mail abgelehnt hat.
+   */
+  | { ok: true; trackingNumber: string; confirmationSent: boolean }
   | { ok: false; error: string; fieldErrors?: Record<string, string> };
 
 /**
@@ -205,9 +210,11 @@ export async function createBooking(input: unknown): Promise<BookingResult> {
   }
 
   // --- Confirmation ----------------------------------------------------------
-  // Never let a mail problem fail a booking that is already stored.
+  // Never let a mail problem fail a booking that is already stored — but do
+  // report whether it worked, so the page does not claim a mail nobody sent.
+  let confirmationSent = false;
   try {
-    await sendBookingConfirmation(
+    const delivery = await sendBookingConfirmation(
       { email: data.senderEmail, whatsapp: data.senderPhone },
       {
         trackingNumber: shipment.tracking_number,
@@ -220,9 +227,10 @@ export async function createBooking(input: unknown): Promise<BookingResult> {
       },
       shipment.id,
     );
+    confirmationSent = delivery.emailDelivered;
   } catch (notifyError) {
     console.error('[booking] Bestätigung konnte nicht versendet werden:', notifyError);
   }
 
-  return { ok: true, trackingNumber: shipment.tracking_number };
+  return { ok: true, trackingNumber: shipment.tracking_number, confirmationSent };
 }

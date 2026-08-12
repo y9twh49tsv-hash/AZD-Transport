@@ -324,6 +324,8 @@ export const fr: Dictionary = {
     copyNumber: 'Copier le numéro',
     totalPrice: 'Prix total',
     shareWhatsapp: 'Partager via WhatsApp',
+    emailNotSent:
+      'Notez votre numéro d’envoi : nous n’avons pas pu remettre l’e-mail de confirmation à l’instant. Votre envoi est bien réservé — écrivez-nous simplement.',
     emailSent:
       'Nous vous avons envoyé une confirmation par e-mail. Des questions ? Écrivez-nous.',
     title: 'Réserver un envoi',

@@ -323,6 +323,8 @@ export const de = {
     copyNumber: 'Nummer kopieren',
     totalPrice: 'Gesamtpreis',
     shareWhatsapp: 'Über WhatsApp teilen',
+    emailNotSent:
+      'Notiere dir bitte deine Sendungsnummer: die Bestätigungsmail konnten wir gerade nicht zustellen. Deine Sendung ist trotzdem gebucht — melde dich einfach bei uns.',
     emailSent:
       'Wir haben dir eine Bestätigung per E-Mail geschickt. Fragen? Melde dich einfach bei uns.',
     title: 'Sendung buchen',

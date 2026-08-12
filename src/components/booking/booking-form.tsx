@@ -147,9 +147,11 @@ export function BookingForm({ defaults }: { defaults?: BookingDefaults }) {
     { id: 'confirm', label: t('booking.stepConfirm') },
   ] as const;
   const [serverError, setServerError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<{ trackingNumber: string; totalCents: number } | null>(
-    null,
-  );
+  const [success, setSuccess] = useState<{
+    trackingNumber: string;
+    totalCents: number;
+    confirmationSent: boolean;
+  } | null>(null);
   const [pending, startTransition] = useTransition();
 
   const form = useForm<BookingInput>({
@@ -219,7 +221,11 @@ export function BookingForm({ defaults }: { defaults?: BookingDefaults }) {
     startTransition(async () => {
       const result = await createBooking(data);
       if (result.ok) {
-        setSuccess({ trackingNumber: result.trackingNumber, totalCents: price.totalCents });
+        setSuccess({
+          trackingNumber: result.trackingNumber,
+          totalCents: price.totalCents,
+          confirmationSent: result.confirmationSent,
+        });
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
@@ -941,9 +947,11 @@ function SummaryRow({ label, children }: { label: string; children: React.ReactN
 function BookingSuccess({
   trackingNumber,
   totalCents,
+  confirmationSent,
 }: {
   trackingNumber: string;
   totalCents: number;
+  confirmationSent: boolean;
 }) {
   const t = useT();
   const [copied, setCopied] = useState(false);
@@ -1010,7 +1018,14 @@ function BookingSuccess({
         </a>
       </div>
 
-      <p className="mt-8 text-sm text-muted-foreground">{t('booking.emailSent')}</p>
+      {/*
+        Nur behaupten, was passiert ist. Ging die Mail nicht raus, steht hier
+        der Hinweis, sich die Nummer zu notieren — die Sendung selbst ist
+        gespeichert, und genau darauf kommt es an.
+      */}
+      <p className="mt-8 text-sm text-muted-foreground">
+        {confirmationSent ? t('booking.emailSent') : t('booking.emailNotSent')}
+      </p>
     </div>
   );
 }
