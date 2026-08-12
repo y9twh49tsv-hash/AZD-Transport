@@ -17,7 +17,7 @@ export function SetupNotice({ className }: { className?: string }) {
 
   return (
     <Alert tone="warning" title="Supabase ist noch nicht konfiguriert" className={className}>
-      <ul className="mb-2 list-disc space-y-1 pl-5">
+      <ul className="mb-2 list-disc space-y-1 ps-5">
         {problems.map((problem) => (
           <li key={problem} className="font-mono text-xs">
             {problem}

@@ -182,7 +182,7 @@ export function PriceCalculator({
                   onClick={() => setState((prev) => ({ ...prev, shipmentType: option.value }))}
                   aria-pressed={active}
                   className={cn(
-                    'flex min-h-[4.5rem] flex-col items-start gap-1 rounded-xl border p-3.5 text-left transition-colors',
+                    'flex min-h-[4.5rem] flex-col items-start gap-1 rounded-xl border p-3.5 text-start transition-colors',
                     active
                       ? 'border-primary bg-primary-muted'
                       : 'border-border bg-card hover:bg-secondary',
@@ -296,9 +296,9 @@ export function PriceCalculator({
               onChange={(e) =>
                 setState((prev) => ({ ...prev, weight: e.target.value.replace(/[^\d.,]/g, '') }))
               }
-              className="pr-14 text-lg font-semibold"
+              className="pe-14 text-lg font-semibold"
             />
-            <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-medium text-muted-foreground">
+            <span className="pointer-events-none absolute inset-y-0 end-4 flex items-center text-sm font-medium text-muted-foreground">
               kg
             </span>
           </div>
@@ -310,7 +310,7 @@ export function PriceCalculator({
           onClick={() => setState((prev) => ({ ...prev, pickup: !prev.pickup }))}
           aria-pressed={state.pickup}
           className={cn(
-            'flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-colors',
+            'flex w-full items-center gap-3 rounded-xl border p-4 text-start transition-colors',
             state.pickup ? 'border-primary bg-primary-muted' : 'border-border bg-card hover:bg-secondary',
           )}
         >
@@ -331,7 +331,7 @@ export function PriceCalculator({
             <span
               className={cn(
                 'absolute top-1 size-5 rounded-full bg-white shadow transition-all',
-                state.pickup ? 'left-6' : 'left-1',
+                state.pickup ? 'start-6' : 'start-1',
               )}
             />
           </span>
@@ -368,7 +368,7 @@ export function PriceCalculator({
                 </p>
               </div>
               {hasWeight && !blocked && (
-                <p className="pb-1.5 text-right text-xs text-muted-foreground">
+                <p className="pb-1.5 text-end text-xs text-muted-foreground">
                   {t('calculator.forWeight', { weight: formatWeight(weightNumber) })}
                   <br />
                   {state.pickup ? t('calculator.inclPickup') : t('calculator.dropOff')}

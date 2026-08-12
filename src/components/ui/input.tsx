@@ -31,7 +31,7 @@ export const Select = React.forwardRef<
     ref={ref}
     className={cn(
       base,
-      'min-h-12 appearance-none py-3 pr-10',
+      'min-h-12 appearance-none py-3 pe-10',
       // chevron drawn as a background image so no extra element is needed
       "bg-[url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2378716c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")] bg-[length:1.15rem] bg-[right_0.9rem_center] bg-no-repeat",
       className,
@@ -76,7 +76,7 @@ export function Field({
       {label && (
         <Label htmlFor={htmlFor}>
           {label}
-          {required && <span className="ml-1 text-destructive">*</span>}
+          {required && <span className="ms-1 text-destructive">*</span>}
         </Label>
       )}
       {children}

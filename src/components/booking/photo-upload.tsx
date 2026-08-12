@@ -135,7 +135,7 @@ export function PhotoUpload({
             <button
               type="button"
               onClick={() => remove(index)}
-              className="absolute right-1.5 top-1.5 inline-flex size-7 items-center justify-center rounded-full bg-foreground/70 text-background backdrop-blur transition-colors hover:bg-destructive"
+              className="absolute end-1.5 top-1.5 inline-flex size-7 items-center justify-center rounded-full bg-foreground/70 text-background backdrop-blur transition-colors hover:bg-destructive"
               aria-label={t('photos.removePhoto', { n: index + 1 })}
             >
               <X className="size-3.5" aria-hidden />

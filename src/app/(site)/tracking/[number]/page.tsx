@@ -98,7 +98,7 @@ function NotFound({
         </p>
       )}
 
-      <div className="mx-auto mt-8 max-w-md text-left">
+      <div className="mx-auto mt-8 max-w-md text-start">
         <TrackingSearch initialValue={trackingNumber} />
       </div>
 

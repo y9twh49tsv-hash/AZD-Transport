@@ -273,7 +273,7 @@ export function BookingForm({ defaults }: { defaults?: BookingDefaults }) {
 
           {step === 3 && Object.keys(errors).length > 0 && (
             <Alert tone="error" title={t('booking.checkTitle')} className="mt-6">
-              <ul className="list-disc space-y-1 pl-5">
+              <ul className="list-disc space-y-1 ps-5">
                 {Object.entries(errors)
                   .slice(0, 6)
                   .map(([field, error]) => {
@@ -365,7 +365,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   return (
     <div className="flex justify-between gap-3">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className="text-right font-medium">{children}</dd>
+      <dd className="text-end font-medium">{children}</dd>
     </div>
   );
 }
@@ -454,7 +454,7 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
                 }}
                 aria-pressed={active}
                 className={cn(
-                  'flex min-h-[4.5rem] flex-col items-start gap-1 rounded-xl border p-3.5 text-left transition-colors',
+                  'flex min-h-[4.5rem] flex-col items-start gap-1 rounded-xl border p-3.5 text-start transition-colors',
                   active ? 'border-primary bg-primary-muted' : 'border-border bg-card hover:bg-secondary',
                 )}
               >
@@ -895,7 +895,7 @@ function SummaryRow({ label, children }: { label: string; children: React.ReactN
   return (
     <div className="flex justify-between gap-3">
       <dt className="shrink-0 text-muted-foreground">{label}</dt>
-      <dd className="break-words text-right font-medium">{children}</dd>
+      <dd className="break-words text-end font-medium">{children}</dd>
     </div>
   );
 }
