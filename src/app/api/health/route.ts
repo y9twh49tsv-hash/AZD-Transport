@@ -33,6 +33,7 @@ export function GET() {
   // Healthcheck nicht auf "nicht konfiguriert" ziehen, muss aber sichtbar sein
   // — ein stiller Versandfehler fällt sonst erst der Kundschaft auf.
   const emailProblems = emailConfigProblems();
+  const replyTo = process.env.EMAIL_REPLY_TO?.trim() || null;
 
   // Wohin die Meldung über eine neue Buchung geht. Beantwortet die Frage, die
   // sich nach dem Einrichten der WhatsApp Cloud API sofort stellt: kommt sie
@@ -58,6 +59,12 @@ export function GET() {
       ...(problems.length > 0 && { problems }),
       email: {
         sending: emailProblems.length === 0,
+        // Wohin die Antwort einer Kundin geht, wenn sie im Mailprogramm auf
+        // "Antworten" tippt. Ohne EMAIL_REPLY_TO ist das die Absenderadresse —
+        // und die ist bei einem reinen Versanddienst wie Resend kein Postfach.
+        // Antworten gingen dann still verloren, was niemandem auffällt, bis
+        // sich jemand beschwert, nie eine Antwort bekommen zu haben.
+        replyTo: replyTo ? maskEmail(replyTo) : null,
         ...(emailProblems.length > 0 && { problems: emailProblems }),
       },
       alerts,
