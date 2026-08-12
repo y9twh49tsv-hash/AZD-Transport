@@ -15,9 +15,14 @@ export const brand = {
   tagline: 'Transporte zwischen Deutschland und Marokko',
   trackingPrefix: process.env.NEXT_PUBLIC_TRACKING_PREFIX || 'AZD',
   email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'azd-transport@outlook.com',
-  phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || '+49 000 0000000',
-  /** Digits only, international format — used for wa.me deep links. */
-  whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '49000000000',
+  phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || '+49 157 82034336',
+  /**
+   * Digits only, international format — used for wa.me deep links and, once
+   * the Meta Cloud API is configured, as the destination for the booking
+   * alerts. `normalisePhone()` also accepts 0157…, so a local spelling in the
+   * environment variable works too.
+   */
+  whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '4915782034336',
   address: {
     street: process.env.NEXT_PUBLIC_CONTACT_STREET || 'Musterstraße 1',
     zip: process.env.NEXT_PUBLIC_CONTACT_ZIP || '60311',

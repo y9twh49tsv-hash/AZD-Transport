@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { appUrl } from '@/config/brand';
+import { appUrl, brand } from '@/config/brand';
 import { serviceRoleProblems, supabaseConfigProblems } from '@/lib/env';
-import { emailConfigProblems } from '@/lib/notifications/email';
+import { emailConfigProblems, maskEmail } from '@/lib/notifications/email';
+import { isWhatsAppConfigured } from '@/lib/notifications/whatsapp';
 
 /**
  * Health check for the container host (Railway `healthcheckPath`, Docker
@@ -33,6 +34,23 @@ export function GET() {
   // — ein stiller Versandfehler fällt sonst erst der Kundschaft auf.
   const emailProblems = emailConfigProblems();
 
+  // Wohin die Meldung über eine neue Buchung geht. Beantwortet die Frage, die
+  // sich nach dem Einrichten der WhatsApp Cloud API sofort stellt: kommt sie
+  // jetzt aufs Handy oder immer noch nur per E-Mail? Die Adresse ist maskiert,
+  // die Nummer wird nicht ausgegeben — der Endpunkt ist öffentlich.
+  const alerts = {
+    email: maskEmail(process.env.OPERATOR_EMAIL?.trim() || brand.email),
+    whatsapp: isWhatsAppConfigured(),
+    ...(isWhatsAppConfigured()
+      ? {}
+      : {
+          hint:
+            'WhatsApp-Meldungen brauchen die Meta Cloud API ' +
+            '(WHATSAPP_PHONE_NUMBER_ID und WHATSAPP_ACCESS_TOKEN). ' +
+            'Ein WhatsApp-Business-Konto allein genügt nicht.',
+        }),
+  };
+
   return NextResponse.json(
     {
       status: 'ok',
@@ -42,6 +60,7 @@ export function GET() {
         sending: emailProblems.length === 0,
         ...(emailProblems.length > 0 && { problems: emailProblems }),
       },
+      alerts,
       commit: commit ? commit.slice(0, 7) : null,
       publicUrl: appUrl(),
       timestamp: new Date().toISOString(),
