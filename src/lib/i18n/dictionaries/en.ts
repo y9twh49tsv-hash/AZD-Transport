@@ -82,6 +82,7 @@ export const en: Dictionary = {
       'Documents (passports, certificates, contracts): a flat {price} up to {max} kg — regardless of weight.',
     bulkyNote:
       'Bulky items (furniture, appliances, bicycles): an individual flat price based on photos and dimensions.',
+    departures: 'We set off once the vehicle is full enough — there are no fixed departure days.',
     whyTitle: 'Why {brand}?',
     whySubtitle: 'Personal, traceable and without hidden costs.',
     featurePickupTitle: 'Personal collection',
@@ -532,6 +533,8 @@ export const en: Dictionary = {
     toAccount: 'To my account',
   },
   bulky: {
+    customsNote:
+      'Furniture is only carried new and in its original packaging. Electrical appliances have to be cleared through customs, and other items can incur customs charges too — these are not included in the price.',
     metaTitle: 'Request a bulky goods quote',
     metaDescription:
       'A washing machine, fridge, furniture or bicycle to Morocco? Upload photos and get a fixed price.',

@@ -82,6 +82,8 @@ export const fr: Dictionary = {
       'Documents (passeports, actes, contrats) : forfait de {price} jusqu’à {max} kg — quel que soit le poids.',
     bulkyNote:
       'Objets encombrants (meubles, appareils, vélos) : prix forfaitaire individuel sur photos et dimensions.',
+    departures:
+      'Nous partons dès que le véhicule est suffisamment rempli — il n’y a pas de jours de départ fixes.',
     whyTitle: 'Pourquoi {brand} ?',
     whySubtitle: 'Un service personnel, traçable et sans frais cachés.',
     featurePickupTitle: 'Enlèvement à domicile',
@@ -538,6 +540,8 @@ export const fr: Dictionary = {
     toAccount: 'Vers mon compte',
   },
   bulky: {
+    customsNote:
+      'Les meubles ne sont acceptés que neufs et dans leur emballage d’origine. Les appareils électriques doivent être dédouanés, et d’autres articles peuvent aussi entraîner des frais de douane — ils ne sont pas compris dans le prix.',
     metaTitle: 'Demande pour objets encombrants',
     metaDescription:
       'Machine à laver, réfrigérateur, meubles ou vélo vers le Maroc ? Envoyez des photos et recevez un prix fixe.',

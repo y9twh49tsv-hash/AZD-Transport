@@ -128,6 +128,9 @@ export const legalEn: LegalDictionary = {
     s2li4: 'Put liquids into a sealed bag as well.',
     s3Title: 'Drop-off or collection',
     s3p: 'You can drop your shipment off with us or have it collected from you for a flat {pickup}. At collection we check weight and number of items together with you and document the handover.',
+    departuresTitle: 'When we travel',
+    departuresText:
+      'We set off once the vehicle is full enough. There are therefore no fixed departure days — which is why the price is low, as nobody has to pay for a half-empty run. As soon as your shipment is loaded you see it in the tracking.',
     s4Title: 'Documents',
     s4p: 'We carry passports, certificates, contracts and powers of attorney as their own type of shipment at a flat price of {documents} up to {documentsMax} kg. They have to be booked as a document shipment — we may not carry them loose inside a parcel.',
     s5Title: 'Security bags and seals',
@@ -135,6 +138,12 @@ export const legalEn: LegalDictionary = {
     s6Title: 'Delivery',
     s6p: 'We deliver to the address given or agree a handover point. The recipient must be reachable by phone. At handover we document the delivery with a photo and/or a signature.',
     s7Title: 'Customs',
+    s7p:
+      'Customs duties are not included in the transport price. Depending on the goods, charges may arise on import that have to be paid on top.',
+    s7li1: 'Furniture is only carried new and in its original packaging.',
+    s7li2: 'Electrical appliances have to be cleared through customs.',
+    s7li3:
+      'Other items can incur customs charges too. When in doubt, ask us beforehand — that is settled faster than at the border.',
     s7todo:
       '[Have customs guidance added by a competent body: which quantities are permitted as removal or gift goods? Which documents must the customer provide? Who bears any duties?]',
   },

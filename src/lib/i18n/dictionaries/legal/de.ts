@@ -135,6 +135,9 @@ export const legalDe = {
     s2li4: 'Flüssigkeiten zusätzlich in einen dichten Beutel geben.',
     s3Title: 'Abgabe oder Abholung',
     s3p: 'Du kannst deine Sendung bei uns abgeben oder sie für pauschal {pickup} bei dir abholen lassen. Bei der Abholung prüfen wir Gewicht und Anzahl gemeinsam mit dir und dokumentieren die Übernahme.',
+    departuresTitle: 'Wann wir fahren',
+    departuresText:
+      'Wir fahren, sobald das Fahrzeug voll genug ist. Feste Abfahrtstage gibt es deshalb nicht — dafür ist der Preis niedrig, weil keine halbleere Fahrt bezahlt werden muss. Sobald deine Sendung verladen ist, siehst du das in der Sendungsverfolgung.',
     s4Title: 'Dokumente',
     s4p: 'Pässe, Urkunden, Verträge und Vollmachten befördern wir als eigene Sendungsart zum Pauschalpreis von {documents} bis {documentsMax} kg. Sie müssen als Dokumentensendung gebucht werden — lose in einem Paket dürfen wir sie nicht mitnehmen.',
     s5Title: 'Sicherheitsbeutel und Plomben',
@@ -142,6 +145,12 @@ export const legalDe = {
     s6Title: 'Zustellung',
     s6p: 'Wir stellen an der angegebenen Adresse zu oder vereinbaren einen Übergabeort. Der Empfänger muss telefonisch erreichbar sein. Bei der Übergabe dokumentieren wir die Zustellung mit Foto und/oder Unterschrift.',
     s7Title: 'Zoll',
+    s7p:
+      'Zollgebühren sind nicht im Transportpreis enthalten. Je nach Ware können bei der Einfuhr Abgaben anfallen, die zusätzlich zu zahlen sind.',
+    s7li1: 'Möbel nehmen wir nur neu und originalverpackt mit.',
+    s7li2: 'Elektrogeräte müssen verzollt werden.',
+    s7li3:
+      'Auch bei anderen Artikeln können Zollkosten hinzukommen. Frag im Zweifel vorher nach — das ist schneller geklärt als am Zoll.',
     s7todo:
       '[Zollrechtliche Hinweise durch eine sachkundige Stelle ergänzen lassen: Welche Warenmengen sind als Umzugs- oder Geschenkgut zulässig? Welche Dokumente muss der Kunde beibringen? Wer trägt eventuelle Abgaben?]',
   },

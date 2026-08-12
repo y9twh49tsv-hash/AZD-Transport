@@ -124,6 +124,9 @@ export const legalFr: LegalDictionary = {
     s2li4: 'Placez en plus les liquides dans un sac étanche.',
     s3Title: 'Dépôt ou enlèvement',
     s3p: 'Vous pouvez déposer votre envoi chez nous ou le faire enlever chez vous pour un forfait de {pickup}. Lors de l’enlèvement, nous vérifions le poids et le nombre de colis avec vous et documentons la prise en charge.',
+    departuresTitle: 'Quand nous partons',
+    departuresText:
+      'Nous partons dès que le véhicule est suffisamment rempli. Il n’y a donc pas de jours de départ fixes — c’est ce qui permet ce prix, personne ne paie un trajet à moitié vide. Dès que votre envoi est chargé, vous le voyez dans le suivi.',
     s4Title: 'Documents',
     s4p: 'Nous transportons passeports, actes, contrats et procurations comme type d’envoi distinct, au prix forfaitaire de {documents} jusqu’à {documentsMax} kg. Ils doivent être réservés en tant qu’envoi de documents — nous ne pouvons pas les emporter en vrac dans un colis.',
     s5Title: 'Sacs de sécurité et scellés',
@@ -131,6 +134,12 @@ export const legalFr: LegalDictionary = {
     s6Title: 'Livraison',
     s6p: 'Nous livrons à l’adresse indiquée ou convenons d’un lieu de remise. Le destinataire doit être joignable par téléphone. À la remise, nous documentons la livraison par photo et/ou signature.',
     s7Title: 'Douane',
+    s7p:
+      'Les droits de douane ne sont pas compris dans le prix du transport. Selon la marchandise, des taxes peuvent s’appliquer à l’importation et sont à payer en plus.',
+    s7li1: 'Les meubles ne sont acceptés que neufs et dans leur emballage d’origine.',
+    s7li2: 'Les appareils électriques doivent être dédouanés.',
+    s7li3:
+      'D’autres articles peuvent également entraîner des frais de douane. En cas de doute, demandez-nous avant — c’est réglé plus vite qu’à la frontière.',
     s7todo:
       '[Faire compléter les indications douanières par un organisme compétent : quelles quantités sont admises comme effets de déménagement ou cadeaux ? Quels documents le client doit-il fournir ? Qui supporte les éventuels droits ?]',
   },

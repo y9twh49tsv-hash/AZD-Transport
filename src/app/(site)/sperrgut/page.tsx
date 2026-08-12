@@ -56,6 +56,14 @@ export default async function BulkyPage({
         <p className="mt-3 max-w-xl text-base leading-relaxed text-muted-foreground">
           {t('bulky.subtitle')} {t('bulky.intro')}
         </p>
+        {/*
+          Möbel, Waschmaschinen, Fernseher — genau die Waren, bei denen Zoll und
+          Verpackung entscheiden, ob die Sendung überhaupt durchkommt. Der
+          Hinweis gehört deshalb vor das Formular, nicht in die AGB allein.
+        */}
+        <p className="mt-3 max-w-xl rounded-xl border border-border bg-secondary/40 p-4 text-sm leading-relaxed text-muted-foreground">
+          {t('bulky.customsNote')}
+        </p>
 
         <ol className="mt-6 flex flex-wrap gap-x-2 gap-y-2 text-sm text-muted-foreground">
           {steps.map((step, index) => (

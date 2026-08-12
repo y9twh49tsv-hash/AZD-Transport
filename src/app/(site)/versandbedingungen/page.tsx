@@ -38,6 +38,10 @@ export default async function ShippingTermsPage() {
         <p>{t('legal.shipping.s3p', { pickup: formatCents(pricingConfig.pickupFeeCents) })}</p>
       </Section>
 
+      <Section title={t('legal.shipping.departuresTitle')}>
+        <p>{t('legal.shipping.departuresText')}</p>
+      </Section>
+
       <Section title={t('legal.shipping.s4Title')}>
         <p>
           {t('legal.shipping.s4p', {
@@ -56,6 +60,12 @@ export default async function ShippingTermsPage() {
       </Section>
 
       <Section title={t('legal.shipping.s7Title')}>
+        <p>{t('legal.shipping.s7p')}</p>
+        <ul>
+          <li>{t('legal.shipping.s7li1')}</li>
+          <li>{t('legal.shipping.s7li2')}</li>
+          <li>{t('legal.shipping.s7li3')}</li>
+        </ul>
         <p>
           <Todo>{t('legal.shipping.s7todo')}</Todo>
         </p>

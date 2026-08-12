@@ -82,6 +82,7 @@ export const de = {
       'Dokumente (Pässe, Urkunden, Verträge): pauschal {price} bis {max} kg — unabhängig vom Gewicht.',
     bulkyNote:
       'Sperrige Gegenstände (Möbel, Geräte, Fahrräder): individueller Pauschalpreis nach Foto und Maßen.',
+    departures: 'Wir fahren, sobald das Fahrzeug voll genug ist — feste Abfahrtstage gibt es nicht.',
     whyTitle: 'Warum {brand}?',
     whySubtitle: 'Persönlich, nachvollziehbar und ohne versteckte Kosten.',
     featurePickupTitle: 'Persönliche Abholung',
@@ -535,6 +536,8 @@ export const de = {
     toAccount: 'Zu meinem Konto',
   },
   bulky: {
+    customsNote:
+      'Möbel nehmen wir nur neu und originalverpackt mit. Elektrogeräte müssen verzollt werden, und auch bei anderen Artikeln können Zollkosten hinzukommen — die sind nicht im Preis enthalten.',
     metaTitle: 'Sperrgut anfragen',
     metaDescription:
       'Waschmaschine, Kühlschrank, Möbel oder Fahrrad nach Marokko? Lade Fotos hoch und erhalte einen Festpreis.',

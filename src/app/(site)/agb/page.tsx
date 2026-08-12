@@ -58,6 +58,7 @@ export default async function TermsPage() {
       </Section>
 
       <Section title={t('legal.terms.s6Title')}>
+        <p>{t('legal.shipping.departuresText')}</p>
         <p>
           <Todo>{t('legal.terms.s6todo')}</Todo> {t('legal.terms.s6p')}
         </p>

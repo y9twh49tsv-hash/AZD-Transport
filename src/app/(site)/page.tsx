@@ -79,14 +79,14 @@ export default async function HomePage() {
                   if (part === '{from}') {
                     return (
                       <span key={index} className="text-primary">
-                        {t('home.countryFrom')}
+                        {t('countries.DE')}
                       </span>
                     );
                   }
                   if (part === '{to}') {
                     return (
                       <span key={index} className="text-accent">
-                        {t('home.countryTo')}
+                        {t('countries.MA')}
                       </span>
                     );
                   }
@@ -123,6 +123,7 @@ export default async function HomePage() {
                 })}
               </p>
               <p className="mt-1.5 text-sm text-muted-foreground">{t('home.bulkyNote')}</p>
+              <p className="mt-1.5 text-sm text-muted-foreground">{t('home.departures')}</p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link href="/buchen">
@@ -224,13 +225,13 @@ export default async function HomePage() {
             {[
               {
                 flag: '🇩🇪',
-                title: t('home.countryFrom'),
+                title: t('countries.DE'),
                 hint: t('home.areaFromHint'),
                 list: activeDe,
               },
               {
                 flag: '🇲🇦',
-                title: t('home.countryTo'),
+                title: t('countries.MA'),
                 hint: t('home.areaToHint'),
                 list: activeMa,
               },
