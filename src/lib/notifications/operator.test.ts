@@ -77,14 +77,33 @@ describe('Betriebsmeldung — E-Mail', () => {
 });
 
 describe('Betriebsmeldung — WhatsApp', () => {
-  it('setzt die Entscheidung in die erste Zeile', () => {
-    // In der Handy-Benachrichtigung sieht man oft nur diese eine Zeile.
-    expect(buildOperatorBookingWhatsAppText(abholung).split('\n')[0]).toBe(
-      'ABHOLUNG am 14.08.2026 — AZD-260812-0002',
+  it('setzt die Entscheidung an den Anfang', () => {
+    // Auf dem Sperrbildschirm ist oft nur der Anfang zu lesen.
+    expect(buildOperatorBookingWhatsAppText(abholung)).toMatch(
+      /^ABHOLUNG am 14\.08\.2026 — AZD-260812-0002/,
     );
-    expect(buildOperatorBookingWhatsAppText(abgabe).split('\n')[0]).toBe(
-      'ABGABE bei uns — AZD-260812-0003',
-    );
+    expect(buildOperatorBookingWhatsAppText(abgabe)).toMatch(/^ABGABE bei uns — AZD-260812-0003/);
+  });
+
+  it('enthält nichts, was Meta als Parameter ablehnt', () => {
+    // Die Cloud API weist Zeilenumbrüche, Tabulatoren und mehr als vier
+    // aufeinanderfolgende Leerzeichen ab. Das würde sonst erst beim ersten
+    // echten Versand auffallen — nach dem ganzen Einrichtungsaufwand.
+    for (const ctx of [abholung, abgabe]) {
+      const text = buildOperatorBookingWhatsAppText(ctx);
+      expect(text).not.toMatch(/[\r\n\t]/);
+      expect(text).not.toMatch(/ {5}/);
+      expect(text.length).toBeLessThanOrEqual(1024);
+    }
+  });
+
+  it('bereinigt auch eine mehrzeilig eingegebene Adresse', () => {
+    const text = buildOperatorBookingWhatsAppText({
+      ...abholung,
+      pickupAddress: 'Kleyerstraße 92a\n\n60326    Frankfurt',
+    });
+    expect(text).not.toMatch(/[\r\n\t]/);
+    expect(text).toContain('Kleyerstraße 92a 60326 Frankfurt');
   });
 
   it('bleibt kurz genug für eine Benachrichtigung', () => {

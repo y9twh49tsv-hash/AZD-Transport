@@ -373,10 +373,27 @@ export function buildOperatorBookingEmail(
 }
 
 /**
+ * Was Meta als Vorlagen-Parameter durchlässt.
+ *
+ * Die Cloud API weist eine Nachricht ab, deren Parameter Zeilenumbrüche,
+ * Tabulatoren oder mehr als vier aufeinanderfolgende Leerzeichen enthält
+ * („Parameter text cannot have new-line/tab characters or more than 4
+ * consecutive spaces"). Das ist keine Formatierungsfrage, sondern der
+ * Unterschied zwischen zugestellt und abgelehnt — und es fällt sonst erst
+ * beim ersten echten Versand auf, lange nach dem Einrichten.
+ */
+function whatsappParameter(value: string): string {
+  return value.replace(/[\r\n\t]+/g, ' ').replace(/ {2,}/g, ' ').trim();
+}
+
+/**
  * Dieselbe Meldung als WhatsApp-Text.
  *
- * Kurz gehalten: WhatsApp zeigt in der Benachrichtigung nur die ersten Zeilen,
- * und im Betrieb zählt genau eine Frage — hinfahren oder kommt er vorbei.
+ * Eine einzige Zeile, mit „·" getrennt: Meta erlaubt in einem
+ * Vorlagen-Parameter keine Zeilenumbrüche (siehe `whatsappParameter`). Die
+ * Reihenfolge bleibt trotzdem die des Betriebs — zuerst die Frage, ob
+ * hingefahren werden muss, denn in der Benachrichtigung auf dem Sperrbildschirm
+ * ist oft nur der Anfang zu lesen.
  */
 export function buildOperatorBookingWhatsAppText(ctx: OperatorBookingContext): string {
   const art = ctx.shipmentType === 'documents' ? 'Dokumente' : 'Paket';
@@ -384,12 +401,14 @@ export function buildOperatorBookingWhatsAppText(ctx: OperatorBookingContext): s
     ? `ABHOLUNG${ctx.pickupDate ? ` am ${germanDate(ctx.pickupDate)}` : ''}`
     : 'ABGABE bei uns';
 
-  return [
-    `${kopf} — ${ctx.trackingNumber}`,
-    ctx.pickupRequested && ctx.pickupAddress ? ctx.pickupAddress : null,
-    `${art} · ${cityName(ctx.originCity)} → ${cityName(ctx.destinationCity)} · ${euro(ctx.priceTotalCents)}`,
-    `${ctx.senderName} · ${ctx.senderPhone}`,
-  ]
-    .filter(Boolean)
-    .join('\n');
+  return whatsappParameter(
+    [
+      `${kopf} — ${ctx.trackingNumber}`,
+      ctx.pickupRequested && ctx.pickupAddress ? ctx.pickupAddress : null,
+      `${art} · ${cityName(ctx.originCity)} → ${cityName(ctx.destinationCity)} · ${euro(ctx.priceTotalCents)}`,
+      `${ctx.senderName} · ${ctx.senderPhone}`,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+  );
 }
