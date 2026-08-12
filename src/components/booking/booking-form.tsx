@@ -28,6 +28,7 @@ import { whatsappShareLink } from '@/lib/notifications/whatsapp';
 import { createBooking } from '@/app/(site)/buchen/actions';
 import { useT } from '@/lib/i18n/client';
 import type { Translate } from '@/lib/i18n';
+import { translateError } from '@/lib/i18n/errors';
 
 
 /** Which fields must be valid before the user may move to the next step. */
@@ -294,7 +295,7 @@ export function BookingForm({ defaults }: { defaults?: BookingDefaults }) {
                           </button>
                         )}
                         {label ? ': ' : ''}
-                        {(error as { message?: string })?.message}
+                        {translateError(t, (error as { message?: string })?.message)}
                       </li>
                     );
                   })}
@@ -499,7 +500,7 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
         <Field
           label={t('calculator.originCity')}
           htmlFor="origin-city"
-          error={errors.originCity?.message}
+          error={translateError(t, errors.originCity?.message)}
           required
         >
           <Select id="origin-city" {...register('originCity')}>
@@ -515,7 +516,7 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
         <Field
           label={t('calculator.destinationCity')}
           htmlFor="destination-city"
-          error={errors.destinationCity?.message}
+          error={translateError(t, errors.destinationCity?.message)}
           required
         >
           <Select id="destination-city" {...register('destinationCity')}>
@@ -533,7 +534,7 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
         <Field
           label={t('calculator.weightLabel')}
           htmlFor="weight"
-          error={errors.weightKg?.message}
+          error={translateError(t, errors.weightKg?.message)}
           hint={
             weight
               ? t('booking.transportHint', { price: formatCents(price.basePriceCents) })
@@ -557,7 +558,7 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
         <Field
           label={t('booking.piecesLabel')}
           htmlFor="pieces"
-          error={errors.pieceCount?.message}
+          error={translateError(t, errors.pieceCount?.message)}
           hint={t('booking.piecesHint')}
           required
         >
@@ -576,7 +577,7 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
       <Field
         label={t('booking.contentLabel')}
         htmlFor="content-type"
-        error={errors.contentType?.message}
+        error={translateError(t, errors.contentType?.message)}
         hint={t('booking.contentHint')}
         required
       >
@@ -591,7 +592,7 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
       <Field
         label={t('booking.descriptionLabel')}
         htmlFor="description"
-        error={errors.description?.message}
+        error={translateError(t, errors.description?.message)}
         hint={t('booking.descriptionHint')}
       >
         <Textarea
@@ -618,7 +619,7 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
         <Field
           label={t('booking.pickupDateLabel')}
           htmlFor="pickup-date"
-          error={errors.pickupDate?.message}
+          error={translateError(t, errors.pickupDate?.message)}
           hint={t('booking.pickupDateHint')}
           required
         >
@@ -648,13 +649,13 @@ function SenderStep({ form }: { form: FormApi }) {
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={t('fields.firstName')} htmlFor="s-first" error={errors.senderFirstName?.message} required>
+        <Field label={t('fields.firstName')} htmlFor="s-first" error={translateError(t, errors.senderFirstName?.message)} required>
           <Input id="s-first" autoComplete="given-name" aria-invalid={!!errors.senderFirstName} {...register('senderFirstName')} />
         </Field>
-        <Field label={t('fields.lastName')} htmlFor="s-last" error={errors.senderLastName?.message} required>
+        <Field label={t('fields.lastName')} htmlFor="s-last" error={translateError(t, errors.senderLastName?.message)} required>
           <Input id="s-last" autoComplete="family-name" aria-invalid={!!errors.senderLastName} {...register('senderLastName')} />
         </Field>
-        <Field label={t('fields.phone')} htmlFor="s-phone" error={errors.senderPhone?.message} required>
+        <Field label={t('fields.phone')} htmlFor="s-phone" error={translateError(t, errors.senderPhone?.message)} required>
           <Input
             id="s-phone"
             type="tel"
@@ -665,7 +666,7 @@ function SenderStep({ form }: { form: FormApi }) {
             {...register('senderPhone')}
           />
         </Field>
-        <Field label={t('fields.email')} htmlFor="s-email" error={errors.senderEmail?.message} required>
+        <Field label={t('fields.email')} htmlFor="s-email" error={translateError(t, errors.senderEmail?.message)} required>
           <Input
             id="s-email"
             type="email"
@@ -678,7 +679,7 @@ function SenderStep({ form }: { form: FormApi }) {
         </Field>
       </div>
 
-      <Field label={t('fields.address')} htmlFor="s-address" error={errors.senderAddress?.message} required>
+      <Field label={t('fields.address')} htmlFor="s-address" error={translateError(t, errors.senderAddress?.message)} required>
         <Input
           id="s-address"
           autoComplete="street-address"
@@ -689,15 +690,15 @@ function SenderStep({ form }: { form: FormApi }) {
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-[8rem_1fr]">
-        <Field label={t('fields.postalCode')} htmlFor="s-zip" error={errors.senderPostalCode?.message}>
+        <Field label={t('fields.postalCode')} htmlFor="s-zip" error={translateError(t, errors.senderPostalCode?.message)}>
           <Input id="s-zip" inputMode="numeric" autoComplete="postal-code" {...register('senderPostalCode')} />
         </Field>
-        <Field label={t('fields.city')} htmlFor="s-city" error={errors.senderCity?.message} required>
+        <Field label={t('fields.city')} htmlFor="s-city" error={translateError(t, errors.senderCity?.message)} required>
           <Input id="s-city" autoComplete="address-level2" aria-invalid={!!errors.senderCity} {...register('senderCity')} />
         </Field>
       </div>
 
-      <Field label={t('fields.country')} htmlFor="s-country" error={errors.senderCountry?.message} required>
+      <Field label={t('fields.country')} htmlFor="s-country" error={translateError(t, errors.senderCountry?.message)} required>
         <Select id="s-country" {...register('senderCountry')}>
           {(['DE', 'MA'] as CountryCode[]).map((c) => (
             <option key={c} value={c}>
@@ -723,15 +724,15 @@ function RecipientStep({ form }: { form: FormApi }) {
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={t('fields.firstName')} htmlFor="r-first" error={errors.recipientFirstName?.message} required>
+        <Field label={t('fields.firstName')} htmlFor="r-first" error={translateError(t, errors.recipientFirstName?.message)} required>
           <Input id="r-first" aria-invalid={!!errors.recipientFirstName} {...register('recipientFirstName')} />
         </Field>
-        <Field label={t('fields.lastName')} htmlFor="r-last" error={errors.recipientLastName?.message} required>
+        <Field label={t('fields.lastName')} htmlFor="r-last" error={translateError(t, errors.recipientLastName?.message)} required>
           <Input id="r-last" aria-invalid={!!errors.recipientLastName} {...register('recipientLastName')} />
         </Field>
       </div>
 
-      <Field label={t('fields.phone')} htmlFor="r-phone" error={errors.recipientPhone?.message} required>
+      <Field label={t('fields.phone')} htmlFor="r-phone" error={translateError(t, errors.recipientPhone?.message)} required>
         <Input
           id="r-phone"
           type="tel"
@@ -742,7 +743,7 @@ function RecipientStep({ form }: { form: FormApi }) {
         />
       </Field>
 
-      <Field label={t('fields.address')} htmlFor="r-address" error={errors.recipientAddress?.message} required>
+      <Field label={t('fields.address')} htmlFor="r-address" error={translateError(t, errors.recipientAddress?.message)} required>
         <Input
           id="r-address"
           placeholder={t('fields.streetPlaceholderMa')}
@@ -752,10 +753,10 @@ function RecipientStep({ form }: { form: FormApi }) {
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={t('fields.city')} htmlFor="r-city" error={errors.recipientCity?.message} required>
+        <Field label={t('fields.city')} htmlFor="r-city" error={translateError(t, errors.recipientCity?.message)} required>
           <Input id="r-city" aria-invalid={!!errors.recipientCity} {...register('recipientCity')} />
         </Field>
-        <Field label={t('fields.country')} htmlFor="r-country" error={errors.recipientCountry?.message} required>
+        <Field label={t('fields.country')} htmlFor="r-country" error={translateError(t, errors.recipientCountry?.message)} required>
           <Select id="r-country" {...register('recipientCountry')}>
             {(['DE', 'MA'] as CountryCode[]).map((c) => (
               <option key={c} value={c}>
@@ -835,7 +836,7 @@ function ConfirmStep({ form, price }: { form: FormApi; price: ReturnType<typeof 
       <div className="space-y-3">
         <Checkbox
           label={t('booking.confirmDetails')}
-          error={errors.detailsConfirmed?.message}
+          error={translateError(t, errors.detailsConfirmed?.message)}
           {...register('detailsConfirmed')}
         />
         <Checkbox
@@ -855,7 +856,7 @@ function ConfirmStep({ form, price }: { form: FormApi; price: ReturnType<typeof 
               </span>
             </>
           }
-          error={errors.prohibitedConfirmed?.message}
+          error={translateError(t, errors.prohibitedConfirmed?.message)}
           {...register('prohibitedConfirmed')}
         />
         <Checkbox
@@ -872,7 +873,7 @@ function ConfirmStep({ form, price }: { form: FormApi; price: ReturnType<typeof 
               .
             </>
           }
-          error={errors.termsAccepted?.message}
+          error={translateError(t, errors.termsAccepted?.message)}
           {...register('termsAccepted')}
         />
       </div>

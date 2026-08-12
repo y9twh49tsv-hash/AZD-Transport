@@ -15,6 +15,8 @@ import {
   tripSchema,
   vehicleSchema,
 } from './validation';
+import { createT } from '@/lib/i18n';
+import { translateError } from '@/lib/i18n/errors';
 
 const validBooking = {
   originCountry: 'DE',
@@ -454,7 +456,9 @@ describe('Dokumentenversand', () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0].path).toEqual(['weightKg']);
-      expect(result.error.issues[0].message).toContain('Paket');
+      // Die Schemas tragen Schlüssel statt Sätze — die Sprache steht erst beim
+      // Anzeigen fest. Geprüft wird deshalb der aufgelöste deutsche Text.
+      expect(translateError(createT('de'), result.error.issues[0].message)).toContain('Paket');
     }
   });
 
@@ -500,7 +504,7 @@ describe('Mindestgewicht je Sendungsart', () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       const issue = result.error.issues.find((i) => i.path[0] === 'weightKg');
-      expect(issue?.message).toContain('Dokumentensendung');
+      expect(translateError(createT('de'), issue?.message)).toContain('Dokumentensendung');
     }
   });
 });

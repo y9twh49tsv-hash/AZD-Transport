@@ -13,6 +13,7 @@ import { bulkyRequestSchema, type BulkyRequestInput } from '@/lib/validation';
 import { citiesByCountry, countryFlags, type CountryCode } from '@/config/regions';
 import { createBulkyRequest } from '@/app/(site)/sperrgut/actions';
 import { useT } from '@/lib/i18n/client';
+import { translateError } from '@/lib/i18n/errors';
 
 /**
  * Suggestions for the item field. Keys only — the words are looked up in the
@@ -153,7 +154,7 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
         <Field
           label={t('bulky.itemLabel')}
           htmlFor="item-type"
-          error={errors.itemType?.message}
+          error={translateError(t, errors.itemType?.message)}
           required
         >
           <Input
@@ -173,7 +174,7 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
         <Field
           label={t('booking.descriptionLabel')}
           htmlFor="item-description"
-          error={errors.itemDescription?.message}
+          error={translateError(t, errors.itemDescription?.message)}
           hint={t('bulky.itemDescriptionHint')}
         >
           <Textarea
@@ -187,7 +188,7 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
         <Field
           label={t('bulky.approxWeightLabel')}
           htmlFor="approx-weight"
-          error={errors.approxWeightKg?.message}
+          error={translateError(t, errors.approxWeightKg?.message)}
           hint={t('bulky.approxWeightHint')}
           required
         >
@@ -204,13 +205,13 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
         <fieldset>
           <legend className="field-label">{t('bulky.dimensionsLabel')}</legend>
           <div className="grid grid-cols-3 gap-3">
-            <Field label={t('bulky.length')} htmlFor="length" error={errors.lengthCm?.message}>
+            <Field label={t('bulky.length')} htmlFor="length" error={translateError(t, errors.lengthCm?.message)}>
               <Input id="length" type="number" inputMode="numeric" min={1} placeholder="60" {...register('lengthCm')} />
             </Field>
-            <Field label={t('bulky.width')} htmlFor="width" error={errors.widthCm?.message}>
+            <Field label={t('bulky.width')} htmlFor="width" error={translateError(t, errors.widthCm?.message)}>
               <Input id="width" type="number" inputMode="numeric" min={1} placeholder="60" {...register('widthCm')} />
             </Field>
-            <Field label={t('bulky.height')} htmlFor="height" error={errors.heightCm?.message}>
+            <Field label={t('bulky.height')} htmlFor="height" error={translateError(t, errors.heightCm?.message)}>
               <Input id="height" type="number" inputMode="numeric" min={1} placeholder="85" {...register('heightCm')} />
             </Field>
           </div>
@@ -248,7 +249,7 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
               ))}
             </Select>
           </Field>
-          <Field label={t('bulky.originLabel')} htmlFor="b-origin-city" error={errors.originCity?.message} required>
+          <Field label={t('bulky.originLabel')} htmlFor="b-origin-city" error={translateError(t, errors.originCity?.message)} required>
             <Select id="b-origin-city" {...register('originCity')}>
               {citiesByCountry(originCountry).map((city) => (
                 <option key={city.slug} value={city.slug}>
@@ -257,7 +258,7 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
               ))}
             </Select>
           </Field>
-          <Field label={t('bulky.destinationLabel')} htmlFor="b-destination-city" error={errors.destinationCity?.message} required>
+          <Field label={t('bulky.destinationLabel')} htmlFor="b-destination-city" error={translateError(t, errors.destinationCity?.message)} required>
             <Select id="b-destination-city" {...register('destinationCity')}>
               {citiesByCountry(destinationCountry).map((city) => (
                 <option key={city.slug} value={city.slug}>
@@ -284,13 +285,13 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
         <h2 className="text-xl font-semibold tracking-tight">{t('bulky.contactTitle')}</h2>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={t('fields.firstName')} htmlFor="b-first" error={errors.contactFirstName?.message} required>
+          <Field label={t('fields.firstName')} htmlFor="b-first" error={translateError(t, errors.contactFirstName?.message)} required>
             <Input id="b-first" autoComplete="given-name" aria-invalid={!!errors.contactFirstName} {...register('contactFirstName')} />
           </Field>
-          <Field label={t('fields.lastName')} htmlFor="b-last" error={errors.contactLastName?.message} required>
+          <Field label={t('fields.lastName')} htmlFor="b-last" error={translateError(t, errors.contactLastName?.message)} required>
             <Input id="b-last" autoComplete="family-name" aria-invalid={!!errors.contactLastName} {...register('contactLastName')} />
           </Field>
-          <Field label={t('fields.phone')} htmlFor="b-phone" error={errors.phone?.message} required>
+          <Field label={t('fields.phone')} htmlFor="b-phone" error={translateError(t, errors.phone?.message)} required>
             <Input
               id="b-phone"
               type="tel"
@@ -304,14 +305,14 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
           <Field
             label={t('fields.email')}
             htmlFor="b-email"
-            error={errors.email?.message}
+            error={translateError(t, errors.email?.message)}
             hint={t('bulky.emailHint')}
           >
             <Input id="b-email" type="email" inputMode="email" autoComplete="email" {...register('email')} />
           </Field>
         </div>
 
-        <Field label={t('bulky.notesLabel')} htmlFor="b-notes" error={errors.notes?.message}>
+        <Field label={t('bulky.notesLabel')} htmlFor="b-notes" error={translateError(t, errors.notes?.message)}>
           <Textarea
             id="b-notes"
             rows={3}
@@ -329,7 +330,7 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
               </Link>
             </>
           }
-          error={errors.prohibitedConfirmed?.message}
+          error={translateError(t, errors.prohibitedConfirmed?.message)}
           {...register('prohibitedConfirmed')}
         />
       </section>

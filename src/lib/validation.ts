@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { errorKey } from '@/lib/i18n/errors';
 import { pricingConfig } from '@/config/pricing';
 import { exampleTrackingNumber } from '@/config/brand';
 import { cities, COUNTRIES } from '@/config/regions';
@@ -21,15 +22,24 @@ const citySlugs = cities.map((c) => c.slug) as [string, ...string[]];
 
 export const countrySchema = z.enum(COUNTRIES);
 export const citySchema = z.enum(citySlugs, {
-  errorMap: () => ({ message: 'Bitte wähle eine Stadt aus der Liste.' }),
+  errorMap: () => ({ message: errorKey('cityFromList') }),
 });
 
-const trimmed = (min: number, max: number, label: string) =>
+/**
+ * Required free text.
+ *
+ * The field name deliberately does not appear in the message. It is already
+ * the label directly above the input, and the error summary on the last step
+ * of the booking form prefixes it a second time — so "Vorname: Vorname ist
+ * erforderlich." was the old result. Leaving it out also removes the only
+ * German word that would otherwise have to live inside a schema.
+ */
+const trimmed = (min: number, max: number) =>
   z
     .string()
     .trim()
-    .min(min, `${label} ist erforderlich.`)
-    .max(max, `${label} ist zu lang (max. ${max} Zeichen).`);
+    .min(min, min <= 1 ? errorKey('required') : errorKey('tooShort', { min }))
+    .max(max, errorKey('tooLong', { max }));
 
 /**
  * Optional free text that ends up as `text NULL` in the database.
@@ -51,19 +61,19 @@ const optionalText = (max: number) =>
   z
     .string()
     .trim()
-    .max(max, `Bitte kürzer fassen (max. ${max} Zeichen).`)
+    .max(max, errorKey('tooLong', { max }))
     .nullish()
     .transform((v) => v || null);
 
 /** Optional selection of something identified by a uuid. */
 const optionalUuid = () =>
   z
-    .union([z.string().uuid('Ungültige Auswahl.'), z.literal('')])
+    .union([z.string().uuid(errorKey('invalidChoice')), z.literal('')])
     .nullish()
     .transform((v) => (v ? v : null));
 
 /** Optional ISO date (`2026-08-10`) coming from an `<input type="date">`. */
-const optionalIsoDate = (message = 'Bitte ein gültiges Datum wählen.') =>
+const optionalIsoDate = (message = errorKey('invalidDate')) =>
   z
     .union([z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, message), z.literal('')])
     .nullish()
@@ -72,7 +82,7 @@ const optionalIsoDate = (message = 'Bitte ein gültiges Datum wählen.') =>
 /** Optional time of day (`08:30`) from an `<input type="time">`. */
 const optionalTime = () =>
   z
-    .union([z.string().trim().regex(/^\d{2}:\d{2}$/, 'Format HH:MM'), z.literal('')])
+    .union([z.string().trim().regex(/^\d{2}:\d{2}$/, errorKey('timeFormat')), z.literal('')])
     .nullish()
     .transform((v) => (v ? v : null));
 
@@ -94,16 +104,16 @@ const optionalNumber = <T extends z.ZodTypeAny>(schema: T) =>
 export const phoneSchema = z
   .string()
   .trim()
-  .min(6, 'Bitte gib eine Telefonnummer an.')
-  .max(32, 'Telefonnummer ist zu lang.')
-  .refine((v) => (v.match(/\d/g) ?? []).length >= 6, 'Die Telefonnummer wirkt unvollständig.')
-  .refine((v) => /^[+()\-.\s\d/]+$/.test(v), 'Die Telefonnummer enthält ungültige Zeichen.');
+  .min(6, errorKey('phoneRequired'))
+  .max(32, errorKey('phoneTooLong'))
+  .refine((v) => (v.match(/\d/g) ?? []).length >= 6, errorKey('phoneIncomplete'))
+  .refine((v) => /^[+()\-.\s\d/]+$/.test(v), errorKey('phoneInvalidChars'));
 
 export const emailSchema = z
   .string()
   .trim()
   .toLowerCase()
-  .email('Bitte gib eine gültige E-Mail-Adresse an.')
+  .email(errorKey('emailInvalid'))
   .max(254);
 
 export const optionalEmailSchema = z
@@ -121,12 +131,15 @@ export const optionalEmailSchema = z
  * Umschlag mit Pass und zwei Urkunden wiegt rund 50 Gramm.
  */
 export const weightSchema = z.coerce
-  .number({ invalid_type_error: 'Bitte gib ein Gewicht in kg an.' })
-  .positive('Das Gewicht muss größer als 0 sein.')
-  .min(pricingConfig.minDocumentsWeightKg, `Mindestens ${pricingConfig.minDocumentsWeightKg} kg.`)
+  .number({ invalid_type_error: errorKey('weightRequired') })
+  .positive(errorKey('weightPositive'))
+  .min(
+    pricingConfig.minDocumentsWeightKg,
+    errorKey('weightMin', { min: pricingConfig.minDocumentsWeightKg }),
+  )
   .max(
     pricingConfig.maxStandardWeightKg,
-    `Über ${pricingConfig.maxStandardWeightKg} kg bitte als Sperrgut anfragen.`,
+    errorKey('weightMaxStandard', { max: pricingConfig.maxStandardWeightKg }),
   );
 
 /** Alles außer Dokumenten muss das Paket-Mindestgewicht erreichen. */
@@ -134,15 +147,15 @@ const requiresParcelWeight = (v: { shipmentType?: string; weightKg: number }) =>
   v.shipmentType === 'documents' || v.weightKg >= pricingConfig.minWeightKg;
 
 const parcelWeightMessage = {
-  message: `Mindestens ${pricingConfig.minWeightKg} kg. Leichter? Dann ist es vermutlich eine Dokumentensendung.`,
+  message: errorKey('parcelWeightMin', { min: pricingConfig.minWeightKg }),
   path: ['weightKg'],
 };
 
 export const pieceCountSchema = z.coerce
-  .number({ invalid_type_error: 'Bitte gib die Anzahl der Gepäckstücke an.' })
-  .int('Bitte eine ganze Zahl angeben.')
-  .min(1, 'Mindestens 1 Gepäckstück.')
-  .max(200, 'Bitte kontaktiere uns für mehr als 200 Gepäckstücke.');
+  .number({ invalid_type_error: errorKey('piecesRequired') })
+  .int(errorKey('piecesInteger'))
+  .min(1, errorKey('piecesMin'))
+  .max(200, errorKey('piecesMax', { max: 200 }));
 
 // --- Price calculator -------------------------------------------------------
 
@@ -157,16 +170,16 @@ export const quoteSchema = z
     shipmentType: z.enum(['standard', 'documents', 'bulky']).default('standard'),
   })
   .refine((v) => v.originCountry !== v.destinationCountry, {
-    message: 'Wir transportieren zwischen Deutschland und Marokko — bitte wähle zwei Länder.',
+    message: errorKey('corridorCountries'),
     path: ['destinationCountry'],
   })
   .refine((v) => cities.find((c) => c.slug === v.originCity)?.country === v.originCountry, {
-    message: 'Die Abholstadt passt nicht zum gewählten Land.',
+    message: errorKey('originCityMismatch'),
     path: ['originCity'],
   })
   .refine(
     (v) => cities.find((c) => c.slug === v.destinationCity)?.country === v.destinationCountry,
-    { message: 'Die Zielstadt passt nicht zum gewählten Land.', path: ['destinationCity'] },
+    { message: errorKey('destinationCityMismatch'), path: ['destinationCity'] },
   )
   .refine(requiresParcelWeight, parcelWeightMessage);
 
@@ -189,54 +202,54 @@ export const bookingSchema = z
     shipmentType: z.enum(['standard', 'documents']).default('standard'),
     weightKg: weightSchema,
     pieceCount: pieceCountSchema,
-    contentType: trimmed(2, 120, 'Art des Inhalts'),
+    contentType: trimmed(2, 120),
     description: optionalText(2000),
     pickupRequested: z.boolean().default(false),
     pickupDate: optionalIsoDate(),
 
     // Sender
-    senderFirstName: trimmed(2, 80, 'Vorname'),
-    senderLastName: trimmed(2, 80, 'Nachname'),
+    senderFirstName: trimmed(2, 80),
+    senderLastName: trimmed(2, 80),
     senderPhone: phoneSchema,
     senderEmail: emailSchema,
-    senderAddress: trimmed(3, 200, 'Adresse'),
+    senderAddress: trimmed(3, 200),
     senderPostalCode: optionalText(16),
-    senderCity: trimmed(2, 100, 'Stadt'),
+    senderCity: trimmed(2, 100),
     senderCountry: countrySchema,
 
     // Recipient
-    recipientFirstName: trimmed(2, 80, 'Vorname des Empfängers'),
-    recipientLastName: trimmed(2, 80, 'Nachname des Empfängers'),
+    recipientFirstName: trimmed(2, 80),
+    recipientLastName: trimmed(2, 80),
     recipientPhone: phoneSchema,
-    recipientAddress: trimmed(3, 200, 'Adresse des Empfängers'),
-    recipientCity: trimmed(2, 100, 'Stadt des Empfängers'),
+    recipientAddress: trimmed(3, 200),
+    recipientCity: trimmed(2, 100),
     recipientCountry: countrySchema,
 
     // Confirmations — all three are mandatory
     detailsConfirmed: z.literal(true, {
-      errorMap: () => ({ message: 'Bitte bestätige, dass deine Angaben korrekt sind.' }),
+      errorMap: () => ({ message: errorKey('confirmDetails') }),
     }),
     prohibitedConfirmed: z.literal(true, {
-      errorMap: () => ({ message: 'Bitte bestätige, dass keine verbotenen Waren enthalten sind.' }),
+      errorMap: () => ({ message: errorKey('confirmProhibited') }),
     }),
     termsAccepted: z.literal(true, {
-      errorMap: () => ({ message: 'Bitte akzeptiere die Versandbedingungen.' }),
+      errorMap: () => ({ message: errorKey('confirmTerms') }),
     }),
   })
   .refine((v) => v.originCountry !== v.destinationCountry, {
-    message: 'Start- und Zielland müssen unterschiedlich sein.',
+    message: errorKey('differentCountries'),
     path: ['destinationCountry'],
   })
   .refine((v) => cities.find((c) => c.slug === v.originCity)?.country === v.originCountry, {
-    message: 'Die Abholstadt passt nicht zum gewählten Land.',
+    message: errorKey('originCityMismatch'),
     path: ['originCity'],
   })
   .refine(
     (v) => cities.find((c) => c.slug === v.destinationCity)?.country === v.destinationCountry,
-    { message: 'Die Zielstadt passt nicht zum gewählten Land.', path: ['destinationCity'] },
+    { message: errorKey('destinationCityMismatch'), path: ['destinationCity'] },
   )
   .refine((v) => !v.pickupRequested || !!v.pickupDate, {
-    message: 'Bitte wähle ein Wunschdatum für die Abholung.',
+    message: errorKey('pickupDateRequired'),
     path: ['pickupDate'],
   })
   .refine(requiresParcelWeight, parcelWeightMessage)
@@ -246,13 +259,11 @@ export const bookingSchema = z
    * für jede Sendung — 10,00 € statt 2,00 € pro Kilo.
    */
   .refine((v) => v.shipmentType !== 'documents' || v.weightKg <= pricingConfig.maxDocumentsWeightKg, {
-    message:
-      `Für Dokumente gilt der Pauschalpreis bis ${pricingConfig.maxDocumentsWeightKg} kg. ` +
-      'Schwerer? Dann buche es bitte als Paket.',
+    message: errorKey('documentsTooHeavy', { max: pricingConfig.maxDocumentsWeightKg }),
     path: ['weightKg'],
   })
   .refine((v) => v.shipmentType !== 'documents' || v.pieceCount === 1, {
-    message: 'Für Dokumente ist ein Umschlag vorgesehen. Mehrere Stücke bitte als Paket buchen.',
+    message: errorKey('documentsOnePiece'),
     path: ['pieceCount'],
   });
 
@@ -267,18 +278,18 @@ export const bulkyRequestSchema = z
     destinationCountry: countrySchema,
     destinationCity: citySchema,
 
-    itemType: trimmed(2, 80, 'Gegenstand'),
+    itemType: trimmed(2, 80),
     itemDescription: optionalText(2000),
     approxWeightKg: z.coerce
-      .number({ invalid_type_error: 'Bitte gib ein ungefähres Gewicht an.' })
-      .positive('Das Gewicht muss größer als 0 sein.')
-      .max(2000, 'Bitte kontaktiere uns direkt für über 2000 kg.'),
-    lengthCm: z.coerce.number().int().positive('Bitte gib die Länge in cm an.').max(1000),
-    widthCm: z.coerce.number().int().positive('Bitte gib die Breite in cm an.').max(1000),
-    heightCm: z.coerce.number().int().positive('Bitte gib die Höhe in cm an.').max(1000),
+      .number({ invalid_type_error: errorKey('approxWeightRequired') })
+      .positive(errorKey('weightPositive'))
+      .max(2000, errorKey('approxWeightMax', { max: 2000 })),
+    lengthCm: z.coerce.number().int().positive(errorKey('lengthRequired')).max(1000),
+    widthCm: z.coerce.number().int().positive(errorKey('widthRequired')).max(1000),
+    heightCm: z.coerce.number().int().positive(errorKey('heightRequired')).max(1000),
 
-    contactFirstName: trimmed(2, 80, 'Vorname'),
-    contactLastName: trimmed(2, 80, 'Nachname'),
+    contactFirstName: trimmed(2, 80),
+    contactLastName: trimmed(2, 80),
     phone: phoneSchema,
     email: optionalEmailSchema,
     pickupRequested: z.boolean().default(false),
@@ -288,20 +299,20 @@ export const bulkyRequestSchema = z
     photoPaths: z.array(z.string().trim().min(1).max(300)).max(6).default([]),
 
     prohibitedConfirmed: z.literal(true, {
-      errorMap: () => ({ message: 'Bitte bestätige, dass keine verbotenen Waren enthalten sind.' }),
+      errorMap: () => ({ message: errorKey('confirmProhibited') }),
     }),
   })
   .refine((v) => v.originCountry !== v.destinationCountry, {
-    message: 'Start- und Zielland müssen unterschiedlich sein.',
+    message: errorKey('differentCountries'),
     path: ['destinationCountry'],
   })
   .refine((v) => cities.find((c) => c.slug === v.originCity)?.country === v.originCountry, {
-    message: 'Die Abholstadt passt nicht zum gewählten Land.',
+    message: errorKey('originCityMismatch'),
     path: ['originCity'],
   })
   .refine(
     (v) => cities.find((c) => c.slug === v.destinationCity)?.country === v.destinationCountry,
-    { message: 'Die Zielstadt passt nicht zum gewählten Land.', path: ['destinationCity'] },
+    { message: errorKey('destinationCityMismatch'), path: ['destinationCity'] },
   );
 
 export type BulkyRequestInput = z.infer<typeof bulkyRequestSchema>;
@@ -316,10 +327,13 @@ export const trackingNumberSchema = z
     /^[A-Z]{2,5}-\d{6}-\d{4,}$/,
     // Aus dem Präfix der Marke abgeleitet — ein festes Beispiel wäre nach der
     // Umbenennung stehen geblieben und hätte die falsche Form gezeigt.
-    `Bitte gib eine gültige Sendungsnummer ein (z. B. ${exampleTrackingNumber}).`,
+    errorKey('trackingNumberInvalid', { example: exampleTrackingNumber }),
   );
 
-export const uuidSchema = z.string().uuid('Ungültige ID.');
+/** Der Upload für Sperrgut-Fotos läuft über eine öffentliche Seite. */
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
+export const uuidSchema = z.string().uuid(errorKey('invalidId'));
 
 export const statusUpdateSchema = z.object({
   shipmentId: uuidSchema,
@@ -362,7 +376,7 @@ export const pickupScheduleSchema = z.object({
 
 export const vehicleSchema = z.object({
   id: uuidSchema.optional(),
-  plate: trimmed(2, 20, 'Kennzeichen').transform((v) => v.toUpperCase()),
+  plate: trimmed(2, 20).transform((v) => v.toUpperCase()),
   make: optionalText(60),
   model: optionalText(60),
   grossWeightKg: optionalNumber(z.coerce.number().positive().max(60_000)),
@@ -375,7 +389,7 @@ export const vehicleSchema = z.object({
 export const tripSchema = z
   .object({
     id: uuidSchema.optional(),
-    code: trimmed(3, 40, 'Tour-ID').transform((v) => v.toUpperCase()),
+    code: trimmed(3, 40).transform((v) => v.toUpperCase()),
     originCountry: countrySchema,
     originCity: citySchema,
     destinationCountry: countrySchema,
@@ -389,7 +403,7 @@ export const tripSchema = z
     notes: optionalText(2000),
   })
   .refine((v) => v.originCountry !== v.destinationCountry, {
-    message: 'Start- und Zielland müssen unterschiedlich sein.',
+    message: errorKey('differentCountries'),
     path: ['destinationCountry'],
   });
 
@@ -428,5 +442,5 @@ export const signedUploadSchema = z.object({
     .number()
     .int()
     .positive()
-    .max(10 * 1024 * 1024, 'Die Datei darf höchstens 10 MB groß sein.'),
+    .max(MAX_UPLOAD_BYTES, errorKey('fileTooLarge', { max: MAX_UPLOAD_BYTES / (1024 * 1024) })),
 });

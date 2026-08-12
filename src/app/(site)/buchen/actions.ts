@@ -8,6 +8,7 @@ import { getSessionUser } from '@/lib/auth';
 import { isSupabaseConfigured } from '@/lib/env';
 import { checkRateLimit, clientKey, RATE_LIMITS } from '@/lib/rate-limit';
 import { sendBookingConfirmation } from '@/lib/notifications';
+import { getT } from '@/lib/i18n/server';
 
 export type BookingResult =
   | { ok: true; trackingNumber: string }
@@ -26,6 +27,7 @@ export type BookingResult =
  *    shipment to them so it shows up in /konto.
  */
 export async function createBooking(input: unknown): Promise<BookingResult> {
+  const t = await getT();
   if (!isSupabaseConfigured()) {
     return {
       ok: false,
@@ -41,7 +43,7 @@ export async function createBooking(input: unknown): Promise<BookingResult> {
       const key = issue.path.join('.');
       if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
     }
-    return { ok: false, error: 'Bitte prüfe deine Eingaben.', fieldErrors };
+    return { ok: false, error: t('actions.checkInput'), fieldErrors };
   }
 
   const data = parsed.data;
@@ -185,7 +187,7 @@ export async function createBooking(input: unknown): Promise<BookingResult> {
     console.error('[booking] Sendung konnte nicht angelegt werden:', error?.message);
     return {
       ok: false,
-      error: 'Die Buchung konnte nicht gespeichert werden. Bitte versuche es erneut.',
+      error: t('actions.bookingFailed'),
     };
   }
 

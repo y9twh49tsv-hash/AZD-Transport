@@ -6,6 +6,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { isSupabaseConfigured } from '@/lib/env';
 import { checkRateLimit, clientKey, RATE_LIMITS } from '@/lib/rate-limit';
 import { sendBulkyRequestReceived } from '@/lib/notifications';
+import { getT } from '@/lib/i18n/server';
+import { translateError } from '@/lib/i18n/errors';
 
 const EXTENSION_BY_MIME: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -31,18 +33,22 @@ export type SignedUploadResult =
  * so one visitor cannot overwrite another's file or guess where it landed.
  */
 export async function createSignedUpload(input: unknown): Promise<SignedUploadResult> {
+  const t = await getT();
   if (!isSupabaseConfigured()) {
-    return { ok: false, error: 'Die Datenbank ist noch nicht konfiguriert.' };
+    return { ok: false, error: t('actions.dbNotConfigured') };
   }
 
   const parsed = signedUploadSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? 'Ungültige Datei.' };
+    return {
+      ok: false,
+      error: translateError(t, parsed.error.issues[0]?.message) ?? t('actions.uploadFailed'),
+    };
   }
 
   // The public form may only ever write into the bulky-photos bucket.
   if (parsed.data.bucket !== 'bulky-photos' || parsed.data.kind !== 'bulky_photo') {
-    return { ok: false, error: 'Für diesen Upload fehlt die Berechtigung.' };
+    return { ok: false, error: t('actions.uploadForbidden') };
   }
 
   const requestHeaders = await headers();
@@ -52,7 +58,7 @@ export async function createSignedUpload(input: unknown): Promise<SignedUploadRe
     RATE_LIMITS.upload.windowMs,
   );
   if (!limit.allowed) {
-    return { ok: false, error: 'Zu viele Uploads. Bitte warte einen Moment.' };
+    return { ok: false, error: t('actions.uploadRateLimited') };
   }
 
   const extension = EXTENSION_BY_MIME[parsed.data.mimeType] ?? 'bin';
@@ -67,7 +73,7 @@ export async function createSignedUpload(input: unknown): Promise<SignedUploadRe
 
   if (error || !data) {
     console.error('[upload] Signierte Upload-URL fehlgeschlagen:', error?.message);
-    return { ok: false, error: 'Der Upload konnte nicht vorbereitet werden.' };
+    return { ok: false, error: t('actions.uploadFailed') };
   }
 
   return { ok: true, path: data.path, token: data.token, bucket: 'bulky-photos' };
@@ -78,10 +84,11 @@ export type BulkyResult =
   | { ok: false; error: string; fieldErrors?: Record<string, string> };
 
 export async function createBulkyRequest(input: unknown): Promise<BulkyResult> {
+  const t = await getT();
   if (!isSupabaseConfigured()) {
     return {
       ok: false,
-      error: 'Die Datenbank ist noch nicht konfiguriert. Bitte hinterlege die Supabase-Zugangsdaten.',
+      error: t('actions.dbNotConfigured'),
     };
   }
 
@@ -92,7 +99,7 @@ export async function createBulkyRequest(input: unknown): Promise<BulkyResult> {
       const key = issue.path.join('.');
       if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
     }
-    return { ok: false, error: 'Bitte prüfe deine Eingaben.', fieldErrors };
+    return { ok: false, error: t('actions.checkInput'), fieldErrors };
   }
 
   const data = parsed.data;
@@ -138,7 +145,7 @@ export async function createBulkyRequest(input: unknown): Promise<BulkyResult> {
 
   if (error || !request) {
     console.error('[bulky] Anfrage konnte nicht gespeichert werden:', error?.message);
-    return { ok: false, error: 'Die Anfrage konnte nicht gespeichert werden. Bitte versuche es erneut.' };
+    return { ok: false, error: t('actions.bulkyFailed') };
   }
 
   // Attach the photos that were uploaded before the form was submitted.
@@ -183,11 +190,12 @@ export type OfferDecision = { ok: true; status: 'ACCEPTED' | 'REJECTED' } | { ok
  * exists beyond the generic error message.
  */
 export async function decideOnOffer(token: string, decision: 'accept' | 'reject'): Promise<OfferDecision> {
+  const t = await getT();
   if (!isSupabaseConfigured()) {
-    return { ok: false, error: 'Die Datenbank ist noch nicht konfiguriert.' };
+    return { ok: false, error: t('actions.dbNotConfigured') };
   }
   if (typeof token !== 'string' || !/^[a-f0-9]{16,64}$/.test(token)) {
-    return { ok: false, error: 'Dieser Angebotslink ist ungültig.' };
+    return { ok: false, error: t('actions.offerLinkInvalid') };
   }
 
   const requestHeaders = await headers();
@@ -197,7 +205,7 @@ export async function decideOnOffer(token: string, decision: 'accept' | 'reject'
     RATE_LIMITS.bulky.windowMs,
   );
   if (!limit.allowed) {
-    return { ok: false, error: 'Zu viele Versuche. Bitte warte einen Moment.' };
+    return { ok: false, error: t('actions.offerRateLimited') };
   }
 
   const supabase = createAdminClient();
@@ -207,9 +215,9 @@ export async function decideOnOffer(token: string, decision: 'accept' | 'reject'
     .eq('public_token', token)
     .maybeSingle();
 
-  if (!request) return { ok: false, error: 'Dieser Angebotslink ist ungültig.' };
+  if (!request) return { ok: false, error: t('actions.offerLinkInvalid') };
   if (request.status !== 'QUOTED') {
-    return { ok: false, error: 'Dieses Angebot kann nicht mehr bearbeitet werden.' };
+    return { ok: false, error: t('actions.offerClosed') };
   }
 
   if (decision === 'reject') {
@@ -271,7 +279,7 @@ export async function decideOnOffer(token: string, decision: 'accept' | 'reject'
 
   if (shipmentError || !shipment) {
     console.error('[offer] Sendung konnte nicht erstellt werden:', shipmentError?.message);
-    return { ok: false, error: 'Die Sendung konnte nicht angelegt werden. Bitte melde dich bei uns.' };
+    return { ok: false, error: t('actions.shipmentFailed') };
   }
 
   await supabase

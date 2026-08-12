@@ -6,6 +6,8 @@ import { z } from 'zod';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { emailSchema } from '@/lib/validation';
+import { getT } from '@/lib/i18n/server';
+import { translateError } from '@/lib/i18n/errors';
 
 export type AuthResult = { ok: false; error: string } | { ok: true; message?: string };
 
@@ -26,8 +28,9 @@ function safeRedirect(target: string | undefined | null): string {
 }
 
 export async function signIn(formData: FormData): Promise<AuthResult> {
+  const t = await getT();
   if (!isSupabaseConfigured()) {
-    return { ok: false, error: 'Die Anmeldung ist noch nicht konfiguriert (Supabase fehlt).' };
+    return { ok: false, error: t('actions.authNotConfigured') };
   }
 
   const parsed = credentialsSchema.safeParse({
@@ -36,7 +39,10 @@ export async function signIn(formData: FormData): Promise<AuthResult> {
   });
 
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? 'Bitte prüfe deine Eingaben.' };
+    return {
+      ok: false,
+      error: translateError(t, parsed.error.issues[0]?.message) ?? t('actions.checkInput'),
+    };
   }
 
   const supabase = await createServerSupabase();
@@ -44,7 +50,7 @@ export async function signIn(formData: FormData): Promise<AuthResult> {
 
   if (error) {
     // Deliberately generic: never reveal whether an address exists.
-    return { ok: false, error: 'E-Mail oder Passwort ist falsch.' };
+    return { ok: false, error: t('actions.signInWrong') };
   }
 
   const next = safeRedirect(formData.get('next')?.toString());
@@ -53,8 +59,9 @@ export async function signIn(formData: FormData): Promise<AuthResult> {
 }
 
 export async function signUp(formData: FormData): Promise<AuthResult> {
+  const t = await getT();
   if (!isSupabaseConfigured()) {
-    return { ok: false, error: 'Die Registrierung ist noch nicht konfiguriert (Supabase fehlt).' };
+    return { ok: false, error: t('actions.signUpNotConfigured') };
   }
 
   const parsed = signUpSchema.safeParse({
@@ -65,7 +72,10 @@ export async function signUp(formData: FormData): Promise<AuthResult> {
   });
 
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? 'Bitte prüfe deine Eingaben.' };
+    return {
+      ok: false,
+      error: translateError(t, parsed.error.issues[0]?.message) ?? t('actions.checkInput'),
+    };
   }
 
   const supabase = await createServerSupabase();
@@ -82,15 +92,14 @@ export async function signUp(formData: FormData): Promise<AuthResult> {
 
   if (error) {
     if (error.message.toLowerCase().includes('already')) {
-      return { ok: false, error: 'Für diese E-Mail-Adresse existiert bereits ein Konto.' };
+      return { ok: false, error: t('actions.accountExists') };
     }
-    return { ok: false, error: 'Die Registrierung hat nicht geklappt. Bitte versuche es erneut.' };
+    return { ok: false, error: t('actions.signUpFailed') };
   }
 
   return {
     ok: true,
-    message:
-      'Fast geschafft! Wir haben dir eine E-Mail geschickt. Bestätige darin deine Adresse, dann kannst du dich anmelden.',
+    message: t('actions.signUpConfirm'),
   };
 }
 
@@ -104,13 +113,14 @@ export async function signOut(): Promise<void> {
 }
 
 export async function requestPasswordReset(formData: FormData): Promise<AuthResult> {
+  const t = await getT();
   if (!isSupabaseConfigured()) {
-    return { ok: false, error: 'Diese Funktion ist noch nicht konfiguriert.' };
+    return { ok: false, error: t('actions.resetNotConfigured') };
   }
 
   const parsed = emailSchema.safeParse(formData.get('email'));
   if (!parsed.success) {
-    return { ok: false, error: 'Bitte gib eine gültige E-Mail-Adresse an.' };
+    return { ok: false, error: t('validation.emailInvalid') };
   }
 
   const supabase = await createServerSupabase();
@@ -119,7 +129,6 @@ export async function requestPasswordReset(formData: FormData): Promise<AuthResu
   // Same answer either way, so the form cannot be used to enumerate accounts.
   return {
     ok: true,
-    message:
-      'Wenn ein Konto mit dieser Adresse existiert, haben wir dir eine E-Mail zum Zurücksetzen geschickt.',
+    message: t('actions.resetSent'),
   };
 }
