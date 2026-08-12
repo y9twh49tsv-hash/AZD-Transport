@@ -17,6 +17,8 @@ import {
 } from './validation';
 import { createT } from '@/lib/i18n';
 import { translateError } from '@/lib/i18n/errors';
+import { pricingConfig } from '@/config/pricing';
+import { calculatePrice } from '@/lib/pricing';
 
 const validBooking = {
   originCountry: 'DE',
@@ -505,6 +507,77 @@ describe('Mindestgewicht je Sendungsart', () => {
     if (!result.success) {
       const issue = result.error.issues.find((i) => i.path[0] === 'weightKg');
       expect(translateError(createT('de'), issue?.message)).toContain('Dokumentensendung');
+    }
+  });
+});
+
+describe('Dokumente ohne Gewichtsangabe', () => {
+  // Ohne weightKg: validBooking trägt ein Paketgewicht, das über der
+  // Umschlaggrenze liegt und die Sendung als Dokumente zu Recht scheitern ließe.
+  const { weightKg: _paketgewicht, ...ohneGewicht } = validBooking;
+  const alsDokumente = { ...ohneGewicht, shipmentType: 'documents' as const, pieceCount: 1 };
+
+  // Der Preis ist pauschal. Nach dem Gewicht zu fragen hieße, eine Zahl zu
+  // verlangen, die nichts verändert, was der Kunde sehen kann.
+  for (const leer of [undefined, '', null]) {
+    it(`nimmt weightKg = ${JSON.stringify(leer)} an`, () => {
+      const result = bookingSchema.safeParse({ ...alsDokumente, weightKg: leer });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.weightKg).toBe(pricingConfig.documentsAssumedWeightKg);
+      }
+    });
+  }
+
+  it('behält ein angegebenes Gewicht bei', () => {
+    const result = bookingSchema.safeParse({ ...alsDokumente, weightKg: 0.3 });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.weightKg).toBe(0.3);
+  });
+
+  it('lehnt ein angegebenes Gewicht über der Umschlaggrenze weiterhin ab', () => {
+    const result = bookingSchema.safeParse({ ...alsDokumente, weightKg: 25 });
+    expect(result.success).toBe(false);
+  });
+
+  it('liefert immer eine Zahl — die Spalte ist not null', () => {
+    const result = bookingSchema.safeParse(alsDokumente);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(typeof result.data.weightKg).toBe('number');
+      expect(result.data.weightKg).toBeGreaterThan(0);
+    }
+  });
+
+  it('akzeptiert die eigene Ausgabe wieder', () => {
+    // Dieselbe Regel wie überall sonst: das Formular prüft im Browser, der
+    // Server prüft die *geparste* Ausgabe ein zweites Mal.
+    const first = bookingSchema.safeParse(alsDokumente);
+    expect(first.success).toBe(true);
+    if (first.success) expect(bookingSchema.safeParse(first.data).success).toBe(true);
+  });
+
+  for (const leer of [undefined, '', null]) {
+    it(`verlangt beim Paket weiterhin ein Gewicht (${JSON.stringify(leer)})`, () => {
+      const result = bookingSchema.safeParse({ ...validBooking, weightKg: leer });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const issue = result.error.issues.find((i) => i.path[0] === 'weightKg');
+        expect(issue?.message).toBe('validation.weightRequired');
+      }
+    });
+  }
+
+  it('bleibt beim Preis unabhängig vom Gewicht', () => {
+    const leicht = bookingSchema.safeParse({ ...alsDokumente, weightKg: 0.05 });
+    const schwerer = bookingSchema.safeParse({ ...alsDokumente, weightKg: 1.9 });
+    expect(leicht.success && schwerer.success).toBe(true);
+    if (leicht.success && schwerer.success) {
+      const preis = (w: number) =>
+        calculatePrice({ weightKg: w, pickupRequested: false, shipmentType: 'documents' })
+          .totalCents;
+      expect(preis(leicht.data.weightKg)).toBe(preis(schwerer.data.weightKg));
+      expect(preis(leicht.data.weightKg)).toBe(pricingConfig.documentsPriceCents);
     }
   });
 });

@@ -78,13 +78,19 @@ export function PriceCalculator({
     [hasWeight, weightNumber, state.pickup, state.shipmentType],
   );
 
+  const isDocuments = state.shipmentType === 'documents';
+
+  /**
+   * Wann ein Preis angezeigt werden darf.
+   *
+   * Für Dokumente sofort — er hängt an nichts, was noch einzugeben wäre.
+   * Für Pakete erst mit einem Gewicht, weil es dort der Preis ist.
+   */
+  const priceReady = isDocuments || hasWeight;
+
   const tooHeavy = hasWeight && weightNumber > pricingConfig.maxStandardWeightKg;
-  const tooHeavyForDocuments =
-    hasWeight &&
-    state.shipmentType === 'documents' &&
-    weightNumber > pricingConfig.maxDocumentsWeightKg;
   /** Kein Preis und kein Weiter, solange das Gewicht nicht zur Sendungsart passt. */
-  const blocked = tooHeavy || tooHeavyForDocuments;
+  const blocked = tooHeavy;
 
   function swapDirection() {
     setState((prev) => ({
@@ -179,7 +185,16 @@ export function PriceCalculator({
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setState((prev) => ({ ...prev, shipmentType: option.value }))}
+                  onClick={() =>
+                    setState((prev) => ({
+                      ...prev,
+                      shipmentType: option.value,
+                      // Ein vorher eingetipptes Paketgewicht muss weg: für
+                      // Dokumente wird es nicht mehr abgefragt, bliebe also
+                      // unsichtbar stehen und könnte den Preis blockieren.
+                      weight: option.value === 'documents' ? '' : prev.weight,
+                    }))
+                  }
                   aria-pressed={active}
                   className={cn(
                     'flex min-h-[4.5rem] flex-col items-start gap-1 rounded-xl border p-3.5 text-start transition-colors',
@@ -259,29 +274,27 @@ export function PriceCalculator({
           </Field>
         </div>
 
-        {/* Weight */}
+        {/*
+          Gewicht — bei Dokumenten gar nicht erst gefragt. Der Preis ist
+          pauschal, die Zahl würde also nichts verändern, was der Kunde sehen
+          kann; ein Pflichtfeld ohne Wirkung ist nur eine Hürde vor dem Preis.
+        */}
+        {!isDocuments && (
         <Field
           label={t('calculator.weightLabel')}
           htmlFor="calc-weight"
           hint={
             state.shipmentType === 'bulky'
               ? t('calculator.weightHintBulky')
-              : state.shipmentType === 'documents'
-                ? t('calculator.documentsExplain', {
-                    price: formatCents(pricingConfig.documentsPriceCents),
-                    max: pricingConfig.maxDocumentsWeightKg,
-                  })
-                : t('calculator.weightHintStandard', {
-                    minimum: formatCents(pricingConfig.minimumPriceCents),
-                    perKg: formatCents(pricingConfig.pricePerKgCents),
-                  })
+              : t('calculator.weightHintStandard', {
+                  minimum: formatCents(pricingConfig.minimumPriceCents),
+                  perKg: formatCents(pricingConfig.pricePerKgCents),
+                })
           }
           error={
             tooHeavy && state.shipmentType === 'standard'
               ? t('calculator.tooHeavyStandard', { max: pricingConfig.maxStandardWeightKg })
-              : tooHeavyForDocuments
-                ? t('calculator.tooHeavyDocuments', { max: pricingConfig.maxDocumentsWeightKg })
-                : null
+              : null
           }
         >
           <div className="relative">
@@ -303,6 +316,16 @@ export function PriceCalculator({
             </span>
           </div>
         </Field>
+        )}
+
+        {isDocuments && (
+          <p className="rounded-xl border border-border bg-secondary/40 p-4 text-sm leading-relaxed text-muted-foreground">
+            {t('calculator.documentsExplain', {
+              price: formatCents(pricingConfig.documentsPriceCents),
+              max: pricingConfig.maxDocumentsWeightKg,
+            })}
+          </p>
+        )}
 
         {/* Pickup */}
         <button
@@ -364,19 +387,24 @@ export function PriceCalculator({
               <div>
                 <p className="text-sm font-medium text-muted-foreground">{t('calculator.yourPrice')}</p>
                 <p className="mt-1 text-4xl font-bold tracking-tight text-foreground tabular-nums">
-                  {hasWeight && !blocked ? formatCents(breakdown.totalCents) : '—'}
+                  {priceReady && !blocked ? formatCents(breakdown.totalCents) : '—'}
                 </p>
               </div>
-              {hasWeight && !blocked && (
+              {priceReady && !blocked && (
                 <p className="pb-1.5 text-end text-xs text-muted-foreground">
-                  {t('calculator.forWeight', { weight: formatWeight(weightNumber) })}
-                  <br />
+                  {/* Bei Dokumenten gibt es kein Gewicht zu nennen. */}
+                  {!isDocuments && (
+                    <>
+                      {t('calculator.forWeight', { weight: formatWeight(weightNumber) })}
+                      <br />
+                    </>
+                  )}
                   {state.pickup ? t('calculator.inclPickup') : t('calculator.dropOff')}
                 </p>
               )}
             </div>
 
-            {hasWeight && !blocked && (
+            {priceReady && !blocked && (
               <dl className="space-y-1.5 border-t border-border pt-3 text-sm">
                 <div className="flex justify-between gap-4">
                   <dt className="text-muted-foreground">
@@ -403,14 +431,14 @@ export function PriceCalculator({
               </dl>
             )}
 
-            <Link href={bookingHref} aria-disabled={!hasWeight || blocked}>
-              <Button size="lg" block disabled={!hasWeight || blocked}>
+            <Link href={bookingHref} aria-disabled={!priceReady || blocked}>
+              <Button size="lg" block disabled={!priceReady || blocked}>
                 {t('common.bookShipment')}
                 <ArrowRight aria-hidden />
               </Button>
             </Link>
 
-            {!hasWeight && (
+            {!priceReady && (
               <p className="text-center text-xs text-muted-foreground">
                 {t('calculator.enterWeight')}
               </p>

@@ -142,14 +142,60 @@ export const weightSchema = z.coerce
     errorKey('weightMaxStandard', { max: pricingConfig.maxStandardWeightKg }),
   );
 
+/**
+ * Das Gewicht, wie es das Formular liefert — für Dokumente optional.
+ *
+ * Bei einer Dokumentensendung ist der Preis pauschal. Nach dem Gewicht zu
+ * fragen hieße, eine Zahl zu verlangen, die nichts verändert, was der Kunde
+ * sehen kann — und „wie schwer ist ein Umschlag“ ist eine Frage ohne
+ * brauchbare Antwort. Also darf das Feld leer bleiben; welchen Wert die
+ * Sendung dann bekommt, entscheidet `withAssumedDocumentsWeight`.
+ *
+ * Für Pakete bleibt es Pflicht: dort ist das Gewicht der Preis.
+ */
+const optionalWeight = z.preprocess(
+  (v) => (v === '' || v === null ? undefined : v),
+  weightSchema.optional(),
+);
+
+type WeighedShipment = { shipmentType?: string; weightKg?: number };
+
+/** Pakete brauchen überhaupt ein Gewicht — Dokumente nicht. */
+const parcelHasWeight = (v: WeighedShipment) =>
+  v.shipmentType === 'documents' || v.weightKg !== undefined;
+
+const parcelWeightRequired = {
+  message: errorKey('weightRequired'),
+  path: ['weightKg'],
+};
+
 /** Alles außer Dokumenten muss das Paket-Mindestgewicht erreichen. */
-const requiresParcelWeight = (v: { shipmentType?: string; weightKg: number }) =>
-  v.shipmentType === 'documents' || v.weightKg >= pricingConfig.minWeightKg;
+const requiresParcelWeight = (v: WeighedShipment) =>
+  v.shipmentType === 'documents' ||
+  v.weightKg === undefined ||
+  v.weightKg >= pricingConfig.minWeightKg;
 
 const parcelWeightMessage = {
   message: errorKey('parcelWeightMin', { min: pricingConfig.minWeightKg }),
   path: ['weightKg'],
 };
+
+/**
+ * Setzt das angenommene Gewicht ein, wenn bei Dokumenten keins angegeben wurde.
+ *
+ * Läuft als letzter Schritt, damit `weightKg` nach dem Parsen immer eine Zahl
+ * ist: die Spalte `shipments.weight_kg` ist `not null` und geht in die
+ * Auslastungsrechnung der Touren ein. Der Rest der Anwendung muss deshalb
+ * nicht wissen, dass das Feld je optional war.
+ */
+function withAssumedDocumentsWeight<T extends WeighedShipment>(v: T): T & { weightKg: number } {
+  return {
+    ...v,
+    weightKg:
+      v.weightKg ??
+      (v.shipmentType === 'documents' ? pricingConfig.documentsAssumedWeightKg : 0),
+  };
+}
 
 export const pieceCountSchema = z.coerce
   .number({ invalid_type_error: errorKey('piecesRequired') })
@@ -165,7 +211,7 @@ export const quoteSchema = z
     originCity: citySchema,
     destinationCountry: countrySchema,
     destinationCity: citySchema,
-    weightKg: weightSchema,
+    weightKg: optionalWeight,
     pickupRequested: z.boolean().default(false),
     shipmentType: z.enum(['standard', 'documents', 'bulky']).default('standard'),
   })
@@ -181,7 +227,9 @@ export const quoteSchema = z
     (v) => cities.find((c) => c.slug === v.destinationCity)?.country === v.destinationCountry,
     { message: errorKey('destinationCityMismatch'), path: ['destinationCity'] },
   )
-  .refine(requiresParcelWeight, parcelWeightMessage);
+  .refine(parcelHasWeight, parcelWeightRequired)
+  .refine(requiresParcelWeight, parcelWeightMessage)
+  .transform(withAssumedDocumentsWeight);
 
 export type QuoteInput = z.infer<typeof quoteSchema>;
 
@@ -200,7 +248,7 @@ export const bookingSchema = z
      * einen verbindlichen Preis — das geht nur für Paket und Dokumente.
      */
     shipmentType: z.enum(['standard', 'documents']).default('standard'),
-    weightKg: weightSchema,
+    weightKg: optionalWeight,
     pieceCount: pieceCountSchema,
     contentType: trimmed(2, 120),
     description: optionalText(2000),
@@ -252,20 +300,28 @@ export const bookingSchema = z
     message: errorKey('pickupDateRequired'),
     path: ['pickupDate'],
   })
+  .refine(parcelHasWeight, parcelWeightRequired)
   .refine(requiresParcelWeight, parcelWeightMessage)
   /**
    * Der Pauschalpreis für Dokumente gilt für einen Umschlag, nicht für einen
    * Karton. Ohne diese Grenze wäre „Dokumente“ schlicht der billigere Tarif
    * für jede Sendung — 10,00 € statt 2,00 € pro Kilo.
    */
-  .refine((v) => v.shipmentType !== 'documents' || v.weightKg <= pricingConfig.maxDocumentsWeightKg, {
-    message: errorKey('documentsTooHeavy', { max: pricingConfig.maxDocumentsWeightKg }),
-    path: ['weightKg'],
-  })
+  .refine(
+    (v) =>
+      v.shipmentType !== 'documents' ||
+      v.weightKg === undefined ||
+      v.weightKg <= pricingConfig.maxDocumentsWeightKg,
+    {
+      message: errorKey('documentsTooHeavy', { max: pricingConfig.maxDocumentsWeightKg }),
+      path: ['weightKg'],
+    },
+  )
   .refine((v) => v.shipmentType !== 'documents' || v.pieceCount === 1, {
     message: errorKey('documentsOnePiece'),
     path: ['pieceCount'],
-  });
+  })
+  .transform(withAssumedDocumentsWeight);
 
 export type BookingInput = z.infer<typeof bookingSchema>;
 

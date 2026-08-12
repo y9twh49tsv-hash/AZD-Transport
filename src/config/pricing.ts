@@ -39,8 +39,25 @@ export const pricingConfig = {
    * The floor for documents. An envelope with a passport and two certificates
    * weighs around 50 grams, so the parcel minimum of 0,5 kg would reject the
    * very shipments this service exists for.
+   *
+   * Only checked when a weight was given at all — see below.
    */
   minDocumentsWeightKg: 0.01,
+  /**
+   * What a document shipment is booked as when nobody weighed it.
+   *
+   * The customer is not asked: the price is flat, so the number would change
+   * nothing they can see, and "how much does an envelope weigh" is a question
+   * with no useful answer. But `shipments.weight_kg` is `not null` and feeds
+   * the load planning — a trip sums the weight of its shipments against the
+   * vehicle's payload — so a value has to be stored.
+   *
+   * 100 grams is a realistic envelope with a few certified copies. Erring
+   * low is the right direction here: a document shipment that quietly
+   * consumed 2 kg of a van's payload would push out a parcel that actually
+   * needed the space.
+   */
+  documentsAssumedWeightKg: 0.1,
   currency: 'EUR',
 } as const;
 

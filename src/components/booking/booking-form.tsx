@@ -190,6 +190,7 @@ export function BookingForm({ defaults }: { defaults?: BookingDefaults }) {
   const values = form.watch();
   const errors = form.formState.errors;
   const labels = fieldLabels(t);
+  const documentsBooking = values.shipmentType === 'documents';
 
   const price = useMemo(
     () =>
@@ -335,17 +336,27 @@ export function BookingForm({ defaults }: { defaults?: BookingDefaults }) {
             {t('booking.summaryTitle')}
           </h2>
           <p className="mt-3 text-3xl font-bold tracking-tight tabular-nums">
-            {values.weightKg ? formatCents(price.totalCents) : '—'}
+            {/*
+              Für Dokumente hängt der Preis an keiner Eingabe mehr — er darf
+              also nicht auf ein Gewicht warten, das nie kommt.
+            */}
+            {documentsBooking || values.weightKg ? formatCents(price.totalCents) : '—'}
           </p>
 
           <dl className="mt-4 space-y-2 border-t border-border pt-4 text-sm">
             <Row label={t('common.route')}>
               {cityName(values.originCity)} → {cityName(values.destinationCity)}
             </Row>
-            <Row label={t('common.weight')}>
-              {values.weightKg ? formatWeight(Number(values.weightKg)) : '—'}
-            </Row>
-            <Row label={t('common.pieces')}>{values.pieceCount || '—'}</Row>
+            {documentsBooking ? (
+              <Row label={t('calculator.typeLabel')}>{t('calculator.typeDocuments')}</Row>
+            ) : (
+              <>
+                <Row label={t('common.weight')}>
+                  {values.weightKg ? formatWeight(Number(values.weightKg)) : '—'}
+                </Row>
+                <Row label={t('common.pieces')}>{values.pieceCount || '—'}</Row>
+              </>
+            )}
             <Row label={t('common.pickup')}>
               {values.pickupRequested
                 ? t('booking.pickupYes', { fee: formatCents(pricingConfig.pickupFeeCents) })
@@ -382,6 +393,9 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
   const pickupRequested = watch('pickupRequested');
   const weight = watch('weightKg');
   const shipmentType = watch('shipmentType');
+  // Dokumente sind ein Umschlag zum Pauschalpreis: weder Gewicht noch
+  // Stückzahl sind etwas, das der Kunde eintragen müsste.
+  const isDocuments = shipmentType === 'documents';
 
   function handleCountryChange(side: 'origin' | 'destination', value: CountryCode) {
     const other: CountryCode = value === 'DE' ? 'MA' : 'DE';
@@ -450,8 +464,13 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
                   setValue('shipmentType', option.value, { shouldValidate: true });
                   // Dokumente sind ein Umschlag. Ohne das Zurücksetzen bliebe
                   // eine vorher eingetragene Stückzahl stehen und die Buchung
-                  // scheiterte an einer Regel, die der Kunde nicht sieht.
-                  if (option.value === 'documents') setValue('pieceCount', 1);
+                  // scheiterte an einer Regel, die der Kunde nicht sieht. Beim
+                  // Gewicht dasselbe: es wird für Dokumente nicht abgefragt,
+                  // stünde also unsichtbar im Formular.
+                  if (option.value === 'documents') {
+                    setValue('pieceCount', 1);
+                    setValue('weightKg', undefined as never, { shouldValidate: true });
+                  }
                 }}
                 aria-pressed={active}
                 className={cn(
@@ -530,31 +549,40 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
         </Field>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          label={t('calculator.weightLabel')}
-          htmlFor="weight"
-          error={translateError(t, errors.weightKg?.message)}
-          hint={
-            weight
-              ? t('booking.transportHint', { price: formatCents(price.basePriceCents) })
-              : t('booking.minimumHint', {
-                  minimum: formatCents(pricingConfig.minimumPriceCents),
-                })
-          }
-          required
-        >
-          <Input
-            id="weight"
-            type="text"
-            inputMode="decimal"
-            placeholder={t('calculator.weightPlaceholder')}
-            aria-invalid={!!errors.weightKg}
-            className="text-lg font-semibold"
-            {...register('weightKg')}
-          />
-        </Field>
+      <div className={cn('grid gap-4', !isDocuments && 'sm:grid-cols-2')}>
+        {/*
+          Kein Gewichtsfeld für Dokumente: der Preis ist pauschal, die Zahl
+          hätte keine sichtbare Wirkung. Was gespeichert wird, entscheidet
+          pricingConfig.documentsAssumedWeightKg — die Spalte ist `not null`
+          und geht in die Auslastung der Touren ein.
+        */}
+        {!isDocuments && (
+          <Field
+            label={t('calculator.weightLabel')}
+            htmlFor="weight"
+            error={translateError(t, errors.weightKg?.message)}
+            hint={
+              weight
+                ? t('booking.transportHint', { price: formatCents(price.basePriceCents) })
+                : t('booking.minimumHint', {
+                    minimum: formatCents(pricingConfig.minimumPriceCents),
+                  })
+            }
+            required
+          >
+            <Input
+              id="weight"
+              type="text"
+              inputMode="decimal"
+              placeholder={t('calculator.weightPlaceholder')}
+              aria-invalid={!!errors.weightKg}
+              className="text-lg font-semibold"
+              {...register('weightKg')}
+            />
+          </Field>
+        )}
 
+        {!isDocuments && (
         <Field
           label={t('booking.piecesLabel')}
           htmlFor="pieces"
@@ -572,6 +600,7 @@ function ShipmentStep({ form, price }: { form: FormApi; price: ReturnType<typeof
             {...register('pieceCount')}
           />
         </Field>
+        )}
       </div>
 
       <Field
@@ -788,8 +817,16 @@ function ConfirmStep({ form, price }: { form: FormApi; price: ReturnType<typeof 
           <SummaryRow label={t('common.route')}>
             {cityName(v.originCity)} → {cityName(v.destinationCity)}
           </SummaryRow>
-          <SummaryRow label={t('common.weight')}>{formatWeight(Number(v.weightKg))}</SummaryRow>
-          <SummaryRow label={t('common.pieces')}>{v.pieceCount}</SummaryRow>
+          {v.shipmentType === 'documents' ? (
+            <SummaryRow label={t('calculator.typeLabel')}>
+              {t('calculator.typeDocuments')}
+            </SummaryRow>
+          ) : (
+            <>
+              <SummaryRow label={t('common.weight')}>{formatWeight(Number(v.weightKg))}</SummaryRow>
+              <SummaryRow label={t('common.pieces')}>{v.pieceCount}</SummaryRow>
+            </>
+          )}
           <SummaryRow label={t('booking.summaryContent')}>{v.contentType}</SummaryRow>
           <SummaryRow label={t('common.pickup')}>
             {v.pickupRequested
