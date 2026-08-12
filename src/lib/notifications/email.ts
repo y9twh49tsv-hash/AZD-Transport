@@ -14,7 +14,8 @@ import type { EmailAdapter, EmailMessage, SendResult } from './types';
  */
 
 function fromAddress(): string {
-  return process.env.EMAIL_FROM || 'AZD Transport <onboarding@resend.dev>';
+  const configured = parseSender(process.env.EMAIL_FROM ?? '');
+  return configured ? formatSender(configured) : 'AZD Transport <onboarding@resend.dev>';
 }
 
 /**
@@ -50,11 +51,60 @@ const UNVERIFIABLE_DOMAINS = [
   'proton.me', 'protonmail.com', 'mail.ru', 'yandex.ru',
 ];
 
+/**
+ * A plausible e-mail address, anywhere inside a longer string.
+ *
+ * The excluded set contains the typographic brackets « » ‹ › “ ” as well as the
+ * ASCII ones. A phone that turned `<` into `«` would otherwise leave the
+ * guillemet glued to the address, and the send would fail on a character the
+ * user never typed.
+ */
+const ADDRESS = /[^\s<>«»‹›“”'"()[\],;:@]+@[^\s<>«»‹›“”'"()[\],;:@]+\.[^\s<>«»‹›“”'"()[\],;:@]+/;
+
+export type Sender = { name: string | null; address: string };
+
+/**
+ * Reads a sender out of whatever was configured.
+ *
+ * The canonical form is `Name <a@b.de>`, and a bare `a@b.de` is equally fine.
+ * But EMAIL_FROM is typed into a hosting dashboard, often on a phone, and the
+ * angle brackets are exactly what a phone keyboard makes awkward: they sit
+ * behind two layers of the symbol keyboard, and autocorrect happily turns them
+ * into « ». The result — "AZD Transport info@azd-transport.com" — is a value
+ * whose intent nobody could misread, and rejecting it helps no one.
+ *
+ * So the address is found wherever it sits and whatever surrounds it becomes
+ * the display name. `formatSender` then writes it back out in the form the
+ * providers actually require, so a sloppy setting produces a correct header
+ * rather than a rejected send.
+ *
+ * What is still refused: a value with no address in it at all. That one is not
+ * a formatting slip, it is a wrong setting, and pretending otherwise would
+ * mean every notification failing silently at the provider instead.
+ */
+export function parseSender(value: string): Sender | null {
+  const match = value.match(ADDRESS);
+  if (!match) return null;
+
+  const address = match[0].toLowerCase();
+  const name = value
+    .replace(match[0], '')
+    .replace(/[<>«»‹›“”"']/g, '')
+    .trim()
+    .replace(/[,;]$/, '')
+    .trim();
+
+  return { name: name || null, address };
+}
+
+/** Writes a sender back in the form every provider accepts. */
+export function formatSender({ name, address }: Sender): string {
+  return name ? `${name} <${address}>` : address;
+}
+
 /** Pulls "a@b.de" out of both "a@b.de" and "Name <a@b.de>". */
 function extractAddress(value: string): string | null {
-  const match = value.match(/<([^>]+)>/);
-  const candidate = (match ? match[1] : value).trim().toLowerCase();
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidate) ? candidate : null;
+  return parseSender(value)?.address ?? null;
 }
 
 /**
@@ -85,7 +135,10 @@ export function emailConfigProblems(): string[] {
   } else {
     const address = extractAddress(from);
     if (!address) {
-      problems.push('EMAIL_FROM ist keine gültige Absenderadresse (erwartet: Name <info@deine-domain.de>)');
+      problems.push(
+        `EMAIL_FROM enthält keine E-Mail-Adresse (gesetzt: "${from}"). ` +
+          'Erwartet wird info@deine-domain.de oder Name <info@deine-domain.de>.',
+      );
     } else {
       const domain = address.split('@')[1];
       if (UNVERIFIABLE_DOMAINS.includes(domain)) {

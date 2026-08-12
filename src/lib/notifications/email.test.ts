@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { emailConfigProblems, isEmailConfigured, maskEmail } from './email';
+import {
+  emailConfigProblems,
+  formatSender,
+  isEmailConfigured,
+  maskEmail,
+  parseSender,
+} from './email';
 
 const KEYS = ['EMAIL_API_KEY', 'EMAIL_PROVIDER', 'EMAIL_FROM', 'EMAIL_REPLY_TO'] as const;
 
@@ -82,7 +88,9 @@ describe('emailConfigProblems', () => {
 
   it('rejects a malformed sender and reply address', () => {
     set({ EMAIL_API_KEY: 're_x1234567890', EMAIL_FROM: 'AZD Transport' });
-    expect(emailConfigProblems()).toEqual([expect.stringContaining('gültige Absenderadresse')]);
+    expect(emailConfigProblems()).toEqual([
+      expect.stringContaining('enthält keine E-Mail-Adresse'),
+    ]);
 
     set({
       EMAIL_API_KEY: 're_x1234567890',
@@ -103,5 +111,41 @@ describe('maskEmail', () => {
     expect(maskEmail('mehdi90@outlook.de')).toBe('m***0@outlook.de');
     expect(maskEmail('ab@x.de')).toBe('a@x.de');
     expect(maskEmail('kaputt')).toBe('***');
+  });
+});
+
+describe('parseSender — was aus EMAIL_FROM gelesen wird', () => {
+  const cases: [string, string | null][] = [
+    // Die beiden kanonischen Formen.
+    ['info@azd-transport.com', 'info@azd-transport.com'],
+    ['AZD Transport <info@azd-transport.com>', 'AZD Transport <info@azd-transport.com>'],
+
+    // Tippvarianten, die am Handy entstehen. Sie werden gelesen und in die
+    // Form zurückgeschrieben, die der Versanddienst verlangt — sonst scheitert
+    // jeder Versand an einem Zeichen, das niemand absichtlich getippt hat.
+    ['AZD Transport info@azd-transport.com', 'AZD Transport <info@azd-transport.com>'],
+    ['AZD Transport <info@azd-transport.com', 'AZD Transport <info@azd-transport.com>'],
+    ['AZD Transport «info@azd-transport.com»', 'AZD Transport <info@azd-transport.com>'],
+    ['"AZD Transport" <info@azd-transport.com>', 'AZD Transport <info@azd-transport.com>'],
+    ['  AZD Transport   <INFO@AZD-Transport.com>  ', 'AZD Transport <info@azd-transport.com>'],
+    ['<info@azd-transport.com>', 'info@azd-transport.com'],
+
+    // Keine Adresse darin: das ist kein Formfehler, sondern die falsche
+    // Einstellung, und wird weiterhin abgelehnt.
+    ['AZD Transport', null],
+    ['', null],
+    ['info@localhost', null],
+  ];
+
+  for (const [input, expected] of cases) {
+    it(`${JSON.stringify(input)} → ${expected ?? 'abgelehnt'}`, () => {
+      const parsed = parseSender(input);
+      expect(parsed ? formatSender(parsed) : null).toBe(expected);
+    });
+  }
+
+  it('normalisiert die Adresse auf Kleinschreibung, lässt den Namen in Ruhe', () => {
+    const parsed = parseSender('AZD Transport <Info@AZD-Transport.com>');
+    expect(parsed).toEqual({ name: 'AZD Transport', address: 'info@azd-transport.com' });
   });
 });
