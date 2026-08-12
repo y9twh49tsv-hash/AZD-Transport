@@ -268,3 +268,128 @@ export function buildShipmentWhatsAppText(
 
   return `${brand.name}: ${messages[template] ?? ''} Status: ${url}`.trim();
 }
+
+// --- Betriebsbenachrichtigung ------------------------------------------------
+
+export type OperatorBookingContext = {
+  trackingNumber: string;
+  shipmentType: 'standard' | 'documents';
+  priceTotalCents: number;
+  originCity: string;
+  destinationCity: string;
+  weightKg: number;
+  pieceCount: number;
+  contentType: string;
+  /** Abholung beim Kunden statt Abgabe bei uns. */
+  pickupRequested: boolean;
+  pickupDate?: string | null;
+  senderName: string;
+  senderPhone: string;
+  senderEmail: string;
+  /** Nur bei Abholung gefüllt — sonst kommt der Kunde zu uns. */
+  pickupAddress?: string | null;
+  recipientName: string;
+  recipientPhone: string;
+  recipientCity: string;
+};
+
+/** "2026-08-14" → "14.08.2026" */
+function germanDate(iso: string): string {
+  const [year, month, day] = iso.split('-');
+  return year && month && day ? `${day}.${month}.${year}` : iso;
+}
+
+/**
+ * Die Nachricht an den Betrieb, wenn eine Buchung eingeht.
+ *
+ * Bewusst eine andere Mail als die Kundenbestätigung: hier stehen genau die
+ * Angaben, die für die Disposition zählen — vor allem, ob abgeholt werden muss
+ * oder der Kunde vorbeikommt. Adressen und Telefonnummern dürfen hier stehen,
+ * denn der Empfänger ist der Betrieb selbst, nicht die Öffentlichkeit.
+ *
+ * `whatsappUrl` öffnet den Chat mit dem Kunden mit einem Tippen. Das ist die
+ * WhatsApp-Verknüpfung, die ohne Meta-Geschäftskonto funktioniert — eine
+ * automatisch *gesendete* WhatsApp-Nachricht setzt die Cloud API mit
+ * genehmigter Vorlage voraus.
+ */
+export function buildOperatorBookingEmail(
+  to: string,
+  ctx: OperatorBookingContext,
+  whatsappUrl: string,
+): EmailMessage {
+  const art = ctx.shipmentType === 'documents' ? 'Dokumente' : 'Paket';
+  const route = `${cityName(ctx.originCity)} → ${cityName(ctx.destinationCity)}`;
+
+  const abholung = ctx.pickupRequested
+    ? `Abholung beim Kunden${ctx.pickupDate ? ` am ${germanDate(ctx.pickupDate)}` : ''}`
+    : 'Kunde bringt die Sendung vorbei';
+
+  const subject = ctx.pickupRequested
+    ? `Abholung: ${ctx.trackingNumber} (${art}, ${route})`
+    : `Abgabe: ${ctx.trackingNumber} (${art}, ${route})`;
+
+  // Die wichtigste Zeile zuerst — in der Benachrichtigung auf dem Handy ist
+  // oft nur der Betreff und die erste Zeile zu sehen.
+  const lines = [
+    `<strong>${escapeHtml(abholung)}</strong>`,
+    ctx.pickupRequested && ctx.pickupAddress
+      ? `Adresse: ${escapeHtml(ctx.pickupAddress)}`
+      : `Annahmestelle: ${escapeHtml(brand.address.street)}, ${escapeHtml(brand.address.zip)} ${escapeHtml(brand.address.city)}`,
+    `Sendung: <strong>${escapeHtml(ctx.trackingNumber)}</strong> · ${escapeHtml(art)} · ${escapeHtml(route)}`,
+    ctx.shipmentType === 'documents'
+      ? `Inhalt: ${escapeHtml(ctx.contentType)}`
+      : `Inhalt: ${escapeHtml(ctx.contentType)} · ${ctx.pieceCount} Stück · ${String(ctx.weightKg).replace('.', ',')} kg`,
+    `Preis: <strong>${euro(ctx.priceTotalCents)}</strong>`,
+    `Absender: ${escapeHtml(ctx.senderName)} · ${escapeHtml(ctx.senderPhone)} · ${escapeHtml(ctx.senderEmail)}`,
+    `Empfänger: ${escapeHtml(ctx.recipientName)} · ${escapeHtml(ctx.recipientPhone)} · ${escapeHtml(cityName(ctx.recipientCity))}`,
+  ];
+
+  const text = [
+    abholung,
+    ctx.pickupRequested && ctx.pickupAddress
+      ? `Adresse: ${ctx.pickupAddress}`
+      : `Annahmestelle: ${brand.address.street}, ${brand.address.zip} ${brand.address.city}`,
+    '',
+    `Sendung: ${ctx.trackingNumber} (${art})`,
+    `Route: ${route}`,
+    ctx.shipmentType === 'documents'
+      ? `Inhalt: ${ctx.contentType}`
+      : `Inhalt: ${ctx.contentType}, ${ctx.pieceCount} Stück, ${String(ctx.weightKg).replace('.', ',')} kg`,
+    `Preis: ${euro(ctx.priceTotalCents)}`,
+    '',
+    `Absender: ${ctx.senderName}, ${ctx.senderPhone}, ${ctx.senderEmail}`,
+    `Empfänger: ${ctx.recipientName}, ${ctx.recipientPhone}, ${cityName(ctx.recipientCity)}`,
+    '',
+    `WhatsApp mit dem Kunden: ${whatsappUrl}`,
+    `Im Dashboard: ${appUrl()}/admin/sendungen`,
+  ].join('\n');
+
+  return {
+    to,
+    subject,
+    text,
+    html: wrap(subject, lines, { label: 'WhatsApp mit dem Kunden öffnen', url: whatsappUrl }),
+  };
+}
+
+/**
+ * Dieselbe Meldung als WhatsApp-Text.
+ *
+ * Kurz gehalten: WhatsApp zeigt in der Benachrichtigung nur die ersten Zeilen,
+ * und im Betrieb zählt genau eine Frage — hinfahren oder kommt er vorbei.
+ */
+export function buildOperatorBookingWhatsAppText(ctx: OperatorBookingContext): string {
+  const art = ctx.shipmentType === 'documents' ? 'Dokumente' : 'Paket';
+  const kopf = ctx.pickupRequested
+    ? `ABHOLUNG${ctx.pickupDate ? ` am ${germanDate(ctx.pickupDate)}` : ''}`
+    : 'ABGABE bei uns';
+
+  return [
+    `${kopf} — ${ctx.trackingNumber}`,
+    ctx.pickupRequested && ctx.pickupAddress ? ctx.pickupAddress : null,
+    `${art} · ${cityName(ctx.originCity)} → ${cityName(ctx.destinationCity)} · ${euro(ctx.priceTotalCents)}`,
+    `${ctx.senderName} · ${ctx.senderPhone}`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+}

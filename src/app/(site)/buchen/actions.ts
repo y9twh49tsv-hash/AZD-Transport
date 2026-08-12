@@ -7,7 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getSessionUser } from '@/lib/auth';
 import { isSupabaseConfigured } from '@/lib/env';
 import { checkRateLimit, clientKey, RATE_LIMITS } from '@/lib/rate-limit';
-import { sendBookingConfirmation } from '@/lib/notifications';
+import { sendBookingConfirmation, sendOperatorBookingAlert } from '@/lib/notifications';
 import { getT } from '@/lib/i18n/server';
 
 export type BookingResult =
@@ -230,6 +230,43 @@ export async function createBooking(input: unknown): Promise<BookingResult> {
     confirmationSent = delivery.emailDelivered;
   } catch (notifyError) {
     console.error('[booking] Bestätigung konnte nicht versendet werden:', notifyError);
+  }
+
+  // --- Meldung an den Betrieb ------------------------------------------------
+  // Getrennt von der Kundenbestätigung und mit eigenem try: geht sie schief,
+  // ist die Buchung trotzdem gespeichert und der Kunde hat seine Nummer.
+  try {
+    await sendOperatorBookingAlert(
+      {
+        trackingNumber: shipment.tracking_number,
+        shipmentType: data.shipmentType,
+        priceTotalCents: price.totalCents,
+        originCity: data.originCity,
+        destinationCity: data.destinationCity,
+        weightKg: data.weightKg,
+        pieceCount: data.pieceCount,
+        contentType: data.contentType,
+        pickupRequested: data.pickupRequested,
+        pickupDate: data.pickupDate,
+        senderName: `${data.senderFirstName} ${data.senderLastName}`,
+        senderPhone: data.senderPhone,
+        senderEmail: data.senderEmail,
+        // Nur bei Abholung: sonst kommt der Kunde zu uns, und die Adresse
+        // gehört nicht in eine Meldung, die niemand für die Fahrt braucht.
+        pickupAddress: data.pickupRequested
+          ? `${data.senderAddress}, ${data.senderPostalCode ?? ''} ${data.senderCity}`.replace(
+              /\s+/g,
+              ' ',
+            )
+          : null,
+        recipientName: `${data.recipientFirstName} ${data.recipientLastName}`,
+        recipientPhone: data.recipientPhone,
+        recipientCity: data.recipientCity,
+      },
+      shipment.id,
+    );
+  } catch (alertError) {
+    console.error('[booking] Betriebsmeldung konnte nicht versendet werden:', alertError);
   }
 
   return { ok: true, trackingNumber: shipment.tracking_number, confirmationSent };

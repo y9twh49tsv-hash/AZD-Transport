@@ -2,12 +2,16 @@ import 'server-only';
 
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getEmailAdapter, maskEmail } from './email';
-import { getWhatsAppAdapter, isWhatsAppConfigured } from './whatsapp';
+import { getWhatsAppAdapter, isWhatsAppConfigured, whatsappLink } from './whatsapp';
+import { brand } from '@/config/brand';
 import {
   buildBulkyEmail,
+  buildOperatorBookingEmail,
+  buildOperatorBookingWhatsAppText,
   buildShipmentEmail,
   buildShipmentWhatsAppText,
   type BulkyNotificationContext,
+  type OperatorBookingContext,
   type ShipmentNotificationContext,
 } from './templates';
 import type { NotificationTemplate, SendResult } from './types';
@@ -104,6 +108,97 @@ async function deliverShipment(
   }
 
   return { emailDelivered };
+}
+
+/**
+ * Wohin die Betriebsbenachrichtigung geht.
+ *
+ * OPERATOR_EMAIL, sonst die Kontaktadresse der Marke. Ist keine da, wird nicht
+ * verschickt — lieber nichts als eine Mail an eine erratene Adresse.
+ */
+function operatorEmail(): string | null {
+  const configured = process.env.OPERATOR_EMAIL?.trim() || brand.email?.trim();
+  return configured || null;
+}
+
+/**
+ * Die Nummer des Betriebs für WhatsApp-Meldungen.
+ *
+ * OPERATOR_WHATSAPP, sonst die Nummer der Marke. Sie wird nur benutzt, wenn
+ * die Meta Cloud API konfiguriert ist — ein WhatsApp-Business-Konto allein
+ * genügt dafür nicht, dazu braucht es die WhatsApp Business *Platform* mit
+ * Telefonnummer-ID, Zugriffstoken und genehmigter Vorlage.
+ */
+function operatorWhatsApp(): string | null {
+  const configured = process.env.OPERATOR_WHATSAPP?.trim() || brand.whatsapp?.trim();
+  // Die Platzhalternummer aus der Entwicklung ist keine echte Nummer.
+  if (!configured || /^49?0+$/.test(configured.replace(/\D/g, ''))) return null;
+  return configured;
+}
+
+/**
+ * Meldet dem Betrieb eine neue Buchung.
+ *
+ * Läuft getrennt von der Kundenbestätigung, weil hier andere Angaben
+ * hingehören: ob abgeholt werden muss oder der Kunde vorbeikommt, die
+ * Abholadresse, die Telefonnummern. Der Empfänger ist der Betrieb selbst —
+ * deshalb ist das kein Widerspruch zur Regel, dass die öffentliche
+ * Sendungsverfolgung nie Adressen zeigt.
+ *
+ * Ein Fehlschlag hier darf die Buchung nicht beeinflussen; sie ist längst
+ * gespeichert. Er wird protokolliert wie jede andere Zustellung.
+ */
+export async function sendOperatorBookingAlert(
+  ctx: OperatorBookingContext,
+  shipmentId?: string,
+): Promise<DeliveryResult> {
+  // WhatsApp zuerst: wenn die Cloud API eingerichtet ist, ist das der Kanal,
+  // den man im Betrieb tatsächlich sofort sieht.
+  const whatsappTo = operatorWhatsApp();
+  if (whatsappTo && isWhatsAppConfigured()) {
+    const result = await getWhatsAppAdapter().send(
+      whatsappTo,
+      buildOperatorBookingWhatsAppText(ctx),
+    );
+    if (!result.ok) {
+      console.error(`[notifications] Betriebsmeldung per WhatsApp fehlgeschlagen: ${result.error}`);
+    }
+    await logAttempt({
+      shipmentId,
+      channel: 'whatsapp',
+      template: 'operator_new_booking',
+      recipient: whatsappTo,
+      result,
+    });
+  }
+
+  const to = operatorEmail();
+  if (!to) return { emailDelivered: false };
+
+  // Der Chat mit dem Kunden, einen Tipp entfernt. Automatisch *gesendete*
+  // WhatsApp-Nachrichten bräuchten die Meta Cloud API mit genehmigter Vorlage.
+  const whatsappUrl = whatsappLink(
+    ctx.senderPhone,
+    `Hallo ${ctx.senderName.split(' ')[0]}, hier ist ${brand.name} zu deiner Sendung ${ctx.trackingNumber}.`,
+  );
+
+  const message = buildOperatorBookingEmail(to, ctx, whatsappUrl);
+  const result = await getEmailAdapter().send(message);
+
+  if (!result.ok) {
+    console.error(`[notifications] Betriebsmeldung fehlgeschlagen: ${result.error}`);
+  }
+
+  await logAttempt({
+    shipmentId,
+    channel: 'email',
+    template: 'operator_new_booking',
+    recipient: to,
+    subject: message.subject,
+    result,
+  });
+
+  return { emailDelivered: result.ok && !result.skipped };
 }
 
 // --- Public API -------------------------------------------------------------
