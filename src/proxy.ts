@@ -54,7 +54,13 @@ function canonicalRedirect(request: NextRequest): NextResponse | null {
   const expected = canonicalHost();
   if (!expected) return null;
 
-  const actual = request.headers.get('host');
+  // Hinter einem Reverse Proxy — und Railway ist einer — steht im Host-Header
+  // oft nicht mehr der Name, den der Besucher eingetippt hat, sondern der
+  // interne Dienstname. Den ursprünglichen reicht die Edge in
+  // x-forwarded-host weiter. Erst dort nachsehen, dann auf host zurückfallen;
+  // die Reihenfolge ist der Unterschied zwischen einer Weiterleitung, die
+  // greift, und einer, die in der Produktion still nichts tut.
+  const actual = request.headers.get('x-forwarded-host') ?? request.headers.get('host');
   if (!actual || actual === expected) return null;
 
   // Nur zwischen der Domain und ihrer www-Variante umleiten. Alles andere —
