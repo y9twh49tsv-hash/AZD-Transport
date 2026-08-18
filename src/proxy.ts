@@ -15,7 +15,66 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 const PROTECTED_PREFIXES = ['/admin', '/driver', '/konto', '/scan'];
 
+/**
+ * Der eine Hostname, unter dem die Seite laufen soll.
+ *
+ * Aus NEXT_PUBLIC_APP_URL abgeleitet — derselben Quelle, aus der auch die
+ * QR-Codes auf den Labels, die Links in den E-Mails und die Angebotslinks
+ * gebaut werden. Damit kann die Weiterleitung nicht in die eine und ein
+ * gedrucktes Label in die andere Richtung zeigen.
+ */
+function canonicalHost(): string | null {
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (!configured) return null;
+  try {
+    return new URL(/^https?:\/\//i.test(configured) ? configured : `https://${configured}`).host;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Schickt azd-transport.com auf www.azd-transport.com (oder umgekehrt, je nach
+ * Einstellung).
+ *
+ * Zwei Gründe. Erstens findet ein Besucher, der die Adresse ohne www eintippt,
+ * die Seite trotzdem. Zweitens gäbe es sonst zwei Adressen mit demselben
+ * Inhalt: Suchmaschinen werten das ab, und eine Sitzung, die unter dem einen
+ * Hostnamen angemeldet ist, gilt unter dem anderen nicht — das Cookie hängt am
+ * Hostnamen.
+ *
+ * 308 statt 302: die Weiterleitung ist dauerhaft und behält die Methode bei,
+ * ein abgeschicktes Buchungsformular ginge sonst als GET verloren.
+ *
+ * Wichtig: das greift erst, wenn die Anfrage hier überhaupt ankommt. Steht der
+ * DNS-Eintrag der Domain auf "proxied" (orange Wolke bei Cloudflare), endet sie
+ * vorher mit 502 und dieser Code läuft nie.
+ */
+function canonicalRedirect(request: NextRequest): NextResponse | null {
+  const expected = canonicalHost();
+  if (!expected) return null;
+
+  const actual = request.headers.get('host');
+  if (!actual || actual === expected) return null;
+
+  // Nur zwischen der Domain und ihrer www-Variante umleiten. Alles andere —
+  // localhost, die Vorschau-Adresse von Railway, ein eigener Testhost — bleibt
+  // unangetastet, sonst wäre die Anwendung außerhalb der Produktion nicht mehr
+  // erreichbar.
+  const bare = (host: string) => host.replace(/^www\./, '').split(':')[0];
+  if (bare(actual) !== bare(expected)) return null;
+
+  const target = request.nextUrl.clone();
+  target.host = expected;
+  target.protocol = 'https:';
+  target.port = '';
+  return NextResponse.redirect(target, 308);
+}
+
 export default async function proxy(request: NextRequest) {
+  const redirect = canonicalRedirect(request);
+  if (redirect) return redirect;
+
   let response = NextResponse.next({ request });
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
