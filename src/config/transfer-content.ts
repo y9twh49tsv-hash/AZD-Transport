@@ -16,7 +16,7 @@ export const services: Service[] = [
   {
     id: 'premium',
     title: 'Premium- & Luxusfahrzeuge',
-    text: 'Sportwagen, hochwertige Limousinen und SUV. Übernahme, Fahrweise und Übergabe werden dem Fahrzeug angemessen behandelt — nicht wie eine Routinefahrt.',
+    text: 'Sportwagen, hochwertige Limousinen und SUV. Übernahme, Fahrweise und Übergabe sind dem Fahrzeug angemessen — keine Routinefahrt.',
   },
   {
     id: 'kauf',
@@ -151,7 +151,7 @@ export const faq: FaqItem[] = [
   {
     question: 'Muss das Fahrzeug zugelassen sein?',
     answer:
-      'Für die Fahrt auf öffentlichen Straßen ist ein gültiges Kennzeichen und Versicherungsschutz erforderlich — die reguläre Zulassung, ein Kurzzeitkennzeichen oder ein rotes Kennzeichen. Fehlt beides, klären wir vorab, welche Lösung möglich ist.',
+      'Für die Fahrt auf öffentlichen Straßen sind ein gültiges Kennzeichen und ein bestehender Versicherungsschutz erforderlich — die reguläre Zulassung, ein Kurzzeitkennzeichen oder ein rotes Kennzeichen. Liegt das nicht vor, klären wir vorab, welche Lösung möglich ist.',
   },
   {
     question: 'Kann ein Leasingfahrzeug zurückgebracht werden?',

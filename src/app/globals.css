@@ -262,6 +262,13 @@ body:has(.theme-transfer) {
   .eyebrow {
     @apply text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground;
   }
+
+  /* Safari zeichnet an <summary> ein eigenes Dreieck, das sich nicht über
+     `list-style` entfernen lässt. Ohne diese Zeile steht in den häufigen
+     Fragen auf dem iPhone ein zweites Symbol neben dem eigenen Pfeil. */
+  summary::-webkit-details-marker {
+    display: none;
+  }
 }
 
 /* Sanftes Einblenden beim Scrollen. Rein additiv: ohne JavaScript und ohne

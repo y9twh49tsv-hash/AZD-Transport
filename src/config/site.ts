@@ -61,6 +61,34 @@ export const siteConfig = {
   requestInbox: process.env.REQUEST_INBOX?.trim() || 'info@azd-transport.com',
 
   serviceArea: 'Deutschlandweit — auf Anfrage europaweit',
+
+  /**
+   * Optionales Kopfbild.
+   *
+   * Im Projekt liegt keine lizenzierte Automotive-Fotografie, und ein
+   * erkennbares Stockfoto würde bei dieser Zielgruppe eher schaden als nützen.
+   * Der Kopfbereich trägt deshalb ohne Bild.
+   *
+   * Sobald ein eigenes Foto vorliegt — ein Fahrzeug bei der Übergabe, ein
+   * Detail, eine Situation, an der man sieht, dass es echt ist: Datei nach
+   * `public/` legen und den Pfad hier eintragen, z. B. '/hero.jpg'. Querformat,
+   * mindestens 2000 px breit, dunkel oder dunkel abstimmbar. Der Kopfbereich
+   * legt automatisch einen Verlauf darüber, damit die Schrift lesbar bleibt.
+   */
+  heroImage: '' as string,
+
+  /**
+   * Verweis auf den Paketversand im Fußbereich der Hauptseite.
+   *
+   * Aus: die Hauptseite bleibt reine Fahrzeugüberführung — so ist sie in
+   * Auftrag gegeben.
+   *
+   * Zu bedenken: für den Paketversand ist Werbung mit der Adresse
+   * azd-transport.com im Umlauf. Wer darüber kommt, landet auf der
+   * Überführungsseite und findet ohne diesen Verweis keinen Weg zu /pakete.
+   * Ein `true` hier setzt eine unauffällige Zeile in den Fußbereich.
+   */
+  showParcelLink: false,
 } as const;
 
 /** Alle noch offenen Angaben, für den Hinweis in den Rechtsseiten. */

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -107,6 +108,27 @@ export default function TransferHomePage() {
           da — der Kopfbereich lädt kein einziges Byte Bild nach.
           ================================================================ */}
       <section className="hero-wash grain relative isolate overflow-hidden">
+        {siteConfig.heroImage && (
+          <>
+            <Image
+              src={siteConfig.heroImage}
+              alt=""
+              fill
+              // Der Kopfbereich ist das erste, was geladen wird — kein
+              // Nachladen beim Scrollen, sonst blitzt die Fläche kurz leer auf.
+              priority
+              sizes="100vw"
+              className="-z-10 object-cover object-center opacity-45"
+            />
+            {/* Verlauf über dem Foto: die Schrift muss lesbar bleiben, egal
+                wie hell das Bild an der Stelle ist. */}
+            <div
+              className="absolute inset-0 -z-10 bg-gradient-to-r from-background via-background/85 to-background/40"
+              aria-hidden
+            />
+          </>
+        )}
+
         <div className="container relative z-10 grid gap-14 [&>*]:min-w-0 pb-20 pt-16 sm:pt-20 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-16 lg:pb-32 lg:pt-28">
           <div>
             <p className="eyebrow">Fahrzeugüberführungen auf eigener Achse</p>
@@ -237,7 +259,7 @@ export default function TransferHomePage() {
           D — Premium-Bereich
           ================================================================ */}
       <section id="premium" className="scroll-mt-24 border-y border-border bg-card/40 py-24 lg:py-32">
-        <div className="container grid gap-14 [&>*]:min-w-0 lg:grid-cols-2 lg:gap-20">
+        <div className="container grid gap-14 [&>*]:min-w-0 lg:grid-cols-2 lg:items-start lg:gap-20">
           <div>
             <SectionHeading
               eyebrow="Premium-Service"
@@ -351,7 +373,7 @@ export default function TransferHomePage() {
           G — Geschäftskunden
           ================================================================ */}
       <section id="unternehmen" className="scroll-mt-24 py-24 lg:py-32">
-        <div className="container grid gap-14 [&>*]:min-w-0 lg:grid-cols-2 lg:gap-20">
+        <div className="container grid gap-14 [&>*]:min-w-0 lg:grid-cols-2 lg:items-start lg:gap-20">
           <div>
             <SectionHeading
               eyebrow="Für Unternehmen"
@@ -390,7 +412,7 @@ export default function TransferHomePage() {
           ================================================================ */}
       <section className="border-y border-border bg-card/40 py-24 lg:py-32">
         <div className="container">
-          <SectionHeading eyebrow="Warum AZD" title="Warum AZD Transport?" />
+          <SectionHeading eyebrow="Der Unterschied" title="Warum AZD Transport?" />
 
           <ul className="mt-14 grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {reasons.map((reason) => (
