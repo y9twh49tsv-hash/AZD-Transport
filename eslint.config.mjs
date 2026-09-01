@@ -6,7 +6,7 @@ import typescript from 'eslint-config-next/typescript';
  * FlatCompat shim is needed.
  */
 const eslintConfig = [
-  { ignores: ['.next/**', 'node_modules/**', 'next-env.d.ts', 'supabase/**'] },
+  { ignores: ['.next/**', 'node_modules/**', 'next-env.d.ts'] },
   ...coreWebVitals,
   ...typescript,
   {

@@ -2,83 +2,59 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===========================================================================
+   AZD Transport — Dark Luxury Automotive
+   ===========================================================================
+   Ein einziger Farbraum. Er stand früher gekapselt in einer eigenen Klasse,
+   weil daneben noch eine helle Paketplattform lief; seit die weg ist, gilt er
+   für die ganze Anwendung.
+
+   Der Akzent ist ein zurückhaltendes Champagner-Gold. Nicht, weil Gold „teuer"
+   aussieht, sondern weil ein warmer Ton auf Anthrazit ruhig wirkt — ein
+   gesättigtes Blau oder Rot würde auf dieser Fläche sofort nach Werbebanner
+   aussehen.
+   =========================================================================== */
+
 @layer base {
   :root {
-    /* Warm neutral canvas — reads premium, avoids the cold "backend" look */
-    --background: 40 20% 99%;
-    --foreground: 20 14% 5%;
+    --background: 24 8% 7%;
+    --foreground: 40 12% 94%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 20 14% 5%;
+    --card: 24 8% 10%;
+    --card-foreground: 40 12% 94%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 20 14% 5%;
+    --popover: 24 8% 10%;
+    --popover-foreground: 40 12% 94%;
 
-    /* Atlas Green — a deep, calm green nodding to Morocco without being flag-literal */
-    --primary: 165 78% 19%;
-    --primary-foreground: 40 30% 98%;
-    --primary-muted: 165 45% 94%;
+    /* Champagner — nur für Akzente, nie für Flächen */
+    --primary: 38 42% 68%;
+    --primary-foreground: 24 20% 8%;
+    --primary-muted: 38 20% 16%;
 
-    --secondary: 30 12% 96%;
-    --secondary-foreground: 20 14% 12%;
+    --secondary: 24 6% 14%;
+    --secondary-foreground: 40 12% 92%;
 
-    /* Terracotta — warm CTA / highlight accent */
-    --accent: 18 62% 44%;
-    --accent-foreground: 40 30% 98%;
+    --accent: 38 42% 68%;
+    --accent-foreground: 24 20% 8%;
 
-    /* Sand/gold — subtle nod to the German flag's gold, used for seals & badges */
-    --sand: 42 88% 47%;
-    --sand-foreground: 20 40% 12%;
-
-    --muted: 30 14% 96%;
-    --muted-foreground: 25 6% 42%;
-
-    --destructive: 0 72% 45%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 30 10% 90%;
-    --input: 30 10% 88%;
-    --ring: 165 78% 19%;
-
-    --radius: 0.875rem;
-  }
-
-  .dark {
-    --background: 20 14% 6%;
-    --foreground: 40 20% 96%;
-
-    --card: 20 12% 9%;
-    --card-foreground: 40 20% 96%;
-
-    --popover: 20 12% 9%;
-    --popover-foreground: 40 20% 96%;
-
-    --primary: 162 62% 42%;
-    --primary-foreground: 20 20% 6%;
-    --primary-muted: 165 30% 16%;
-
-    --secondary: 20 8% 15%;
-    --secondary-foreground: 40 20% 96%;
-
-    --accent: 18 68% 54%;
-    --accent-foreground: 20 20% 6%;
-
-    --sand: 42 82% 55%;
-    --sand-foreground: 20 40% 10%;
-
-    --muted: 20 8% 15%;
+    --muted: 24 6% 14%;
     --muted-foreground: 30 6% 64%;
 
-    --destructive: 0 62% 52%;
+    --destructive: 4 62% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 20 8% 18%;
-    --input: 20 8% 22%;
-    --ring: 162 62% 42%;
-  }
-}
+    --border: 30 5% 20%;
+    --input: 30 5% 24%;
+    --ring: 38 42% 68%;
 
-@layer base {
+    --radius: 0.5rem;
+
+    /* Formularfelder, Auswahllisten, der Datumswähler und die Bildlaufleiste
+       werden vom Browser dunkel gezeichnet. Ohne das steht mitten auf der
+       dunklen Seite ein weißes Kalenderfenster. */
+    color-scheme: dark;
+  }
+
   * {
     @apply border-border;
   }
@@ -91,11 +67,10 @@
   body {
     @apply bg-background text-foreground antialiased;
     text-rendering: optimizeLegibility;
-    /* iOS safe areas — the driver UI has bottom-anchored actions */
-    padding-bottom: env(safe-area-inset-bottom);
   }
 
-  /* Never let iOS Safari auto-zoom on focus: inputs must be >= 16px */
+  /* Safari auf dem iPhone zoomt beim Fokussieren in jedes Feld mit einer
+     Schrift unter 16px — und der Zoom bleibt danach stehen. */
   input,
   select,
   textarea {
@@ -103,120 +78,8 @@
   }
 
   ::selection {
-    @apply bg-primary/15;
+    @apply bg-primary/25;
   }
-}
-
-@layer components {
-  .surface {
-    @apply rounded-2xl border border-border bg-card shadow-soft;
-  }
-
-  .field-label {
-    @apply mb-1.5 block text-sm font-medium text-foreground;
-  }
-
-  /* Subtle DE/MA corridor gradient used behind hero + key panels */
-  .corridor-gradient {
-    background-image:
-      radial-gradient(70% 120% at 8% 0%, hsl(var(--primary) / 0.1) 0%, transparent 60%),
-      radial-gradient(60% 100% at 100% 10%, hsl(var(--accent) / 0.1) 0%, transparent 55%),
-      radial-gradient(50% 80% at 50% 100%, hsl(var(--sand) / 0.08) 0%, transparent 60%);
-  }
-
-  .grid-texture {
-    background-image:
-      linear-gradient(hsl(var(--border) / 0.6) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--border) / 0.6) 1px, transparent 1px);
-    background-size: 48px 48px;
-    mask-image: radial-gradient(70% 60% at 50% 0%, black, transparent 75%);
-  }
-}
-
-@media print {
-  .no-print {
-    display: none !important;
-  }
-
-  body {
-    background: #fff;
-  }
-
-  @page {
-    margin: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* ===========================================================================
-   Fahrzeugüberführung — Dark Luxury
-   ===========================================================================
-   Eigener Farbraum, gekapselt in .theme-transfer. Der Team-Bereich (/admin,
-   /driver) behält damit seine helle Oberfläche: dort wird tagsüber im Lager
-   und im Auto gearbeitet, wo ein dunkles Layout schlechter lesbar ist.
-
-   Der Akzent ist ein zurückhaltendes Champagner-Gold. Nicht, weil Gold
-   „teuer" aussieht, sondern weil ein warmer Ton auf Anthrazit ruhig wirkt —
-   ein gesättigtes Blau oder Rot würde auf dieser Fläche sofort nach
-   Werbebanner aussehen.
-   =========================================================================== */
-
-.theme-transfer {
-  --background: 24 8% 7%;
-  --foreground: 40 12% 94%;
-
-  --card: 24 8% 10%;
-  --card-foreground: 40 12% 94%;
-
-  --popover: 24 8% 10%;
-  --popover-foreground: 40 12% 94%;
-
-  /* Champagner — nur für Akzente, nie für Flächen */
-  --primary: 38 42% 68%;
-  --primary-foreground: 24 20% 8%;
-  --primary-muted: 38 20% 16%;
-
-  --secondary: 24 6% 14%;
-  --secondary-foreground: 40 12% 92%;
-
-  --accent: 38 42% 68%;
-  --accent-foreground: 24 20% 8%;
-
-  --muted: 24 6% 14%;
-  --muted-foreground: 30 6% 64%;
-
-  --destructive: 4 62% 52%;
-  --destructive-foreground: 0 0% 100%;
-
-  --border: 30 5% 20%;
-  --input: 30 5% 24%;
-  --ring: 38 42% 68%;
-
-  --radius: 0.5rem;
-
-  /* Sorgt dafür, dass Formularfelder, Auswahllisten, der Datumswähler und
-     die Bildlaufleiste vom Browser dunkel gezeichnet werden. Ohne das steht
-     mitten auf der dunklen Seite ein weißes Kalenderfenster. */
-  color-scheme: dark;
-
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-}
-
-/* Das <body> liegt außerhalb dieses Bereichs und behält sonst die helle
-   Fläche der Paketplattform. Beim Überziehen des Scrollbereichs auf dem
-   iPhone blitzt sie dann am oberen oder unteren Rand auf. */
-body:has(.theme-transfer) {
-  background-color: hsl(24 8% 7%);
 }
 
 @layer components {
@@ -271,8 +134,9 @@ body:has(.theme-transfer) {
   }
 }
 
-/* Sanftes Einblenden beim Scrollen. Rein additiv: ohne JavaScript und ohne
-   Animationsunterstützung ist der Inhalt trotzdem sichtbar. */
+/* Sanftes Einblenden beim Scrollen. Rein additiv: ohne Unterstützung für
+   scroll-gesteuerte Animationen ist die Dauer 0s und `both` lässt den
+   Endzustand stehen — der Inhalt ist also in jedem Fall sichtbar. */
 @media (prefers-reduced-motion: no-preference) {
   .reveal {
     animation: reveal-up linear both;
@@ -289,5 +153,15 @@ body:has(.theme-transfer) {
       opacity: 1;
       transform: none;
     }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

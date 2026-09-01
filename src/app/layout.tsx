@@ -1,20 +1,14 @@
 import type { Metadata, Viewport } from 'next';
-import { headers } from 'next/headers';
 import './globals.css';
-import { appUrl } from '@/config/brand';
-import { PATHNAME_HEADER, isTransferPath } from '@/config/routes';
+import { appUrl } from '@/config/app-url';
 import { siteConfig } from '@/config/site';
-import { dir, htmlLang, createT } from '@/lib/i18n';
-import { currentLocale } from '@/lib/i18n/server';
-import { LocaleProvider } from '@/lib/i18n/client';
 
 /**
  * Die Grundangaben des Unternehmens.
  *
- * Das Hauptgeschäft ist die Fahrzeugüberführung, also steht sie hier. Die
- * Paketplattform bringt in `(site)/layout.tsx` ihre eigenen Metadaten mit und
- * überschreibt diese für ihre Seiten; einzelne Seiten überschreiben Titel und
- * Beschreibung noch einmal.
+ * Einzelne Seiten überschreiben Titel und Beschreibung; die Vorlage sorgt
+ * dafür, dass der Name der Firma auch dann im Browsertab steht, wenn eine
+ * Seite nur ihren eigenen kurzen Titel setzt.
  *
  * `metadataBase` gehört an genau diese Stelle: alle relativen Angaben —
  * canonical, OpenGraph-URL — werden daran absolut gemacht.
@@ -41,36 +35,26 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // Die Farbe der Browserleiste auf dem Telefon. Sie entspricht dem dunklen
-  // Hintergrund der Hauptseite; die Paketplattform setzt in ihrem Layout
-  // wieder ihre helle Farbe.
+  /** Die Farbe der Browserleiste auf dem Telefon — der Hintergrund der Seite. */
   themeColor: '#131210',
   width: 'device-width',
   initialScale: 1,
-  // Never block zooming — it is an accessibility requirement.
+  // Zoomen darf nie blockiert werden — das ist eine Anforderung der
+  // Barrierefreiheit, keine Geschmacksfrage.
   maximumScale: 5,
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Die Seiten der Fahrzeugüberführung sind deutsch. Das Sprach-Cookie gehört
-  // zur Paketplattform und darf ihnen nicht die Schreibrichtung drehen: wer
-  // dort auf Arabisch gestellt hat, bekäme sonst einen deutschen Text von
-  // rechts nach links. Den Pfad reicht `proxy.ts` in einem Header durch, weil
-  // ein Layout ihn selbst nicht kennt.
-  const pathname = (await headers()).get(PATHNAME_HEADER);
-  const locale = isTransferPath(pathname) ? 'de' : await currentLocale();
-  const t = createT(locale);
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang={htmlLang(locale)} dir={dir(locale)} suppressHydrationWarning>
+    <html lang="de" dir="ltr" suppressHydrationWarning>
       <body className="min-h-dvh">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-[100] focus:inline-flex focus:min-h-11 focus:items-center focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:inline-flex focus:min-h-11 focus:items-center focus:rounded-sm focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground"
         >
-          {t('common.skipToContent')}
+          Zum Inhalt springen
         </a>
-        <LocaleProvider locale={locale}>{children}</LocaleProvider>
+        {children}
       </body>
     </html>
   );

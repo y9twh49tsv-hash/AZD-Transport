@@ -19,7 +19,6 @@ next-env.d.ts
 .DS_Store
 
 # Not needed inside the image
-supabase
 scripts
 README.md
 AGENTS.md

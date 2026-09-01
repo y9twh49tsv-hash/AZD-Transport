@@ -13,24 +13,15 @@ const securityHeaders = [
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
   {
     key: 'Permissions-Policy',
-    // camera is needed for the driver QR scanner / photo capture
-    value: 'camera=(self), microphone=(), geolocation=(self), payment=()',
+    // Die Seite braucht keine dieser Fähigkeiten — es gibt kein Formular, das
+    // die Kamera öffnet, und nichts, was den Standort abfragt.
+    value: 'camera=(), microphone=(), geolocation=(), payment=()',
   },
   {
     key: 'Strict-Transport-Security',
     value: 'max-age=63072000; includeSubDomains; preload',
   },
 ];
-
-const supabaseHost = (() => {
-  try {
-    return process.env.NEXT_PUBLIC_SUPABASE_URL
-      ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
-      : undefined;
-  } catch {
-    return undefined;
-  }
-})();
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -44,11 +35,12 @@ const nextConfig: NextConfig = {
    * exactly as it was — it does its own bundling and ignores this setting.
    */
   output: process.env.DOCKER_BUILD === '1' ? 'standalone' : undefined,
-  images: {
-    remotePatterns: supabaseHost
-      ? [{ protocol: 'https', hostname: supabaseHost, pathname: '/storage/v1/object/**' }]
-      : [],
-  },
+  /**
+   * Keine entfernten Bildquellen: alles, was die Seite anzeigt, liegt in
+   * `public/`. Eine leere Liste ist hier die sichere Vorgabe — sie verhindert,
+   * dass sich der Bildoptimierer als offener Weiterleiter missbrauchen lässt.
+   */
+  images: { remotePatterns: [] },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },

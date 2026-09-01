@@ -1,8 +1,6 @@
 import type { Config } from 'tailwindcss';
-import animate from 'tailwindcss-animate';
 
 const config: Config = {
-  darkMode: ['class'],
   content: ['./src/**/*.{ts,tsx,mdx}'],
   theme: {
     container: {
@@ -12,8 +10,9 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        // System font stack: San Francisco on iOS/macOS, Roboto on Android,
-        // Segoe UI on Windows. No network fetch, no layout shift, native feel.
+        // Systemschriften: San Francisco auf iOS/macOS, Roboto auf Android,
+        // Segoe UI auf Windows. Kein Netzwerkabruf, kein Springen des Layouts,
+        // und auf jedem Gerät die Schrift, die dort vertraut aussieht.
         sans: [
           '-apple-system',
           'BlinkMacSystemFont',
@@ -44,10 +43,6 @@ const config: Config = {
           DEFAULT: 'hsl(var(--accent))',
           foreground: 'hsl(var(--accent-foreground))',
         },
-        sand: {
-          DEFAULT: 'hsl(var(--sand))',
-          foreground: 'hsl(var(--sand-foreground))',
-        },
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
@@ -72,29 +67,8 @@ const config: Config = {
         xl: 'calc(var(--radius) + 4px)',
         '2xl': 'calc(var(--radius) + 10px)',
       },
-      boxShadow: {
-        soft: '0 1px 2px rgba(12, 10, 9, 0.04), 0 8px 24px -12px rgba(12, 10, 9, 0.12)',
-        lift: '0 2px 4px rgba(12, 10, 9, 0.04), 0 16px 40px -16px rgba(12, 10, 9, 0.18)',
-      },
-      keyframes: {
-        'accordion-down': {
-          from: { height: '0' },
-          to: { height: 'var(--radix-accordion-content-height)' },
-        },
-        'fade-up': {
-          from: { opacity: '0', transform: 'translateY(8px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
-        },
-        shimmer: {
-          '100%': { transform: 'translateX(100%)' },
-        },
-      },
-      animation: {
-        'fade-up': 'fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both',
-      },
     },
   },
-  plugins: [animate],
 };
 
 export default config;

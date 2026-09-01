@@ -3,21 +3,16 @@ import { SiteFooter } from '@/components/transfer/site-footer';
 import { StickyCta } from '@/components/transfer/sticky-cta';
 
 /**
- * Der Rahmen der Überführungsseite.
+ * Der Rahmen der Website: Kopfzeile, Inhalt, Fußzeile und — auf dem Telefon —
+ * die feste Handlungsleiste am unteren Rand.
  *
- * `lang` und `dir` stehen hier noch einmal, obwohl das Wurzellayout sie
- * bereits am <html>-Element setzt. Grund: dort richten sie sich nach der
- * Sprachwahl der Paketplattform, die in einem Cookie steht. Wer dort auf
- * Arabisch umgestellt hat und danach diese Seite öffnet, bekäme sonst einen
- * deutschen Text von rechts nach links gesetzt. Das nächstgelegene
- * dir-Attribut gewinnt — damit ist die Richtung hier unabhängig davon richtig.
- *
- * Das untere Polster hält Platz für die feste Handlungsleiste auf dem Telefon,
- * damit sie nicht den letzten Absatz verdeckt.
+ * Die Route-Gruppe `(transfer)` taucht in keiner Adresse auf. Sie steht noch
+ * da, weil dieses Layout nur für die öffentlichen Seiten gilt und nicht für
+ * die Fehlerseiten, die ihren eigenen Rahmen mitbringen.
  */
 export default function TransferLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div lang="de" dir="ltr" className="theme-transfer flex min-h-dvh flex-col">
+    <div className="flex min-h-dvh flex-col">
       <SiteHeader />
       <main id="main" className="flex-1">
         {children}

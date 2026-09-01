@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { appUrl } from './brand';
+import { appUrl } from './app-url';
 
 const KEYS = [
   'NEXT_PUBLIC_APP_URL',

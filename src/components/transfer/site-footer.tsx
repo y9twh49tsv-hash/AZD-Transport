@@ -117,14 +117,7 @@ export function SiteFooter() {
           <p>
             © {new Date().getFullYear()} {siteConfig.companyName}
           </p>
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span>Fahrzeugüberführungen auf eigener Achse — kein Transport auf Anhänger.</span>
-            {siteConfig.showParcelLink && (
-              <Link href="/pakete" className="underline underline-offset-4 hover:text-foreground">
-                Paketversand Deutschland–Marokko
-              </Link>
-            )}
-          </p>
+          <p>Fahrzeugüberführungen auf eigener Achse — kein Transport auf Anhänger.</p>
         </div>
       </div>
     </footer>

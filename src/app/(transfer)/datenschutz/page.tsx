@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { IncompleteNotice, LegalPage, LegalSection, Value } from '@/components/transfer/legal';
 import { openDetails, siteConfig } from '@/config/site';
 
@@ -119,17 +118,14 @@ export default function DatenschutzPage() {
 
       <LegalSection title="6. Cookies">
         <p>
-          Auf den Seiten der Fahrzeugüberführung werden keine Cookies zu Analyse-, Werbe- oder
-          Trackingzwecken gesetzt. Es findet keine Reichweitenmessung statt und es sind keine
-          Dienste Dritter eingebunden, die Sie über Websites hinweg wiedererkennen könnten. Eine
-          Einwilligungsabfrage ist deshalb nicht erforderlich.
+          Diese Website setzt <strong>keine Cookies</strong>. Weder zu Analyse- noch zu Werbe- oder
+          Trackingzwecken, und auch keine technisch notwendigen: es gibt keine Anmeldung, keinen
+          Warenkorb und keine Sprachumschaltung, für die etwas gespeichert werden müsste.
         </p>
         <p>
-          Auf dem separaten Bereich für den Paketversand unter{' '}
-          <Link href="/pakete">/pakete</Link> werden zusätzlich technisch notwendige Cookies
-          eingesetzt — ein Sitzungs-Cookie für angemeldete Nutzerinnen und Nutzer sowie ein Cookie
-          für die gewählte Sprache. Einzelheiten dazu stehen in der{' '}
-          <Link href="/pakete/datenschutz">Datenschutzerklärung des Paketversands</Link>.
+          Es findet keine Reichweitenmessung statt, und es sind keine Dienste Dritter eingebunden,
+          die Sie über Websites hinweg wiedererkennen könnten. Eine Einwilligungsabfrage ist
+          deshalb nicht erforderlich — es gibt nichts, worin Sie einwilligen müssten.
         </p>
       </LegalSection>
 

@@ -11,8 +11,8 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-# /api/health answers without touching Supabase, so a database hiccup cannot
-# trigger a restart loop.
+# /api/health antwortet ohne Datenbankzugriff — es gibt keine Datenbank mehr.
+# Ein Aussetzer bei einem Fremddienst kann also keine Neustartschleife auslösen.
 healthcheckPath = "/api/health"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"

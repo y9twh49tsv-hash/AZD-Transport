@@ -1,4 +1,4 @@
-import { appUrl } from '@/config/brand';
+import { appUrl } from '@/config/app-url';
 import { isTodo, siteConfig } from '@/config/site';
 import { faq, services } from '@/config/transfer-content';
 
