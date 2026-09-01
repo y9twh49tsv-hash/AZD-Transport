@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { IncompleteNotice, LegalPage, LegalSection, Value } from '@/components/transfer/legal';
 import { openDetails, siteConfig } from '@/config/site';
 
@@ -116,16 +117,22 @@ export default function DatenschutzPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="6. Cookies">
+      <LegalSection title="6. Cookies und Reichweitenmessung">
         <p>
           Diese Website setzt <strong>keine Cookies</strong>. Weder zu Analyse- noch zu Werbe- oder
           Trackingzwecken, und auch keine technisch notwendigen: es gibt keine Anmeldung, keinen
-          Warenkorb und keine Sprachumschaltung, für die etwas gespeichert werden müsste.
+          Warenkorb und keine Sprachumschaltung, für die etwas gemerkt werden müsste. Es werden auch
+          keine Daten im lokalen Speicher Ihres Browsers abgelegt.
         </p>
         <p>
           Es findet keine Reichweitenmessung statt, und es sind keine Dienste Dritter eingebunden,
-          die Sie über Websites hinweg wiedererkennen könnten. Eine Einwilligungsabfrage ist
-          deshalb nicht erforderlich — es gibt nichts, worin Sie einwilligen müssten.
+          die Sie über Websites hinweg wiedererkennen könnten — auch keine Schriftarten von fremden
+          Servern. Eine Einwilligung nach <strong>§ 25 TDDDG</strong> ist deshalb nicht
+          erforderlich: es wird nichts auf Ihrem Endgerät gespeichert und nichts von dort ausgelesen.
+        </p>
+        <p>
+          Einzelheiten und wie Sie das selbst nachprüfen können, stehen auf der Seite{' '}
+          <Link href="/cookies">Cookies &amp; Tracking</Link>.
         </p>
       </LegalSection>
 

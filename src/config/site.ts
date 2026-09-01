@@ -60,10 +60,31 @@ export const siteConfig = {
     country: 'Deutschland',
   },
 
-  /** Aus der Gewerbeanmeldung bestätigt (Feld 11 und 15). */
+  /**
+   * Die Rufnummer für Anrufe. Aus der Gewerbeanmeldung bestätigt
+   * (Feld 11 und 15). Steht im Impressum, in der Kopf- und Fußzeile und auf
+   * jeder Fehlerseite.
+   */
   phone: '+49 157 82034336',
-  /** Nur Ziffern, internationales Format — für wa.me. */
+
+  /**
+   * Die Rufnummer für WhatsApp — bewusst getrennt von `phone`.
+   *
+   * Format: nur Ziffern, international, ohne Plus und ohne führende Null
+   * (0157… wird zu 49157…). So verlangt es wa.me; mit Plus oder Leerzeichen
+   * öffnet sich WhatsApp ohne Empfänger.
+   *
+   * Beim Wechsel auf eine eigene Nummer (eSIM) reicht es, diesen einen Wert zu
+   * ändern — Kopfzeile, Fußzeile, die feste Leiste auf dem Telefon und der
+   * „Anfrage per WhatsApp senden"-Knopf im Formular hängen alle daran.
+   *
+   * ⚠ Reihenfolge: erst die Nummer in WhatsApp registrieren und einen Testchat
+   * empfangen, dann hier eintragen. Ein wa.me-Link auf eine Nummer ohne
+   * WhatsApp-Konto endet in einer Fehlermeldung — und zwar bei der Kundschaft,
+   * nicht bei uns.
+   */
   whatsapp: '4915782034336',
+
   email: 'info@azd-transport.com',
 
   /** Nicht ins Impressum. Steuernummern gehören nicht auf eine Website. */

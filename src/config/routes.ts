@@ -18,6 +18,7 @@ export type Route = {
 export const ROUTES: Route[] = [
   { path: '/', priority: 1, changeFrequency: 'weekly' },
   { path: '/anfrage', priority: 0.9, changeFrequency: 'monthly' },
+  { path: '/cookies', priority: 0.3, changeFrequency: 'yearly' },
   { path: '/agb', priority: 0.3, changeFrequency: 'yearly' },
   { path: '/widerruf', priority: 0.3, changeFrequency: 'yearly' },
   { path: '/datenschutz', priority: 0.3, changeFrequency: 'yearly' },

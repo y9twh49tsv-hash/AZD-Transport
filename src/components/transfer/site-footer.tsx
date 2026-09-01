@@ -5,6 +5,7 @@ import { isTodo, siteConfig, telLink, whatsappRequestLink } from '@/config/site'
 const LEGAL = [
   { href: '/impressum', label: 'Impressum' },
   { href: '/datenschutz', label: 'Datenschutz' },
+  { href: '/cookies', label: 'Cookies' },
   { href: '/agb', label: 'AGB' },
   { href: '/widerruf', label: 'Widerruf' },
 ];

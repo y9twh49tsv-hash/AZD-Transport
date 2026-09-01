@@ -80,7 +80,19 @@ describe('siteConfig', () => {
   });
 
   it('baut einen wählbaren Telefonlink', () => {
-    expect(telLink()).toBe('tel:+4915782034336');
+    // Aus der Konfiguration abgeleitet, nicht fest eingetippt: die Nummer darf
+    // sich ändern, ohne dass ein Test grundlos fehlschlägt.
+    expect(telLink()).toBe(`tel:${siteConfig.phone.replace(/[^\d+]/g, '')}`);
+    expect(telLink()).toMatch(/^tel:\+\d{7,15}$/);
+  });
+
+  it('führt die WhatsApp-Nummer in dem Format, das wa.me versteht', () => {
+    // Nur Ziffern, international, ohne Plus und ohne führende Null. Mit Plus,
+    // Leerzeichen oder als 0157… öffnet sich WhatsApp ohne Empfänger — und das
+    // fällt niemandem auf, der den Link nicht selbst antippt.
+    expect(siteConfig.whatsapp).toMatch(/^[1-9]\d{7,14}$/);
+    expect(siteConfig.whatsapp.startsWith('0')).toBe(false);
+    expect(siteConfig.whatsapp).not.toContain('+');
   });
 
   it('baut einen WhatsApp-Link mit kurzem Aufhänger', () => {
