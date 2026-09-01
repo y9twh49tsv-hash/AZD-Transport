@@ -156,3 +156,131 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ===========================================================================
+   Fahrzeugüberführung — Dark Luxury
+   ===========================================================================
+   Eigener Farbraum, gekapselt in .theme-transfer. Der Team-Bereich (/admin,
+   /driver) behält damit seine helle Oberfläche: dort wird tagsüber im Lager
+   und im Auto gearbeitet, wo ein dunkles Layout schlechter lesbar ist.
+
+   Der Akzent ist ein zurückhaltendes Champagner-Gold. Nicht, weil Gold
+   „teuer" aussieht, sondern weil ein warmer Ton auf Anthrazit ruhig wirkt —
+   ein gesättigtes Blau oder Rot würde auf dieser Fläche sofort nach
+   Werbebanner aussehen.
+   =========================================================================== */
+
+.theme-transfer {
+  --background: 24 8% 7%;
+  --foreground: 40 12% 94%;
+
+  --card: 24 8% 10%;
+  --card-foreground: 40 12% 94%;
+
+  --popover: 24 8% 10%;
+  --popover-foreground: 40 12% 94%;
+
+  /* Champagner — nur für Akzente, nie für Flächen */
+  --primary: 38 42% 68%;
+  --primary-foreground: 24 20% 8%;
+  --primary-muted: 38 20% 16%;
+
+  --secondary: 24 6% 14%;
+  --secondary-foreground: 40 12% 92%;
+
+  --accent: 38 42% 68%;
+  --accent-foreground: 24 20% 8%;
+
+  --muted: 24 6% 14%;
+  --muted-foreground: 30 6% 64%;
+
+  --destructive: 4 62% 52%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 30 5% 20%;
+  --input: 30 5% 24%;
+  --ring: 38 42% 68%;
+
+  --radius: 0.5rem;
+
+  /* Sorgt dafür, dass Formularfelder, Auswahllisten, der Datumswähler und
+     die Bildlaufleiste vom Browser dunkel gezeichnet werden. Ohne das steht
+     mitten auf der dunklen Seite ein weißes Kalenderfenster. */
+  color-scheme: dark;
+
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* Das <body> liegt außerhalb dieses Bereichs und behält sonst die helle
+   Fläche der Paketplattform. Beim Überziehen des Scrollbereichs auf dem
+   iPhone blitzt sie dann am oberen oder unteren Rand auf. */
+body:has(.theme-transfer) {
+  background-color: hsl(24 8% 7%);
+}
+
+@layer components {
+  /* Ruhige Fläche mit einer kaum sichtbaren Kante — kein Schlagschatten,
+     der auf Dunkel ohnehin nur schmutzig wirkt. */
+  .panel {
+    @apply rounded-lg border border-border bg-card;
+  }
+
+  /* Der Verlauf hinter dem Kopfbereich. Zwei sehr weiche Lichtquellen statt
+     eines Farbverlaufs von Ecke zu Ecke, damit es nach Studiolicht aussieht
+     und nicht nach Vorlage. */
+  .hero-wash {
+    background:
+      radial-gradient(70% 90% at 15% 0%, hsl(38 30% 30% / 0.22), transparent 60%),
+      radial-gradient(60% 80% at 90% 10%, hsl(200 30% 30% / 0.16), transparent 55%),
+      hsl(var(--background));
+  }
+
+  /* Feines Korn. Verhindert die Bandenbildung, die große dunkle Verläufe auf
+     OLED-Displays zeigen, und nimmt der Fläche das Digitale. */
+  .grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.35;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+  }
+
+  /* Haarlinie als Trenner — auf Dunkel liest sich ein 1px-Border als Kante,
+     ein Verlauf als Übergang. */
+  .rule {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      hsl(var(--border)),
+      transparent
+    );
+  }
+
+  .eyebrow {
+    @apply text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground;
+  }
+}
+
+/* Sanftes Einblenden beim Scrollen. Rein additiv: ohne JavaScript und ohne
+   Animationsunterstützung ist der Inhalt trotzdem sichtbar. */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    animation: reveal-up linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 22%;
+  }
+
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}

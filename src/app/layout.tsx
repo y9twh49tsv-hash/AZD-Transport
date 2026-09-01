@@ -1,55 +1,50 @@
 import type { Metadata, Viewport } from 'next';
+import { headers } from 'next/headers';
 import './globals.css';
-import { brand, appUrl } from '@/config/brand';
-import { pricingConfig } from '@/config/pricing';
-import { formatCents } from '@/lib/pricing';
-import { createT, dir, htmlLang } from '@/lib/i18n';
+import { appUrl } from '@/config/brand';
+import { PATHNAME_HEADER, isTransferPath } from '@/config/routes';
+import { siteConfig } from '@/config/site';
+import { dir, htmlLang, createT } from '@/lib/i18n';
 import { currentLocale } from '@/lib/i18n/server';
 import { LocaleProvider } from '@/lib/i18n/client';
 
 /**
- * Metadata follows the chosen language, so a French visitor who shares the page
- * gets a French preview card. The prices come from `pricingConfig` rather than
- * from the sentence, so a price change cannot leave a stale number in the
- * search-engine snippet.
+ * Die Grundangaben des Unternehmens.
+ *
+ * Das Hauptgeschäft ist die Fahrzeugüberführung, also steht sie hier. Die
+ * Paketplattform bringt in `(site)/layout.tsx` ihre eigenen Metadaten mit und
+ * überschreibt diese für ihre Seiten; einzelne Seiten überschreiben Titel und
+ * Beschreibung noch einmal.
+ *
+ * `metadataBase` gehört an genau diese Stelle: alle relativen Angaben —
+ * canonical, OpenGraph-URL — werden daran absolut gemacht.
  */
-export async function generateMetadata(): Promise<Metadata> {
-  const t = createT(await currentLocale());
-  const prices = {
-    perKg: formatCents(pricingConfig.pricePerKgCents),
-    minimum: formatCents(pricingConfig.minimumPriceCents),
-    pickup: formatCents(pricingConfig.pickupFeeCents),
-  };
-  const title = `${brand.name} — ${t('meta.tagline')}`;
-
-  return {
-    metadataBase: new URL(appUrl()),
-    title: {
-      default: title,
-      template: `%s · ${brand.name}`,
-    },
-    description: t('meta.siteDescription', prices),
-    applicationName: brand.name,
-    formatDetection: { telephone: true, address: false, email: false },
-    openGraph: {
-      type: 'website',
-      locale: t('meta.ogLocale'),
-      siteName: brand.name,
-      title,
-      description: t('meta.ogDescription', prices),
-    },
-    robots: {
-      index: true,
-      follow: true,
-    },
-  };
-}
+export const metadata: Metadata = {
+  metadataBase: new URL(appUrl()),
+  title: {
+    default: 'Fahrzeugüberführung Frankfurt & deutschlandweit | AZD Transport',
+    template: `%s · ${siteConfig.companyName}`,
+  },
+  description:
+    'Professionelle Fahrzeugüberführungen auf eigener Achse. Premium-, Leasing- und Firmenfahrzeuge deutschlandweit überführen lassen. Jetzt unverbindlich anfragen.',
+  applicationName: siteConfig.companyName,
+  formatDetection: { telephone: true, address: false, email: false },
+  openGraph: {
+    type: 'website',
+    locale: 'de_DE',
+    siteName: siteConfig.companyName,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#fafaf9' },
-    { media: '(prefers-color-scheme: dark)', color: '#111110' },
-  ],
+  // Die Farbe der Browserleiste auf dem Telefon. Sie entspricht dem dunklen
+  // Hintergrund der Hauptseite; die Paketplattform setzt in ihrem Layout
+  // wieder ihre helle Farbe.
+  themeColor: '#131210',
   width: 'device-width',
   initialScale: 1,
   // Never block zooming — it is an accessibility requirement.
@@ -57,7 +52,13 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const locale = await currentLocale();
+  // Die Seiten der Fahrzeugüberführung sind deutsch. Das Sprach-Cookie gehört
+  // zur Paketplattform und darf ihnen nicht die Schreibrichtung drehen: wer
+  // dort auf Arabisch gestellt hat, bekäme sonst einen deutschen Text von
+  // rechts nach links. Den Pfad reicht `proxy.ts` in einem Header durch, weil
+  // ein Layout ihn selbst nicht kennt.
+  const pathname = (await headers()).get(PATHNAME_HEADER);
+  const locale = isTransferPath(pathname) ? 'de' : await currentLocale();
   const t = createT(locale);
 
   return (
@@ -65,7 +66,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-dvh">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+          className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-[100] focus:inline-flex focus:min-h-11 focus:items-center focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
         >
           {t('common.skipToContent')}
         </a>

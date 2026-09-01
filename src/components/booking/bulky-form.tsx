@@ -127,7 +127,7 @@ export function BulkyForm({ defaults }: { defaults?: BulkyDefaults }) {
           </p>
         </div>
 
-        <Link href="/" className="mt-6 inline-block">
+        <Link href="/pakete" className="mt-6 inline-block">
           <Button variant="outline">{t('bulky.toHome')}</Button>
         </Link>
       </div>

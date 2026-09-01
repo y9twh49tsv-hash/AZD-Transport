@@ -98,11 +98,11 @@ export function AdminShell({
 
       <div className="mt-auto space-y-2 border-t border-border p-2 pt-4">
         <Link
-          href="/"
+          href="/pakete"
           className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
         >
           <Building2 className="size-4" aria-hidden />
-          Zur Website
+          Zur Paketseite
         </Link>
         <div className="rounded-xl bg-secondary/60 p-3">
           <p className="truncate text-sm font-medium">{name}</p>

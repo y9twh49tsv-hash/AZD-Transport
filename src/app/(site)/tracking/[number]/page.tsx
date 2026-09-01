@@ -109,7 +109,7 @@ function NotFound({
         </Link>{' '}
         {t('tracking.weWillFind')}
       </p>
-      <Link href="/" className="mt-6 inline-block">
+      <Link href="/pakete" className="mt-6 inline-block">
         <Button variant="ghost">{t('bulky.toHome')}</Button>
       </Link>
     </div>

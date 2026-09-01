@@ -910,7 +910,7 @@ function ConfirmStep({ form, price }: { form: FormApi; price: ReturnType<typeof 
                 {t('footer.shippingTerms')}
               </Link>{' '}
               {t('booking.termsAnd')}{' '}
-              <Link href="/datenschutz" target="_blank" className="font-medium text-primary underline">
+              <Link href="/pakete/datenschutz" target="_blank" className="font-medium text-primary underline">
                 {t('booking.termsPrivacy')}
               </Link>
               .

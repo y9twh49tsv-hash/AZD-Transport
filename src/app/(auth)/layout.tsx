@@ -8,7 +8,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
   return (
     <div className="flex min-h-dvh flex-col corridor-gradient">
       <header className="container flex h-16 items-center">
-        <Link href="/" className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <Link href="/pakete" className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <Logo />
           <span className="sr-only">{t('bulky.toHome')}</span>
         </Link>
@@ -20,13 +20,13 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
 
       <footer className="container py-6">
         <nav className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-          <Link href="/impressum" className="hover:text-foreground">
+          <Link href="/pakete/impressum" className="hover:text-foreground">
             {t('footer.imprint')}
           </Link>
-          <Link href="/datenschutz" className="hover:text-foreground">
+          <Link href="/pakete/datenschutz" className="hover:text-foreground">
             {t('footer.privacy')}
           </Link>
-          <Link href="/agb" className="hover:text-foreground">
+          <Link href="/pakete/agb" className="hover:text-foreground">
             {t('footer.terms')}
           </Link>
         </nav>

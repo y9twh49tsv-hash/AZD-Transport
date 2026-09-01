@@ -30,7 +30,7 @@ export default async function NoAccessPage() {
       <p className="mt-2 text-sm text-muted-foreground">{t('noAccess.askAdmin')}</p>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-        <Link href="/">
+        <Link href="/pakete">
           <Button block className="sm:w-auto">
             {t('bulky.toHome')}
           </Button>

@@ -17,9 +17,9 @@ export async function SiteFooter() {
   ];
 
   const legalLinks = [
-    { href: '/impressum', label: t('footer.imprint') },
-    { href: '/datenschutz', label: t('footer.privacy') },
-    { href: '/agb', label: t('footer.terms') },
+    { href: '/pakete/impressum', label: t('footer.imprint') },
+    { href: '/pakete/datenschutz', label: t('footer.privacy') },
+    { href: '/pakete/agb', label: t('footer.terms') },
     { href: '/versandbedingungen', label: t('footer.shippingTerms') },
     { href: '/verbotene-waren', label: t('footer.prohibited') },
     { href: '/haftung', label: t('footer.liability') },

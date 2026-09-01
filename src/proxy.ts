@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { PATHNAME_HEADER } from '@/config/routes';
 
 /**
  * Runs before every matching request (Next.js "proxy", formerly middleware).
@@ -77,11 +78,26 @@ function canonicalRedirect(request: NextRequest): NextResponse | null {
   return NextResponse.redirect(target, 308);
 }
 
+/**
+ * Reicht den angefragten Pfad an das Layout weiter.
+ *
+ * Ein Layout kennt seinen Pfad nicht — es wird für alle darunterliegenden
+ * Seiten einmal gerendert. Das Wurzellayout braucht ihn aber, um zu
+ * entscheiden, ob die Seite der Sprachwahl der Paketplattform folgt oder
+ * deutsch bleibt.
+ */
+function withPathname(request: NextRequest): Headers {
+  const headers = new Headers(request.headers);
+  headers.set(PATHNAME_HEADER, request.nextUrl.pathname);
+  return headers;
+}
+
 export default async function proxy(request: NextRequest) {
   const redirect = canonicalRedirect(request);
   if (redirect) return redirect;
 
-  let response = NextResponse.next({ request });
+  const headers = withPathname(request);
+  let response = NextResponse.next({ request: { headers } });
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -99,7 +115,7 @@ export default async function proxy(request: NextRequest) {
         for (const { name, value } of cookiesToSet) {
           request.cookies.set(name, value);
         }
-        response = NextResponse.next({ request });
+        response = NextResponse.next({ request: { headers: withPathname(request) } });
         for (const { name, value, options } of cookiesToSet) {
           response.cookies.set(name, value, options);
         }

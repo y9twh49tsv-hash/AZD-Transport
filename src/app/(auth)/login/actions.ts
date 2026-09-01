@@ -109,7 +109,9 @@ export async function signOut(): Promise<void> {
     await supabase.auth.signOut();
   }
   revalidatePath('/', 'layout');
-  redirect('/');
+  // Nach dem Abmelden zurück auf die Paketseite: dort ist man angemeldet
+  // gewesen, und die Startseite gehört inzwischen zur Überführung.
+  redirect('/pakete');
 }
 
 export async function requestPasswordReset(formData: FormData): Promise<AuthResult> {

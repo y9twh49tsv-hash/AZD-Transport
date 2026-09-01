@@ -1,9 +1,45 @@
 # AZD Transport
 
-Webplattform für Transporte zwischen **Deutschland 🇩🇪 und Marokko 🇲🇦** — Pakete, Taschen,
-Kartons, persönliche Gegenstände und Sperrgut.
+Die Anwendung bedient **zwei Geschäftsbereiche** unter einer Domain.
 
-Startregion: Frankfurt am Main / Rhein-Main ↔ Nador und Umgebung.
+### 1. Fahrzeugüberführungen — die Hauptseite (`/`)
+
+Premium-Fahrzeugüberführungen auf eigener Achse, deutschlandweit, auf Anfrage europaweit.
+PKW, SUV, Sportwagen, Luxusfahrzeuge und Transporter bis 3,5 t. Kein Transport auf Anhänger
+oder Autotransporter.
+
+Kein Preisautomat: eine Anfrage geht als E-Mail an den Betrieb, das Angebot wird von Hand
+erstellt. Es gibt bewusst keine Datenbank dahinter — eine Anfrage ist eine Nachricht, kein
+Auftrag.
+
+| | |
+|---|---|
+| **Seiten** | `/` · `/anfrage` · `/impressum` · `/datenschutz` · `/agb` · `/widerruf` |
+| **Code** | `src/app/(transfer)/` · `src/components/transfer/` |
+| **Inhalte** | ⭐ `src/config/site.ts` (Unternehmensangaben) · `src/config/transfer-content.ts` (Texte) |
+| **Gestaltung** | `.theme-transfer` in `src/app/globals.css` — eigener, dunkler Farbraum |
+
+> **Wichtig:** Werte in `src/config/site.ts`, die mit `TODO:` beginnen, sind noch nicht
+> bestätigt. Sie werden auf den Rechtsseiten sichtbar als fehlend gekennzeichnet, statt durch
+> eine erfundene Angabe ersetzt zu werden. Sobald der echte Wert eingetragen ist, verschwindet
+> der Hinweis von selbst.
+
+### 2. Paketversand Deutschland–Marokko (`/pakete`)
+
+Der ursprüngliche Geschäftsbereich: Pakete, Taschen, Kartons, persönliche Gegenstände und
+Sperrgut zwischen **Deutschland 🇩🇪 und Marokko 🇲🇦**, Startregion Frankfurt am Main /
+Rhein-Main ↔ Nador und Umgebung. Mit Buchung, Preisrechner, Sendungsverfolgung,
+Kundenkonto, Admin-Dashboard und Fahreransicht.
+
+Er ist vollständig in Betrieb und lief vor dem Umbau unter `/`. Verschoben wurde nur die
+Startseite (`/pakete`) und die drei Rechtsseiten (`/pakete/impressum`, `/pakete/datenschutz`,
+`/pakete/agb`). **Alle übrigen Adressen sind unverändert** — `/buchen`, `/preisrechner`,
+`/tracking/…`, `/sperrgut`, `/angebot/…`, `/konto`: gedruckte Labels, QR-Codes und bereits
+versendete E-Mails funktionieren weiter.
+
+Der Rest dieser Datei beschreibt diesen Bereich.
+
+---
 
 | | |
 |---|---|
@@ -514,22 +550,27 @@ Nach dem ersten Deployment in Supabase → **Authentication → URL Configuratio
 ```
 src/
 ├─ app/
-│  ├─ (site)/            Öffentliche Website
-│  │  ├─ page.tsx            Startseite mit Preisrechner
+│  ├─ (transfer)/        ⭐ Hauptseite: Fahrzeugüberführungen
+│  │  ├─ page.tsx            Startseite (Abschnitte A–J)
+│  │  ├─ anfrage/            Anfrageformular + Server Action
+│  │  └─ impressum, datenschutz, agb, widerruf
+│  ├─ (site)/            Paketversand Deutschland–Marokko
+│  │  ├─ pakete/             Startseite mit Preisrechner + Rechtsseiten
 │  │  ├─ preisrechner/       Rechner mit Beispielen
 │  │  ├─ buchen/             Buchung (Server Action in actions.ts)
 │  │  ├─ tracking/           Sendungsverfolgung
 │  │  ├─ sperrgut/           Sperrgut-Anfrage mit Upload
 │  │  ├─ angebot/[token]/    Angebotslink für den Kunden
 │  │  ├─ konto/              Kundenkonto
-│  │  └─ impressum, datenschutz, agb, …
+│  │  └─ versandbedingungen, verbotene-waren, haftung
 │  ├─ (auth)/            Login, Registrierung
 │  ├─ admin/             Dashboard (nur staff + admin)
 │  ├─ driver/            Fahreransicht (nur driver + staff + admin)
 │  ├─ scan/[token]/      Ziel jedes QR-Codes
 │  └─ auth/callback/     Supabase-Login-Rückleitung
 ├─ components/           UI-Bausteine
-├─ config/               ⭐ brand.ts · pricing.ts · regions.ts · prohibited-items.ts
+├─ config/               ⭐ site.ts · transfer-content.ts · routes.ts (Überführung)
+│                       ⭐ brand.ts · pricing.ts · regions.ts · prohibited-items.ts (Pakete)
 ├─ lib/
 │  ├─ pricing.ts             ⭐ die einzige Preisberechnung
 │  ├─ shipment-status.ts     Status, Übergänge, Beschriftungen
@@ -537,11 +578,12 @@ src/
 │  ├─ auth.ts                Session und Rollen-Guards
 │  ├─ tracking.ts            Filterung der öffentlichen Trackingdaten
 │  ├─ validation.ts          alle Zod-Schemas
+│  ├─ transfer-request.ts   Zod-Schema der Überführungsanfrage
 │  ├─ qr.ts, rate-limit.ts, image.ts, utils.ts
 │  ├─ notifications/         E-Mail- und WhatsApp-Adapter
 │  ├─ supabase/              Browser-, Server- und Service-Role-Client
 │  └─ i18n/                  Übersetzungen (aktuell Deutsch)
-└─ proxy.ts              Session-Refresh + Schutz der internen Bereiche
+└─ proxy.ts              Session-Refresh · Schutz der internen Bereiche · kanonischer Host
 
 supabase/
 ├─ migrations/           7 SQL-Dateien — die einzige Quelle des Schemas

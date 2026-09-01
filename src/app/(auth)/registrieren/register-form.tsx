@@ -92,11 +92,11 @@ export function RegisterForm() {
 
         <p className="text-xs leading-relaxed text-muted-foreground">
           {t('auth.acceptPrefix')}{' '}
-          <Link href="/agb" className="underline">
+          <Link href="/pakete/agb" className="underline">
             {t('footer.terms')}
           </Link>{' '}
           {t('auth.acceptAnd')}{' '}
-          <Link href="/datenschutz" className="underline">
+          <Link href="/pakete/datenschutz" className="underline">
             {t('booking.termsPrivacy')}
           </Link>
           .
