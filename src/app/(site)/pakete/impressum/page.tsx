@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { LegalPage, Section, Todo } from '@/components/layout/legal-page';
 import { brand } from '@/config/brand';
+import { siteConfig } from '@/config/site';
 import { getT } from '@/lib/i18n/server';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -37,17 +38,20 @@ export default async function ImprintPage() {
         </p>
       </Section>
 
+      {/* Belegt durch die Gewerbeanmeldung — dieselbe Quelle wie auf der
+          Hauptseite, damit beide Impressen nicht auseinanderlaufen können. */}
       <Section title={t('legal.imprint.s3Title')}>
-        <p>
-          <Todo>{t('legal.imprint.s3todo')}</Todo>
-        </p>
+        <p>{siteConfig.ownerName}</p>
       </Section>
 
-      <Section title={t('legal.imprint.s4Title')}>
-        <p>
-          <Todo>{t('legal.imprint.s4todo')}</Todo>
-        </p>
-      </Section>
+      {/* Wie auf der Hauptseite: § 5 DDG verlangt die USt-IdNr. nur, soweit
+          sie vorhanden ist. Ohne Eintrag in `site.ts` entfällt der Abschnitt,
+          statt eine Überschrift ohne Inhalt stehen zu lassen. */}
+      {siteConfig.vatId && (
+        <Section title={t('legal.imprint.s4Title')}>
+          <p>{siteConfig.vatId}</p>
+        </Section>
+      )}
 
       <Section title={t('legal.imprint.s5Title')}>
         <p>
@@ -57,29 +61,24 @@ export default async function ImprintPage() {
 
       <Section title={t('legal.imprint.s6Title')}>
         <p>
-          <Todo>{t('legal.imprint.s6todo')}</Todo>
+          {siteConfig.ownerName}
+          <br />
+          {brand.address.street}
+          <br />
+          {brand.address.zip} {brand.address.city}
         </p>
       </Section>
 
-      <Section title={t('legal.imprint.s7Title')}>
-        <p>
-          {t('legal.imprint.s7p1')}{' '}
-          <a
-            href="https://ec.europa.eu/consumers/odr/"
-            className="font-medium text-primary underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            ec.europa.eu/consumers/odr
-          </a>
-          {t('legal.imprint.s7p2')}
-        </p>
-      </Section>
+      {/*
+        Der Abschnitt zur EU-Plattform für Online-Streitbeilegung ist entfallen.
+        Die Plattform wurde am 20. Juli 2025 abgeschaltet; der Link ging ins
+        Leere und der Satz behauptete etwas, das es nicht mehr gibt.
+      */}
 
+      {/* Dieselbe Aussage wie im Impressum der Hauptseite: es ist ein
+          Unternehmen, also darf hier nicht das Gegenteil stehen. */}
       <Section title={t('legal.imprint.s8Title')}>
-        <p>
-          <Todo>{t('legal.imprint.s8todo')}</Todo>
-        </p>
+        <p>{t('legal.imprint.s8p')}</p>
       </Section>
     </LegalPage>
   );

@@ -190,7 +190,6 @@ export const legalDe = {
     phone: 'Telefon',
     email: 'E-Mail',
     s3Title: 'Vertretungsberechtigte Person',
-    s3todo: '[Vor- und Nachname der Inhaberin / des Inhabers eintragen]',
     s4Title: 'Umsatzsteuer-Identifikationsnummer',
     s4todo:
       '[USt-IdNr. gemäß § 27 a UStG eintragen — oder Hinweis auf Kleinunternehmerregelung nach § 19 UStG]',
@@ -198,13 +197,8 @@ export const legalDe = {
     s5todo:
       '[Falls vorhanden: Handelsregister und Registernummer eintragen. Für gewerblichen Güterkraftverkehr ist zusätzlich die Erlaubnis nach § 3 GüKG bzw. die EU-Gemeinschaftslizenz nach VO (EG) 1072/2009 anzugeben. Bitte anwaltlich prüfen lassen, welche Erlaubnis für dein konkretes Geschäftsmodell erforderlich ist.]',
     s6Title: 'Redaktionell verantwortlich',
-    s6todo: '[Name und Anschrift der verantwortlichen Person eintragen]',
-    s7Title: 'EU-Streitschlichtung',
-    s7p1: 'Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:',
-    s7p2: '. Unsere E-Mail-Adresse findest du oben.',
     s8Title: 'Verbraucherstreitbeilegung',
-    s8todo:
-      '[Angabe ergänzen: Wir sind (nicht) bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.]',
+    s8p: 'Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.',
   },
 
   prohibited: {

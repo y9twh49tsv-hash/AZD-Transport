@@ -1,3 +1,5 @@
+import { siteConfig } from '@/config/site';
+
 /**
  * Single source of truth for the brand.
  *
@@ -11,7 +13,7 @@
  */
 export const brand = {
   name: process.env.NEXT_PUBLIC_BRAND_NAME || 'AZD Transport',
-  legalName: process.env.NEXT_PUBLIC_BRAND_LEGAL_NAME || 'AZD Transport (Einzelunternehmen)',
+  legalName: process.env.NEXT_PUBLIC_BRAND_LEGAL_NAME || siteConfig.legalName,
   tagline: 'Transporte zwischen Deutschland und Marokko',
   trackingPrefix: process.env.NEXT_PUBLIC_TRACKING_PREFIX || 'AZD',
   email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'azd-transport@outlook.com',
@@ -23,11 +25,18 @@ export const brand = {
    * environment variable works too.
    */
   whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '4915782034336',
+  /**
+   * Die Anschrift kommt aus `site.ts` — dort steht sie belegt aus der
+   * Gewerbeanmeldung. Vorher stand hier „Musterstraße 1“ als Platzhalter, und
+   * die tauchte nicht nur im Impressum auf, sondern auch als Annahmestelle in
+   * den Buchungsbestätigungen. Eine erfundene Adresse in einer E-Mail an eine
+   * Kundin ist schlimmer als eine fehlende.
+   */
   address: {
-    street: process.env.NEXT_PUBLIC_CONTACT_STREET || 'Musterstraße 1',
-    zip: process.env.NEXT_PUBLIC_CONTACT_ZIP || '60311',
-    city: process.env.NEXT_PUBLIC_CONTACT_CITY || 'Frankfurt am Main',
-    country: 'Deutschland',
+    street: process.env.NEXT_PUBLIC_CONTACT_STREET || siteConfig.address.street,
+    zip: process.env.NEXT_PUBLIC_CONTACT_ZIP || siteConfig.address.postalCode,
+    city: process.env.NEXT_PUBLIC_CONTACT_CITY || siteConfig.address.city,
+    country: siteConfig.address.country,
   },
 } as const;
 

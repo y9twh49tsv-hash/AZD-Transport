@@ -179,7 +179,6 @@ export const legalFr: LegalDictionary = {
     phone: 'Téléphone',
     email: 'E-mail',
     s3Title: 'Personne habilitée à représenter',
-    s3todo: '[Indiquer le prénom et le nom du ou de la propriétaire]',
     s4Title: 'Numéro d’identification à la TVA',
     s4todo:
       '[Indiquer le numéro de TVA selon le § 27a de la loi allemande sur la TVA — ou une mention du régime des petites entreprises selon le § 19]',
@@ -187,13 +186,8 @@ export const legalFr: LegalDictionary = {
     s5todo:
       '[Le cas échéant : indiquer le registre du commerce et le numéro d’immatriculation. Pour le transport routier commercial de marchandises, l’autorisation selon le § 3 GüKG ou la licence communautaire selon le règlement (CE) 1072/2009 doit également être indiquée. Faire vérifier par un avocat quelle autorisation votre modèle d’activité requiert.]',
     s6Title: 'Responsable éditorial',
-    s6todo: '[Indiquer le nom et l’adresse de la personne responsable]',
-    s7Title: 'Règlement des litiges dans l’UE',
-    s7p1: 'La Commission européenne met à disposition une plateforme de règlement en ligne des litiges (RLL) :',
-    s7p2: '. Notre adresse e-mail figure ci-dessus.',
     s8Title: 'Règlement des litiges de consommation',
-    s8todo:
-      '[Compléter la mention : nous sommes (ne sommes pas) disposés ou tenus de participer à une procédure de règlement des litiges devant un organisme de médiation de la consommation.]',
+    s8p: 'Nous ne sommes ni disposés ni tenus de participer à une procédure de règlement des litiges devant un organisme de médiation de la consommation.',
   },
 
   prohibited: {

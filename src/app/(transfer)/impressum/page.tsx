@@ -17,20 +17,16 @@ export default function ImpressumPage() {
       <IncompleteNotice items={openDetails()} />
 
       <LegalSection title="Anbieter">
-        <p className="not-prose">
+        <p>
           <Value>{siteConfig.legalName}</Value>
+          <br />
+          <Value>{siteConfig.legalForm}</Value>
           <br />
           <Value>{address.street}</Value>
           <br />
           <Value>{address.postalCode}</Value> {address.city}
           <br />
           {address.country}
-        </p>
-      </LegalSection>
-
-      <LegalSection title="Vertreten durch">
-        <p>
-          <Value>{siteConfig.ownerName}</Value>
         </p>
       </LegalSection>
 
@@ -43,13 +39,18 @@ export default function ImpressumPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="Umsatzsteuer-Identifikationsnummer">
-        <p>
-          Umsatzsteuer-Identifikationsnummer gemäß § 27a Umsatzsteuergesetz:
-          <br />
-          <Value>{siteConfig.vatId}</Value>
-        </p>
-      </LegalSection>
+      {/* § 5 DDG verlangt die USt-IdNr. nur, „soweit vorhanden". Ist keine
+          hinterlegt, entfällt der Abschnitt — eine Überschrift ohne Inhalt
+          wirft mehr Fragen auf, als sie beantwortet. */}
+      {siteConfig.vatId && (
+        <LegalSection title="Umsatzsteuer-Identifikationsnummer">
+          <p>
+            Umsatzsteuer-Identifikationsnummer gemäß § 27a Umsatzsteuergesetz:
+            <br />
+            <Value>{siteConfig.vatId}</Value>
+          </p>
+        </LegalSection>
+      )}
 
       <LegalSection title="Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV">
         <p>

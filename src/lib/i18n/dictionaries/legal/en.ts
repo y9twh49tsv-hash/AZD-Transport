@@ -183,7 +183,6 @@ export const legalEn: LegalDictionary = {
     phone: 'Phone',
     email: 'Email',
     s3Title: 'Authorised representative',
-    s3todo: '[Enter the first and last name of the owner]',
     s4Title: 'VAT identification number',
     s4todo:
       '[Enter the VAT ID pursuant to § 27a of the German VAT Act — or a note on the small-business rule under § 19]',
@@ -191,13 +190,8 @@ export const legalEn: LegalDictionary = {
     s5todo:
       '[If applicable: enter the commercial register and registration number. For commercial road haulage the permit under § 3 GüKG or the EU Community licence under Regulation (EC) 1072/2009 must also be stated. Please have a lawyer check which permit your specific business model requires.]',
     s6Title: 'Responsible for the content',
-    s6todo: '[Enter the name and address of the responsible person]',
-    s7Title: 'EU dispute resolution',
-    s7p1: 'The European Commission provides a platform for online dispute resolution (ODR):',
-    s7p2: '. You find our email address above.',
     s8Title: 'Consumer dispute resolution',
-    s8todo:
-      '[Add the statement: we are (not) willing or obliged to take part in dispute resolution proceedings before a consumer arbitration board.]',
+    s8p: 'We are neither willing nor obliged to take part in dispute resolution proceedings before a consumer arbitration board.',
   },
 
   prohibited: {

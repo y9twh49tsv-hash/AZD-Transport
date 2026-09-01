@@ -25,20 +25,42 @@ export function todoText(value: string): string {
 
 export const siteConfig = {
   companyName: 'AZD Transport',
-  legalName: `${TODO} Vollständige Firmierung inkl. Rechtsform (z. B. "Mehdi Azdouffal – AZD Transport, Einzelunternehmen")`,
-  ownerName: `${TODO} Vor- und Nachname der Inhaberin / des Inhabers`,
+
+  /**
+   * Der Name, unter dem das Unternehmen rechtlich auftritt.
+   *
+   * Quelle: Gewerbeanmeldung nach § 14 GewO bei der Stadt Frankfurt
+   * (Antrags-ID EAH-AZ 26.4309), angemeldet zum 27.08.2026 für
+   * „Fahrzeugüberführungen auf eigener Achse sowie Hol- und Bringservice für
+   * Kraftfahrzeuge".
+   *
+   * Ohne Eintrag im Handelsregister verlangt § 15b Abs. 1 GewO den Namen mit
+   * mindestens einem ausgeschriebenen Vornamen — „AZD Transport" allein
+   * genügt im Rechtsverkehr also nicht.
+   */
+  legalName: 'Mehdi Azdouffal – AZD Transport',
+  legalForm: 'Einzelunternehmen',
+  ownerName: 'Mehdi Azdouffal',
 
   claim: 'Premium Fahrzeugüberführungen. Diskret. Sicher. Deutschlandweit.',
   shortDescription: 'Premium Fahrzeugüberführungen auf eigener Achse.',
 
+  /**
+   * Die Betriebsstätte aus der Gewerbeanmeldung (Feld 15).
+   *
+   * ⚠ Sie ist zugleich die Wohnanschrift. Im Impressum muss eine ladungsfähige
+   * Anschrift stehen — ein Postfach genügt nicht —, sie wird also öffentlich
+   * sichtbar. Wer das nicht möchte, braucht eine echte Geschäftsadresse; ein
+   * Weglassen ist keine Option.
+   */
   address: {
-    street: `${TODO} Straße und Hausnummer`,
-    postalCode: `${TODO} PLZ`,
+    street: 'Kleyerstraße 92a',
+    postalCode: '60326',
     city: 'Frankfurt am Main',
     country: 'Deutschland',
   },
 
-  /** Aus der bestehenden Konfiguration übernommen — im Betrieb bestätigt. */
+  /** Aus der Gewerbeanmeldung bestätigt (Feld 11 und 15). */
   phone: '+49 157 82034336',
   /** Nur Ziffern, internationales Format — für wa.me. */
   whatsapp: '4915782034336',
@@ -46,7 +68,18 @@ export const siteConfig = {
 
   /** Nicht ins Impressum. Steuernummern gehören nicht auf eine Website. */
   taxNumber: `${TODO} Steuernummer — nur intern für Rechnungen, NICHT veröffentlichen`,
-  vatId: `${TODO} USt-IdNr. nach § 27a UStG, falls vorhanden — sonst diesen Eintrag löschen`,
+
+  /**
+   * USt-IdNr. nach § 27a UStG.
+   *
+   * Leer = nicht vorhanden. Dann entfällt der Abschnitt im Impressum
+   * vollständig — § 5 DDG verlangt die Angabe nur, „soweit vorhanden".
+   * Angenommen für ein am 27.08.2026 angemeldetes Gewerbe: eine USt-IdNr.
+   * wird nicht automatisch vergeben, sondern beim Bundeszentralamt für
+   * Steuern beantragt. Sobald eine vorliegt, hier eintragen (Format
+   * DE123456789), dann erscheint sie im Impressum.
+   */
+  vatId: '',
 
   /**
    * Bewusst neutral. Sobald eine Police vorliegt, wird hier der konkrete

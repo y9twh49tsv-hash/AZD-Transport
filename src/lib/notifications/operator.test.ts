@@ -19,7 +19,11 @@ const abholung: OperatorBookingContext = {
   senderName: 'Mehdi Azdouffal',
   senderPhone: '+49 157 8203 4336',
   senderEmail: 'mehdi@example.de',
-  pickupAddress: 'Kleyerstraße 92a, 60326 Frankfurt am Main',
+  // Bewusst eine andere Straße als die des Betriebs: der Test unten prüft,
+  // dass ohne Abholung die Kundenadresse nicht in der Meldung landet. Läge
+  // hier die Betriebsanschrift, ginge die Prüfung an der Annahmestelle in
+  // der Meldung fehl und behauptete einen Fehler, den es nicht gibt.
+  pickupAddress: 'Bockenheimer Landstraße 17, 60325 Frankfurt am Main',
   recipientName: 'Amine Akaouch',
   recipientPhone: '+212 6 6885 5220',
   recipientCity: 'nador',
@@ -42,7 +46,7 @@ describe('Betriebsmeldung — E-Mail', () => {
     expect(mail.subject).toContain('AZD-260812-0002');
     // Die wichtigste Frage im Betrieb: hinfahren oder nicht.
     expect(mail.text.split('\n')[0]).toContain('Abholung beim Kunden am 14.08.2026');
-    expect(mail.text).toContain('Kleyerstraße 92a');
+    expect(mail.text).toContain('Bockenheimer Landstraße 17');
   });
 
   it('unterscheidet die Abgabe klar davon', () => {
@@ -51,7 +55,7 @@ describe('Betriebsmeldung — E-Mail', () => {
     expect(mail.text).toContain('Kunde bringt die Sendung vorbei');
     // Ohne Abholung ist die Absenderadresse für die Fahrt bedeutungslos und
     // steht deshalb nicht in der Meldung.
-    expect(mail.text).not.toContain('Kleyerstraße');
+    expect(mail.text).not.toContain('Bockenheimer Landstraße');
   });
 
   it('lässt bei Dokumenten Gewicht und Stückzahl weg', () => {
@@ -111,7 +115,7 @@ describe('Betriebsmeldung — WhatsApp', () => {
   });
 
   it('nennt die Adresse nur, wenn hingefahren wird', () => {
-    expect(buildOperatorBookingWhatsAppText(abholung)).toContain('Kleyerstraße 92a');
-    expect(buildOperatorBookingWhatsAppText(abgabe)).not.toContain('Kleyerstraße');
+    expect(buildOperatorBookingWhatsAppText(abholung)).toContain('Bockenheimer Landstraße 17');
+    expect(buildOperatorBookingWhatsAppText(abgabe)).not.toContain('Bockenheimer Landstraße');
   });
 });
