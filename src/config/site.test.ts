@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { isTodo, openDetails, siteConfig, telLink, todoText, whatsappRequestLink } from './site';
+import {
+  isTodo,
+  openDetails,
+  siteConfig,
+  telLink,
+  todoText,
+  whatsappLink,
+  whatsappRequestLink,
+} from './site';
 
 /**
  * Die Unternehmensangaben sind kein gewöhnlicher Inhalt.
@@ -75,11 +83,28 @@ describe('siteConfig', () => {
     expect(telLink()).toBe('tel:+4915782034336');
   });
 
-  it('baut einen WhatsApp-Link mit vorbereiteter Nachricht', () => {
+  it('baut einen WhatsApp-Link mit kurzem Aufhänger', () => {
     const link = whatsappRequestLink();
     expect(link.startsWith(`https://wa.me/${siteConfig.whatsapp}?text=`)).toBe(true);
-    expect(decodeURIComponent(link)).toContain('Abholort');
-    expect(decodeURIComponent(link)).toContain('Zielort');
+    expect(decodeURIComponent(link)).toContain('Fahrzeugüberführung');
+  });
+
+  it('stellt den Schaltflächen außerhalb des Formulars keine Lückenvorlage hin', () => {
+    // Vorher stand hier „Abholort: ___ Zielort: ___“ zum Selbstausfüllen. Das
+    // sieht nach Hausaufgabe aus und wird weggelöscht; die vollständige
+    // Nachricht baut das Formular.
+    const message = decodeURIComponent(whatsappRequestLink().split('?text=')[1]);
+    expect(message).not.toContain(':');
+    expect(message.split('\n')).toHaveLength(1);
+  });
+
+  it('kodiert beliebigen Text sicher in den Link', () => {
+    const link = whatsappLink('Abholort: Köln & Umgebung\nZielort: München');
+    expect(link).not.toContain(' ');
+    expect(link).not.toContain('\n');
+    expect(decodeURIComponent(link.split('?text=')[1])).toBe(
+      'Abholort: Köln & Umgebung\nZielort: München',
+    );
   });
 });
 

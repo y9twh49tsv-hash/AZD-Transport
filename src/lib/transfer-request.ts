@@ -96,3 +96,113 @@ export const transferRequestSchema = z
   });
 
 export type TransferRequestInput = z.infer<typeof transferRequestSchema>;
+
+/**
+ * Die Anfrage als lesbarer Text.
+ *
+ * Eine Quelle für beide Wege: die E-Mail an den Betrieb und die
+ * WhatsApp-Nachricht, die der Kunde mit einem Tippen abschickt. Zwei getrennte
+ * Textbausteine würden mit Sicherheit auseinanderlaufen — und dann steht in der
+ * einen Meldung etwas anderes als in der anderen.
+ *
+ * Die Felder sind alle einzeln optional, weil dieselbe Funktion auch ein noch
+ * halb ausgefülltes Formular abbilden muss: der WhatsApp-Knopf soll schon
+ * funktionieren, wenn nur Abhol- und Zielort stehen.
+ */
+export type RequestMessageInput = {
+  pickupLocation?: string | null;
+  dropoffLocation?: string | null;
+  vehicleMake?: string | null;
+  vehicleModel?: string | null;
+  vehicleType?: string | null;
+  vehicleState?: string | null;
+  vehicleValue?: string | null;
+  preferredDate?: string | null;
+  dateFlexible?: boolean;
+  notes?: string | null;
+  name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+};
+
+/** „2026-10-01“ → „01.10.2026“. Alles andere bleibt, wie es ist. */
+export function formatDate(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) return value.trim() || null;
+  const [, year, month, day] = match;
+  return `${day}.${month}.${year}`;
+}
+
+function line(label: string, value: string | null | undefined): string | null {
+  const text = value?.toString().trim();
+  return text ? `${label}: ${text}` : null;
+}
+
+export function buildRequestMessage(
+  data: RequestMessageInput,
+  /**
+   * Obergrenze für die Gesamtlänge. Nur der WhatsApp-Weg braucht sie: die
+   * Nachricht steckt dort in einer Adresse, und sehr lange Adressen werden von
+   * manchen Browsern abgeschnitten. Gekürzt wird ausschließlich das Freitextfeld
+   * — die Eckdaten bleiben in jedem Fall vollständig.
+   */
+  options: { maxLength?: number } = {},
+): string {
+  const vehicle = [data.vehicleMake, data.vehicleModel]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(' ');
+
+  const build = (notes: string | null | undefined) =>
+    [
+      'Anfrage Fahrzeugüberführung',
+      '',
+      line('Abholort', data.pickupLocation),
+      line('Zielort', data.dropoffLocation),
+      '',
+      line('Fahrzeug', vehicle || null),
+      line('Fahrzeugtyp', data.vehicleType),
+      line('Zulassung', data.vehicleState),
+      line('Fahrzeugwert', data.vehicleValue),
+      '',
+      line('Wunschtermin', formatDate(data.preferredDate)),
+      data.dateFlexible ? 'Termin flexibel: ja' : null,
+      '',
+      line('Bemerkungen', notes),
+      '',
+      line('Name', data.name),
+      line('Telefon', data.phone),
+      line('E-Mail', data.email),
+    ]
+      .filter((entry) => entry !== null)
+      // Zwei Leerzeilen hintereinander entstehen, wenn ein ganzer Block leer
+      // bleibt. Sie zu einer zusammenzuziehen ist der Unterschied zwischen
+      // einer Nachricht, die man überfliegt, und einer, die man scrollt.
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .replace(/\n+$/, '');
+
+  const full = build(data.notes);
+  const max = options.maxLength;
+  if (!max || full.length <= max) return full;
+
+  // Der Text ohne Bemerkungen ist die Untergrenze. Passt der schon nicht, hilft
+  // Kürzen nicht weiter — die Eckdaten sind wichtiger als die Obergrenze, und
+  // eine Anfrage ohne Zielort wäre wertlos.
+  const withoutNotes = build(null);
+  const notes = data.notes?.trim();
+  if (!notes) return withoutNotes;
+
+  // Schrittweise kürzen statt zu rechnen: wie lang der fertige Text wird, hängt
+  // davon ab, welche Blöcke leer bleiben und wieviel die Leerzeilenbereinigung
+  // wegnimmt. Ausprobieren trifft es genau, Rechnen nur ungefähr.
+  let room = max - withoutNotes.length;
+  while (room >= 24) {
+    const candidate = build(`${notes.slice(0, room)} […]`);
+    if (candidate.length <= max) return candidate;
+    room -= Math.max(1, candidate.length - max);
+  }
+
+  return withoutNotes;
+}

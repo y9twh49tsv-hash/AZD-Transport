@@ -3,15 +3,11 @@
 import { unstable_rethrow } from 'next/navigation';
 import { getEmailAdapter } from '@/lib/notifications/email';
 import { siteConfig } from '@/config/site';
-import { transferRequestSchema } from '@/lib/transfer-request';
+import { buildRequestMessage, transferRequestSchema } from '@/lib/transfer-request';
 
 export type RequestResult =
   | { ok: true }
   | { ok: false; error: string; fieldErrors?: Record<string, string> };
-
-function line(label: string, value: string | null | undefined): string | null {
-  return value ? `${label}: ${value}` : null;
-}
 
 /**
  * Nimmt eine Überführungsanfrage entgegen und schickt sie an den Betrieb.
@@ -40,28 +36,9 @@ export async function submitTransferRequest(input: unknown): Promise<RequestResu
   // verworfen, aber als Erfolg quittiert — wer es merkt, versucht es erneut.
   if (data.company) return { ok: true };
 
-  const vehicle = [data.vehicleMake, data.vehicleModel].filter(Boolean).join(' ');
-
-  const body = [
-    `Abholort: ${data.pickupLocation}`,
-    `Zielort: ${data.dropoffLocation}`,
-    '',
-    line('Fahrzeug', vehicle || null),
-    `Fahrzeugtyp: ${data.vehicleType}`,
-    `Zulassung: ${data.vehicleState}`,
-    line('Fahrzeugwert', data.vehicleValue),
-    '',
-    line('Wunschtermin', data.preferredDate),
-    `Termin flexibel: ${data.dateFlexible ? 'ja' : 'nein'}`,
-    '',
-    line('Bemerkungen', data.notes),
-    '',
-    `Name: ${data.name}`,
-    line('Telefon', data.phone),
-    line('E-Mail', data.email),
-  ]
-    .filter((entry) => entry !== null)
-    .join('\n');
+  // Derselbe Text, den auch die WhatsApp-Nachricht trägt — aus einer Funktion,
+  // damit die beiden Wege nicht auseinanderlaufen können.
+  const body = buildRequestMessage(data);
 
   const subject = `Überführungsanfrage: ${data.pickupLocation} → ${data.dropoffLocation}`;
 

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { transferRequestSchema, VEHICLE_STATES, VEHICLE_TYPES } from './transfer-request';
+import {
+  buildRequestMessage,
+  formatDate,
+  transferRequestSchema,
+  VEHICLE_STATES,
+  VEHICLE_TYPES,
+} from './transfer-request';
 
 /**
  * Die kleinste Anfrage, die durchgehen muss. Alles darüber hinaus ist
@@ -136,5 +142,113 @@ describe('transferRequestSchema', () => {
   it('caps free text so a single request cannot fill the mailbox', () => {
     const result = transferRequestSchema.safeParse({ ...minimal, notes: 'x'.repeat(2001) });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('formatDate', () => {
+  it('macht aus einem ISO-Datum eines, das man vorliest', () => {
+    expect(formatDate('2026-10-01')).toBe('01.10.2026');
+  });
+
+  it('lässt alles andere unangetastet, statt es zu verschlucken', () => {
+    expect(formatDate('nächste Woche')).toBe('nächste Woche');
+    expect(formatDate('')).toBeNull();
+    expect(formatDate(null)).toBeNull();
+    expect(formatDate(undefined)).toBeNull();
+  });
+});
+
+describe('buildRequestMessage', () => {
+  const full = {
+    pickupLocation: '60311 Frankfurt am Main',
+    dropoffLocation: '80331 München',
+    vehicleMake: 'Porsche',
+    vehicleModel: '911 Carrera',
+    vehicleType: 'Sportwagen',
+    vehicleState: 'zugelassen',
+    vehicleValue: '120.000 €',
+    preferredDate: '2026-10-01',
+    dateFlexible: true,
+    notes: 'Abholung beim Autohaus, Ansprechpartner Herr Meier',
+    name: 'Max Mustermann',
+    phone: '0157 82034336',
+    email: 'kunde@example.com',
+  };
+
+  it('nennt jede ausgefüllte Angabe', () => {
+    const text = buildRequestMessage(full);
+    for (const value of [
+      '60311 Frankfurt am Main',
+      '80331 München',
+      'Porsche 911 Carrera',
+      'Sportwagen',
+      'zugelassen',
+      '120.000 €',
+      '01.10.2026',
+      'Termin flexibel: ja',
+      'Ansprechpartner Herr Meier',
+      'Max Mustermann',
+      '0157 82034336',
+      'kunde@example.com',
+    ]) {
+      expect(text).toContain(value);
+    }
+  });
+
+  it('beginnt mit der Strecke — das Erste, was im Chat sichtbar ist', () => {
+    const lines = buildRequestMessage(full).split('\n');
+    expect(lines[0]).toBe('Anfrage Fahrzeugüberführung');
+    expect(lines[2]).toBe('Abholort: 60311 Frankfurt am Main');
+    expect(lines[3]).toBe('Zielort: 80331 München');
+  });
+
+  it('funktioniert schon mit Abhol- und Zielort allein', () => {
+    // Genau der Zustand, in dem der WhatsApp-Knopf freigegeben wird.
+    const text = buildRequestMessage({
+      pickupLocation: 'Frankfurt',
+      dropoffLocation: 'München',
+    });
+    expect(text).toContain('Abholort: Frankfurt');
+    expect(text).toContain('Zielort: München');
+    expect(text).not.toContain('Name:');
+    expect(text).not.toContain('Bemerkungen:');
+  });
+
+  it('lässt leere Felder weg, statt Zeilen ohne Inhalt zu drucken', () => {
+    const text = buildRequestMessage({ ...full, vehicleValue: null, notes: '   ', email: '' });
+    expect(text).not.toContain('Fahrzeugwert');
+    expect(text).not.toContain('Bemerkungen');
+    expect(text).not.toContain('E-Mail');
+  });
+
+  it('erwähnt einen unflexiblen Termin gar nicht erst', () => {
+    expect(buildRequestMessage({ ...full, dateFlexible: false })).not.toContain('flexibel');
+  });
+
+  it('lässt keine doppelten Leerzeilen stehen und endet ohne', () => {
+    const text = buildRequestMessage({ pickupLocation: 'A', dropoffLocation: 'B', name: 'C' });
+    expect(text).not.toMatch(/\n\n\n/);
+    expect(text).not.toMatch(/\n$/);
+  });
+
+  it('kürzt nur die Bemerkungen, wenn die Nachricht zu lang wird', () => {
+    const text = buildRequestMessage({ ...full, notes: 'x'.repeat(2000) }, { maxLength: 400 });
+
+    expect(text.length).toBeLessThanOrEqual(400);
+    // Die Eckdaten überleben die Kürzung — sie sind der Zweck der Nachricht.
+    expect(text).toContain('60311 Frankfurt am Main');
+    expect(text).toContain('80331 München');
+    expect(text).toContain('Max Mustermann');
+    expect(text).toContain('[…]');
+  });
+
+  it('wirft die Bemerkungen ganz weg, wenn selbst gekürzt kein Platz bleibt', () => {
+    const text = buildRequestMessage({ ...full, notes: 'x'.repeat(2000) }, { maxLength: 260 });
+    expect(text).not.toContain('Bemerkungen');
+    expect(text).toContain('80331 München');
+  });
+
+  it('kürzt nicht, wenn die Nachricht ohnehin passt', () => {
+    expect(buildRequestMessage(full, { maxLength: 5000 })).toBe(buildRequestMessage(full));
   });
 });

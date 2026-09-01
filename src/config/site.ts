@@ -132,17 +132,39 @@ export function openDetails(): string[] {
 }
 
 /**
- * WhatsApp-Link mit vorbereiteter Nachricht.
+ * Praktische Obergrenze für die vorbereitete Nachricht in einem wa.me-Link.
  *
- * Die Lücken bleiben absichtlich stehen: der Kunde füllt sie im Chatfenster
- * aus, bevor er sendet. Das ist schneller als ein Formular und erzeugt
- * trotzdem eine Anfrage, mit der sich arbeiten lässt.
+ * Der Text steckt in der Adresse und wird beim Kodieren länger — Umlaute und
+ * Zeilenumbrüche werden zu drei Zeichen. Sehr lange Adressen schneiden manche
+ * Browser ab, und abgeschnitten heißt hier: die Nachricht ist kaputt. Der Wert
+ * ist bewusst konservativ.
+ */
+export const WHATSAPP_MESSAGE_LIMIT = 1200;
+
+/**
+ * Ein WhatsApp-Link mit vorbereiteter Nachricht.
+ *
+ * Der Text steht schon im Eingabefeld, wenn WhatsApp aufgeht — abschicken muss
+ * ihn der Kunde selbst. Das ist keine Einschränkung dieser Umsetzung, sondern
+ * wie wa.me funktioniert, und es ist auch richtig so: niemand verschickt
+ * ungefragt eine Nachricht aus dem Konto eines anderen.
+ */
+export function whatsappLink(message: string): string {
+  return `https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(message)}`;
+}
+
+/**
+ * Der Link für die Schaltflächen außerhalb des Formulars — Kopfzeile,
+ * Fußzeile, die feste Leiste auf dem Telefon.
+ *
+ * Nur ein kurzer Aufhänger, keine Lückenvorlage. Vorher stand hier ein
+ * Gerüst mit „Abholort: ___ Zielort: ___“, das der Kunde selbst ausfüllen
+ * sollte. Das sieht nach Hausaufgabe aus und wird weggelöscht; wer WhatsApp
+ * wählt, will tippen wie in einem Chat. Alle Angaben auf einmal gibt es im
+ * Formular — dessen WhatsApp-Knopf baut die vollständige Nachricht.
  */
 export function whatsappRequestLink(): string {
-  const message =
-    'Hallo, ich interessiere mich für eine Fahrzeugüberführung.\n' +
-    'Abholort: \nZielort: \nFahrzeug: \nTermin: ';
-  return `https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(message)}`;
+  return whatsappLink('Hallo, ich interessiere mich für eine Fahrzeugüberführung.');
 }
 
 export function telLink(): string {
