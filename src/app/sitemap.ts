@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { appUrl } from '@/config/app-url';
-import { ROUTES } from '@/config/routes';
+import { PAGES } from '@/content';
 
 /**
  * Wird pro Anfrage gerendert, nicht beim Bauen: der Host gibt seine Domain
@@ -14,11 +14,35 @@ export const dynamic = 'force-dynamic';
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = appUrl();
   const now = new Date();
+  const url = (path: string) => `${base}${path === '/' ? '' : path}`;
 
-  return ROUTES.map((route) => ({
-    url: `${base}${route.path === '/' ? '' : route.path}`,
-    lastModified: now,
-    changeFrequency: route.changeFrequency,
-    priority: route.priority,
-  }));
+  /*
+    Jede Seite steht zweimal drin, einmal je Sprache, und jeder Eintrag nennt
+    über `alternates.languages` sein Gegenstück. Ohne diese Verweise sind zwei
+    Übersetzungen für eine Suchmaschine zwei konkurrierende Seiten: sie sucht
+    sich eine aus, und die andere verschwindet aus dem Index. Dass beide
+    erreichbar bleiben, merkt man dabei nicht — es fällt nur der Verkehr weg,
+    den es nie gab.
+  */
+  return PAGES.flatMap((page) => {
+    const languages = { de: url(page.de), en: url(page.en) };
+
+    return [
+      {
+        url: url(page.de),
+        lastModified: now,
+        changeFrequency: page.changeFrequency,
+        priority: page.priority,
+        alternates: { languages },
+      },
+      {
+        url: url(page.en),
+        lastModified: now,
+        changeFrequency: page.changeFrequency,
+        // Die englische Fassung ist die Übersetzung, nicht das Original.
+        priority: Number((page.priority * 0.9).toFixed(2)),
+        alternates: { languages },
+      },
+    ];
+  });
 }

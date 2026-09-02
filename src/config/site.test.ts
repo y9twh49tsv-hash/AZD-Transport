@@ -8,6 +8,9 @@ import {
   whatsappLink,
   whatsappRequestLink,
 } from './site';
+import { content } from '@/content';
+
+const de = content('de');
 
 /**
  * Die Unternehmensangaben sind kein gewöhnlicher Inhalt.
@@ -72,13 +75,6 @@ describe('siteConfig', () => {
     if (siteConfig.vatId) expect(siteConfig.vatId).toMatch(/^DE\d{9}$/);
   });
 
-  it('verspricht keine Versicherungsdeckung, die nicht belegt ist', () => {
-    const text = siteConfig.insuranceText.toLowerCase();
-    for (const claim of ['vollversichert', 'vollkasko', '100 %', 'garantiert']) {
-      expect(text).not.toContain(claim);
-    }
-  });
-
   it('baut einen wählbaren Telefonlink', () => {
     // Aus der Konfiguration abgeleitet, nicht fest eingetippt: die Nummer darf
     // sich ändern, ohne dass ein Test grundlos fehlschlägt.
@@ -96,7 +92,7 @@ describe('siteConfig', () => {
   });
 
   it('baut einen WhatsApp-Link mit kurzem Aufhänger', () => {
-    const link = whatsappRequestLink();
+    const link = whatsappRequestLink(de.whatsappOpener);
     expect(link.startsWith(`https://wa.me/${siteConfig.whatsapp}?text=`)).toBe(true);
     expect(decodeURIComponent(link)).toContain('Fahrzeugüberführung');
   });
@@ -105,7 +101,7 @@ describe('siteConfig', () => {
     // Vorher stand hier „Abholort: ___ Zielort: ___“ zum Selbstausfüllen. Das
     // sieht nach Hausaufgabe aus und wird weggelöscht; die vollständige
     // Nachricht baut das Formular.
-    const message = decodeURIComponent(whatsappRequestLink().split('?text=')[1]);
+    const message = decodeURIComponent(whatsappRequestLink(de.whatsappOpener).split('?text=')[1]);
     expect(message).not.toContain(':');
     expect(message.split('\n')).toHaveLength(1);
   });

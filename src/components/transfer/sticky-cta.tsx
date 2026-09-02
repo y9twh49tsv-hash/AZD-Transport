@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { MessageCircle } from 'lucide-react';
 import { whatsappRequestLink } from '@/config/site';
+import { content, pagePath, type Locale } from '@/content';
 import { cn } from '@/lib/utils';
 
 /**
@@ -26,7 +27,9 @@ import { cn } from '@/lib/utils';
  * `env(safe-area-inset-bottom)` hält die Leiste über der Home-Indicator-Leiste
  * des iPhones — ohne das liegt der Knopf teilweise darunter.
  */
-export function StickyCta() {
+export function StickyCta({ locale }: { locale: Locale }) {
+  const t = content(locale);
+  const request = pagePath('request', locale);
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
 
@@ -37,7 +40,7 @@ export function StickyCta() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  if (pathname === '/anfrage') return null;
+  if (pathname === request) return null;
 
   return (
     <>
@@ -59,16 +62,16 @@ export function StickyCta() {
       >
         <div className="container flex gap-2.5 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           <Link
-            href="/anfrage"
+            href={request}
             className="flex min-h-12 flex-1 items-center justify-center rounded-sm bg-primary px-4 text-sm font-semibold text-primary-foreground"
           >
-            Überführung anfragen
+            {t.nav.request}
           </Link>
           <a
-            href={whatsappRequestLink()}
+            href={whatsappRequestLink(t.whatsappOpener)}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Anfrage über WhatsApp"
+            aria-label={t.request.whatsappSubmit}
             className="flex size-12 shrink-0 items-center justify-center rounded-sm border border-border text-foreground"
           >
             <MessageCircle className="size-5" aria-hidden />

@@ -1,29 +1,42 @@
 import Link from 'next/link';
 import { Mail, MessageCircle, Phone } from 'lucide-react';
 import { isTodo, siteConfig, telLink, whatsappRequestLink } from '@/config/site';
+import { content, pagePath, type Locale } from '@/content';
+import { LanguageSwitch } from './language-switch';
 
-const LEGAL = [
-  { href: '/impressum', label: 'Impressum' },
-  { href: '/datenschutz', label: 'Datenschutz' },
-  { href: '/cookies', label: 'Cookies' },
-  { href: '/agb', label: 'AGB' },
-  { href: '/widerruf', label: 'Widerruf' },
-];
+/**
+ * Die Fußzeile.
+ *
+ * Die Rechtslinks kommen aus `PAGES` und nicht aus einer eigenen Liste: eine
+ * zweite Liste derselben Adressen wäre die Stelle, an der nach dem Umbenennen
+ * einer Seite ein toter Link zurückbleibt — ausgerechnet auf das Impressum.
+ */
 
-const NAV = [
-  { href: '/#leistungen', label: 'Leistungen' },
-  { href: '/#premium', label: 'Premium-Service' },
-  { href: '/#unternehmen', label: 'Für Unternehmen' },
-  { href: '/#ablauf', label: 'Ablauf' },
-  { href: '/#faq', label: 'FAQ' },
-  { href: '/anfrage', label: 'Anfrage' },
-];
+const LEGAL = ['imprint', 'privacy', 'cookies', 'terms', 'withdrawal'] as const;
 
-export function SiteFooter() {
+export function SiteFooter({ locale }: { locale: Locale }) {
+  const t = content(locale);
   const { address } = siteConfig;
+  const home = pagePath('home', locale);
+  const anchor = home === '/' ? '' : home;
+
   // Eine unbestätigte Anschrift wird nicht gedruckt. Lieber eine Lücke, die
   // auffällt, als eine Musteradresse, die niemand mehr hinterfragt.
   const addressKnown = !isTodo(address.street) && !isTodo(address.postalCode);
+
+  const nav = [
+    { href: `${anchor}/#leistungen`, label: t.nav.services },
+    { href: `${anchor}/#premium`, label: t.nav.premium },
+    { href: `${anchor}/#unternehmen`, label: t.nav.business },
+    { href: `${anchor}/#ablauf`, label: t.nav.process },
+    { href: `${anchor}/#faq`, label: t.nav.faq },
+    { href: pagePath('request', locale), label: t.nav.request },
+  ];
+
+  const legal = LEGAL.map((key) => ({
+    href: pagePath(key, locale),
+    label: t.legal[key].title,
+  }));
 
   return (
     <footer className="mt-24 border-t border-border">
@@ -34,14 +47,22 @@ export function SiteFooter() {
             Transport
           </p>
           <p className="mt-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
-            {siteConfig.shortDescription} {siteConfig.serviceArea}.
+            {t.footer.tagline} {t.company.serviceArea}.
           </p>
+
+          {/* Auch hier, nicht nur oben: wer die Seite gelesen hat und erst am
+              Ende merkt, dass es sie in der eigenen Sprache gibt, soll nicht
+              zurückscrollen müssen. */}
+          <LanguageSwitch
+            locale={locale}
+            className="mt-5 inline-flex min-h-11 items-center text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
+          />
         </div>
 
         <div>
-          <h2 className="eyebrow">Navigation</h2>
+          <h2 className="eyebrow">{t.nav.navigation}</h2>
           <ul className="mt-3">
-            {NAV.map((item) => (
+            {nav.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
@@ -55,9 +76,9 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <h2 className="eyebrow">Rechtliches</h2>
+          <h2 className="eyebrow">{t.nav.legal}</h2>
           <ul className="mt-3">
-            {LEGAL.map((item) => (
+            {legal.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
@@ -71,7 +92,7 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <h2 className="eyebrow">Kontakt</h2>
+          <h2 className="eyebrow">{t.nav.contact}</h2>
           <ul className="mt-3 text-sm">
             <li>
               <a
@@ -84,7 +105,7 @@ export function SiteFooter() {
             </li>
             <li>
               <a
-                href={whatsappRequestLink()}
+                href={whatsappRequestLink(t.whatsappOpener)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex min-h-11 items-center gap-2.5 text-muted-foreground transition-colors hover:text-foreground"
@@ -118,7 +139,7 @@ export function SiteFooter() {
           <p>
             © {new Date().getFullYear()} {siteConfig.companyName}
           </p>
-          <p>Fahrzeugüberführungen auf eigener Achse — kein Transport auf Anhänger.</p>
+          <p>{t.footer.claim}</p>
         </div>
       </div>
     </footer>

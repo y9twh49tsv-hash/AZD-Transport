@@ -4,25 +4,31 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Menu, Phone, X } from 'lucide-react';
 import { siteConfig, telLink } from '@/config/site';
+import { content, pagePath, type Locale } from '@/content';
 import { cn } from '@/lib/utils';
+import { LanguageSwitch } from './language-switch';
 
 /**
  * Die Navigation zeigt auf Abschnitte einer Seite, nicht auf sieben dünne
  * Unterseiten. Wer ein Fahrzeug überführen lassen will, liest einmal durch und
  * fragt an — jeder Seitenwechsel ist eine Gelegenheit, das nicht zu tun.
  */
-const NAV = [
-  { href: '/#leistungen', label: 'Leistungen' },
-  { href: '/#premium', label: 'Premium-Service' },
-  { href: '/#unternehmen', label: 'Für Unternehmen' },
-  { href: '/#ablauf', label: 'Ablauf' },
-  { href: '/#faq', label: 'FAQ' },
-  { href: '/#kontakt', label: 'Kontakt' },
-];
-
-export function SiteHeader() {
+export function SiteHeader({ locale }: { locale: Locale }) {
+  const t = content(locale);
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const home = pagePath('home', locale);
+  const request = pagePath('request', locale);
+
+  const nav = [
+    { href: `${home === '/' ? '' : home}/#leistungen`, label: t.nav.services },
+    { href: `${home === '/' ? '' : home}/#premium`, label: t.nav.premium },
+    { href: `${home === '/' ? '' : home}/#unternehmen`, label: t.nav.business },
+    { href: `${home === '/' ? '' : home}/#ablauf`, label: t.nav.process },
+    { href: `${home === '/' ? '' : home}/#faq`, label: t.nav.faq },
+    { href: `${home === '/' ? '' : home}/#kontakt`, label: t.nav.contact },
+  ];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -51,7 +57,7 @@ export function SiteHeader() {
     >
       <div className="container flex h-[4.5rem] items-center justify-between gap-6">
         <Link
-          href="/"
+          href={home}
           className="flex min-h-11 flex-col justify-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background"
           onClick={() => setOpen(false)}
         >
@@ -63,9 +69,9 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav aria-label="Hauptnavigation" className="hidden lg:block">
+        <nav aria-label={t.nav.mainNavigation} className="hidden lg:block">
           <ul className="flex items-center gap-8">
-            {NAV.map((item) => (
+            {nav.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
@@ -79,20 +85,24 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <LanguageSwitch
+            locale={locale}
+            className="hidden min-h-11 items-center rounded-sm px-3 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background sm:inline-flex"
+          />
+
           <a
             href={telLink()}
-            className="hidden min-h-11 items-center gap-2 rounded-sm px-3 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+            className="hidden min-h-11 items-center gap-2 rounded-sm px-3 text-sm text-muted-foreground transition-colors hover:text-foreground xl:inline-flex"
           >
             <Phone className="size-4" aria-hidden />
-            <span className="hidden xl:inline">{siteConfig.phone}</span>
-            <span className="xl:hidden">Anrufen</span>
+            {siteConfig.phone}
           </a>
 
           <Link
-            href="/anfrage"
+            href={request}
             className="hidden min-h-11 items-center rounded-sm bg-primary px-5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 sm:inline-flex"
           >
-            Überführung anfragen
+            {t.nav.request}
           </Link>
 
           <button
@@ -100,7 +110,7 @@ export function SiteHeader() {
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-controls="mobile-nav"
-            aria-label={open ? 'Menü schließen' : 'Menü öffnen'}
+            aria-label={open ? t.nav.closeMenu : t.nav.openMenu}
             className="inline-flex size-11 items-center justify-center rounded-sm border border-border text-foreground lg:hidden"
           >
             {open ? <X className="size-5" aria-hidden /> : <Menu className="size-5" aria-hidden />}
@@ -110,9 +120,9 @@ export function SiteHeader() {
 
       {open && (
         <div id="mobile-nav" className="border-t border-border bg-background lg:hidden">
-          <nav aria-label="Hauptnavigation mobil" className="container py-4">
+          <nav aria-label={t.nav.mobileNavigation} className="container py-4">
             <ul className="divide-y divide-border">
-              {NAV.map((item) => (
+              {nav.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
@@ -123,15 +133,21 @@ export function SiteHeader() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <LanguageSwitch
+                  locale={locale}
+                  className="flex min-h-[3.25rem] items-center text-base text-muted-foreground"
+                />
+              </li>
             </ul>
 
             <div className="mt-5 grid gap-2.5">
               <Link
-                href="/anfrage"
+                href={request}
                 onClick={() => setOpen(false)}
                 className="flex min-h-12 items-center justify-center rounded-sm bg-primary px-5 text-sm font-semibold text-primary-foreground"
               >
-                Überführung anfragen
+                {t.nav.request}
               </Link>
               <a
                 href={telLink()}

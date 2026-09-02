@@ -30,13 +30,22 @@ function sourceFiles(dir: string): string[] {
   });
 }
 
-/** Die Cookie-Seite und dieser Test reden über das Thema — sie zählen nicht. */
-const EXEMPT = ['app/(transfer)/cookies/page.tsx', 'app/(transfer)/datenschutz/page.tsx'];
+/**
+ * Die Rechtstexte reden über das Thema — sie zählen nicht.
+ *
+ * Die Seiten selbst stehen nicht mehr auf dieser Liste: sie bestehen nur noch
+ * aus einem Aufruf der Inhaltsdaten, der Text liegt in `content/legal`. Wer
+ * dort etwas einbaut, das speichert, wird von diesem Test erwischt.
+ */
+const EXEMPT = ['content/legal/de.ts', 'content/legal/en.ts'];
 
 function relevantFiles(): { path: string; source: string }[] {
   return sourceFiles(SOURCE)
     .filter((path) => !EXEMPT.some((exempt) => path.endsWith(exempt)))
-    .map((path) => ({ path: path.slice(SOURCE.length + 1), source: readFileSync(path, 'utf8') }));
+    .map((path) => ({
+      path: path.slice(SOURCE.length + 1),
+      source: readFileSync(path, 'utf8'),
+    }));
 }
 
 describe('Die Website speichert nichts auf dem Gerät', () => {
@@ -62,7 +71,8 @@ describe('Die Website speichert nichts auf dem Gerät', () => {
   it('lädt keine Schriftart und kein Skript von einem fremden Server', () => {
     // Eine eingebundene Google-Schriftart überträgt die IP-Adresse jedes
     // Besuchers an Google — das war schon Gegenstand von Abmahnungen.
-    const remote = /https?:\/\/(?!wa\.me|schema\.org|www\.w3\.org|ec\.europa\.eu)[a-z0-9-]+\.[a-z]/i;
+    const remote =
+      /https?:\/\/(?!wa\.me|schema\.org|www\.w3\.org|ec\.europa\.eu)[a-z0-9-]+\.[a-z]/i;
     const offenders = files
       .filter((file) => /\.(tsx?|css)$/.test(file.path))
       .filter((file) =>
@@ -70,7 +80,10 @@ describe('Die Website speichert nichts auf dem Gerät', () => {
           .split('\n')
           // Kommentare und Zeilen mit Adressen im Fließtext zählen nicht — es
           // geht um Ressourcen, die der Browser tatsächlich anfordert.
-          .some((codeLine) => /\b(src|href|@import|url)\s*[=(:]/.test(codeLine) && remote.test(codeLine)),
+          .some(
+            (codeLine) =>
+              /\b(src|href|@import|url)\s*[=(:]/.test(codeLine) && remote.test(codeLine),
+          ),
       )
       .map((file) => file.path);
 

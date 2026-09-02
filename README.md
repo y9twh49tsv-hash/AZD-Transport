@@ -18,6 +18,7 @@ gefahren, nicht auf einen Anhänger oder Autotransporter geladen.
 ## Inhalt
 
 1. [Wie die Seite funktioniert](#1-wie-die-seite-funktioniert)
+1a. [Zwei Sprachen](#1a-zwei-sprachen)
 2. [Alles ändern an einer Stelle](#2-alles-ändern-an-einer-stelle)
 3. [Lokal starten](#3-lokal-starten)
 4. [E-Mail einrichten](#4-e-mail-einrichten)
@@ -31,13 +32,17 @@ gefahren, nicht auf einen Anhänger oder Autotransporter geladen.
 
 ## 1. Wie die Seite funktioniert
 
-Sieben öffentliche Seiten, kein Konto, keine Datenbank:
+Sieben öffentliche Seiten, jede in zwei Sprachen, kein Konto, keine Datenbank:
 
-| Adresse | Inhalt |
-|---|---|
-| `/` | Startseite: Leistungen, Premium-Service, Ablauf, Anfrageformular, Geschäftskunden, FAQ |
-| `/anfrage` | dasselbe Formular als eigene Seite — verlinkbar aus Kopfzeile, Handy-Leiste und WhatsApp |
-| `/impressum` `/datenschutz` `/cookies` `/agb` `/widerruf` | Rechtstexte |
+| Deutsch | Englisch | Inhalt |
+|---|---|---|
+| `/` | `/en` | Startseite: Leistungen, Premium-Service, Ablauf, Anfrageformular, Geschäftskunden, FAQ |
+| `/anfrage` | `/en/request` | dasselbe Formular als eigene Seite — verlinkbar aus Kopfzeile, Handy-Leiste und WhatsApp |
+| `/impressum` | `/en/imprint` | Anbieterkennzeichnung nach § 5 DDG |
+| `/datenschutz` | `/en/privacy` | Datenschutzerklärung |
+| `/cookies` | `/en/cookies` | Cookies & Tracking (es gibt keine) |
+| `/agb` | `/en/terms` | Allgemeine Geschäftsbedingungen |
+| `/widerruf` | `/en/withdrawal` | Widerrufsbelehrung + Muster-Formular |
 
 **Der Anfrageweg.** Das Formular wird im Browser geprüft, ein zweites Mal auf dem
 Server, und dann als E-Mail an den Betrieb geschickt. Es gibt bewusst keine
@@ -58,12 +63,43 @@ niemand die Anfrage je liest. `/api/health` zeigt den Zustand an.
 
 ---
 
+## 1a. Zwei Sprachen
+
+Deutsch liegt ohne Präfix auf der Wurzel, Englisch unter `/en` mit übersetzten
+Adressen. Kein Präfix für Deutsch, weil das der Hauptmarkt ist und die Adressen
+bereits im Umlauf sind; übersetzte Adressen für Englisch, weil `/en/impressum`
+kein englischsprachiger Sucher findet.
+
+**Die Sprache steht in der Adresse — nicht in einem Cookie.** Es gibt keine
+automatische Weiterleitung nach Browsersprache und nichts, was sich eine Wahl
+merkt. Wer `/agb` aufruft, bekommt `/agb`; der Umschalter oben rechts (und
+unten in der Fußzeile) führt auf das Gegenstück derselben Seite, nicht auf die
+Startseite der anderen Sprache.
+
+**Technisch** sind es zwei Wurzellayouts — `app/(de)/layout.tsx` und
+`app/(en)/layout.tsx` —, damit jede Fassung ihr eigenes `<html lang>` trägt.
+Preis dieser Lösung: der Sprachwechsel lädt die Seite vollständig neu. Bei zwei
+Sprachen und einem Wechsel pro Besuch ist das nicht der Rede wert.
+
+> **Die deutsche Fassung ist die verbindliche.** Die englischen Rechtstexte sind
+> Übersetzungen zum leichteren Verständnis und sagen das auch: über jedem steht
+> ein Hinweis. Eine übersetzte AGB übersetzt nicht die Rechtsordnung, für die sie
+> geschrieben wurde.
+
+Eine neue Seite braucht drei Dinge: einen Eintrag in `PAGES`
+(`src/content/index.ts`), je eine `page.tsx` unter `app/(de)/…` und
+`app/(en)/en/…`, und den Text in beiden Sprachmodulen. Fehlt eines davon,
+schlägt `npm test` fehl — `content.test.ts` hält `PAGES` gegen das Dateisystem.
+
+---
+
 ## 2. Alles ändern an einer Stelle
 
-Zwei Dateien, mehr braucht es für Inhalt und Unternehmensangaben nicht:
+Drei Stellen, mehr braucht es für Inhalt und Unternehmensangaben nicht:
 
 **`src/config/site.ts`** — Firmierung, Anschrift, Telefon, E-Mail, USt-IdNr.,
-Versicherungstext, Einsatzgebiet, optionales Kopfbild.
+optionales Kopfbild. Nur, was in jeder Sprache gleich ist: eine Anschrift wird
+nicht übersetzt.
 
 > Werte, die mit `TODO:` beginnen, sind noch nicht bestätigt. Sie werden auf den
 > Rechtsseiten sichtbar als fehlend gekennzeichnet, statt durch eine erfundene
@@ -71,11 +107,20 @@ Versicherungstext, Einsatzgebiet, optionales Kopfbild.
 > eine erfundene Versicherungsaussage ist schlimmer als gar keine. Sobald der
 > echte Wert eingetragen ist, verschwindet der Hinweis von selbst.
 
-**`src/config/transfer-content.ts`** — Leistungen, Ablaufschritte, Vorteile für
-Geschäftskunden, Gründe, FAQ. Alles als Daten, nicht als JSX: jeder Satz steht
-einmal, lässt sich ohne Layoutkenntnisse ändern und taucht automatisch in den
-strukturierten Daten (schema.org) auf, statt dort ein zweites Mal getippt zu
-werden.
+**`src/content/de.ts`** und **`src/content/en.ts`** — jeder Satz der Website:
+Leistungen, Ablaufschritte, FAQ, Formularbeschriftungen, Fehlermeldungen,
+Einsatzgebiet, Versicherungstext. Alles als Daten, nicht als JSX: jeder Satz
+steht einmal, lässt sich ohne Layoutkenntnisse ändern und taucht automatisch in
+den strukturierten Daten (schema.org) auf, statt dort ein zweites Mal getippt zu
+werden. Die Rechtstexte liegen daneben in `src/content/legal/`.
+
+> `en.ts` ist als `Content` deklariert und muss dieselbe Form erfüllen wie
+> `de.ts`. Ein vergessenes Feld ist damit ein Compilerfehler und keine Lücke, die
+> erst auf der fertigen Seite auffällt. In einer früheren Fassung dieses Projekts
+> gab das Wörterbuch bei einem unbekannten Schlüssel den Schlüssel selbst zurück;
+> auf der Startseite stand daraufhin in der Produktion „Deine Pakete sicher von
+> home.countryFrom nach home.countryTo". Typprüfung, Build und alle Tests waren
+> grün.
 
 Ein **eigenes Kopfbild** kommt nach `public/`, der Pfad in `siteConfig.heroImage`
 (z. B. `/hero.jpg`). Querformat, mindestens 2000 px breit. Bleibt der Wert leer,
@@ -162,6 +207,12 @@ Name:  neue_anfrage
 Text:  Neue Anfrage über die Website: {{1}}
 ```
 
+> Die **Vorlage** bleibt deutsch, der **Platzhalter** nicht: eine englische
+> Anfrage füllt ihn mit „60311 Frankfurt → 80331 Munich · …". Meta prüft nur den
+> Vorlagentext gegen die angegebene Sprache, nicht den eingesetzten Wert. Eine
+> zweite Vorlage braucht es also nicht — und die englischen Wörter in der Meldung
+> sagen nebenbei, in welcher Sprache geantwortet werden will.
+
 Genau ein Platzhalter, und der Platzhalter darf **keine Zeilenumbrüche**
 enthalten — Meta lehnt sie mit Fehler 132000 ab, ohne zu sagen welcher
 Platzhalter schuld war. `buildRequestLine()` erzeugt deshalb eine Zeile:
@@ -217,21 +268,27 @@ mit „proxied" (orange) endet die Anfrage vorher mit 502 und der Code läuft ni
 ```
 src/
 ├─ app/
-│  ├─ (transfer)/         Die öffentlichen Seiten
-│  │  ├─ layout.tsx           Kopfzeile, Fußzeile, feste Leiste auf dem Handy
-│  │  ├─ page.tsx             Startseite
-│  │  ├─ anfrage/             Formularseite + Server Action (actions.ts)
-│  │  └─ impressum, datenschutz, agb, widerruf
+│  ├─ (de)/               Die deutschen Adressen — Wurzellayout mit lang="de"
+│  │  ├─ layout.tsx           <html>, Metadaten, Kopf- und Fußzeile
+│  │  ├─ page.tsx             /
+│  │  ├─ anfrage/             /anfrage
+│  │  ├─ impressum, datenschutz, cookies, agb, widerruf
+│  │  └─ error.tsx, not-found.tsx
+│  ├─ (en)/en/            Dieselben Seiten unter /en — Wurzellayout mit lang="en"
 │  ├─ api/health/         Zustandsprüfung für den Hoster
-│  ├─ layout.tsx          <html>, Metadaten, Sprunglink
+│  ├─ global-not-found.tsx    404 für unbekannte Adressen, zweisprachig
+│  ├─ global-error.tsx        Fehler im Wurzellayout selbst
 │  ├─ globals.css         ⭐ der Farbraum und die Bausteine des Designs
-│  ├─ error.tsx, not-found.tsx
 │  └─ robots.ts, sitemap.ts
-├─ components/transfer/   Kopfzeile, Fußzeile, Formular, Rechtsseiten-Bausteine,
-│                         strukturierte Daten, feste Handlungsleiste
-├─ config/                ⭐ site.ts · transfer-content.ts · routes.ts · app-url.ts
+├─ content/               ⭐ de.ts · en.ts · legal/ · index.ts (PAGES, Adressen)
+├─ components/transfer/   Startseite, Anfrageseite, Rechtsseiten, Kopf- und
+│                         Fußzeile, Formular, Sprachumschalter — alle nehmen
+│                         `locale` entgegen und gibt es deshalb nur einmal
+├─ config/                ⭐ site.ts · app-url.ts
 ├─ lib/
-│  ├─ transfer-request.ts     Zod-Schema der Anfrage
+│  ├─ transfer-request.ts     Zod-Schema der Anfrage (je Sprache)
+│  ├─ metadata.ts             Titel, canonical, hreflang
+│  ├─ actions/                Server Action für die Anfrage
 │  ├─ notifications/email.ts  E-Mail-Adapter (Resend, Postmark, Protokoll)
 │  └─ utils.ts
 └─ proxy.ts               Weiterleitung auf den einen Hostnamen
@@ -247,18 +304,24 @@ railway.toml              Railway: Docker-Builder + Healthcheck
 `npm test` deckt die Stellen ab, an denen ein Fehler nicht auffallen würde:
 
 - **`transfer-request.test.ts`** — das Anfrageschema, inklusive Rundlauf (das
-  Schema muss seine eigene Ausgabe wieder annehmen) und Honigtopf.
-- **`anfrage/actions.test.ts`** — die Server-Action gegen einen ausgetauschten
+  Schema muss seine eigene Ausgabe wieder annehmen), Honigtopf und die
+  Sprachfassungen: dieselben Regeln, übersetzte Meldungen, unveränderte Werte.
+- **`content.test.ts`** — der wichtigste Test der Zweisprachigkeit. Er hält
+  `PAGES` gegen das Dateisystem (eine Seite ohne Eintrag in der Sitemap fällt so
+  beim Testlauf auf und nicht erst, wenn sie in keinem Suchergebnis auftaucht),
+  vergleicht die Gliederung beider Sprachen Feld für Feld, prüft, dass der
+  Umschalter in beide Richtungen auf das richtige Gegenstück führt, dass kein
+  Platzhalter ungefüllt bleibt und dass keine Übersetzung in Wirklichkeit der
+  deutsche Text ist.
+- **`actions/transfer-request.test.ts`** — die Server-Action gegen einen ausgetauschten
   Versanddienst. Interessant sind die beiden Fälle, in denen leicht gelogen wird:
   ein ausgefüllter Honigtopf (nach außen ein Erfolg, in Wirklichkeit verworfen)
   und ein fehlender Versanddienst (nach außen ein Fehler, obwohl der Adapter
   „ok" meldet).
 - **`site.test.ts`** — dass keine Pflichtangabe offen ist, keine
-  Platzhalteradresse zurückkommt und der Versicherungstext keine Deckung
-  verspricht.
-- **`routes.test.ts`** — hält die Liste der Adressen gegen das Dateisystem. Eine
-  neue Seite ohne Eintrag in der Sitemap fällt so beim Testlauf auf und nicht
-  erst, wenn sie in keinem Suchergebnis auftaucht.
+  Platzhalteradresse zurückkommt und die WhatsApp-Nummer im Format steht, das
+  wa.me versteht. Dass der Versicherungstext keine Deckung verspricht, prüft
+  `content.test.ts` — in beiden Sprachen.
 - **`app-url.test.ts`** — dass aus einer nackten Domain im Hosting-Dashboard eine
   gültige Adresse wird, statt die ganze Seite beim Rendern abstürzen zu lassen.
 - **`email.test.ts`** — das Zerlegen und Zusammensetzen der Absenderadresse.
@@ -270,7 +333,8 @@ railway.toml              Railway: Docker-Builder + Healthcheck
 - **AGB und Widerrufsbelehrung** sind sorgfältig verfasst, aber keine
   Rechtsberatung. Vor dem echten Geschäftsbetrieb von einer Anwältin oder einem
   Anwalt prüfen lassen — insbesondere Haftung, Versicherung und Stornierung.
-- **Versicherung.** Der Text in `siteConfig.insuranceText` ist bewusst neutral.
+- **Versicherung.** Der Text in `content.company.insuranceText` (je Sprache) ist
+  bewusst neutral.
   Sobald eine Police vorliegt, wird dort der konkrete Umfang eingetragen — und
   nur dann.
 - **USt-IdNr.** Ist `siteConfig.vatId` leer, entfällt der Abschnitt im Impressum;

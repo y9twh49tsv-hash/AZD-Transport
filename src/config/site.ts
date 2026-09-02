@@ -4,6 +4,11 @@
  * Jede Zahl, Adresse und Rechtsangabe der Website kommt von hier. Wer etwas
  * ändern will, ändert es hier — nicht in fünf Komponenten.
  *
+ * Hier steht nur, was in jeder Sprache gleich ist: Firmierung, Anschrift,
+ * Rufnummer, Steuerangaben. Sätze über den Betrieb — Kurzbeschreibung,
+ * Einsatzgebiet, der Absicherungshinweis — stehen in `src/content` und werden
+ * übersetzt.
+ *
  * ⚠ Werte mit `TODO` sind noch nicht bestätigt. Sie sind bewusst als solche
  * markiert und nicht geraten: eine erfundene Anschrift im Impressum ist
  * abmahnfähig, und eine erfundene Versicherungsaussage ist schlimmer als gar
@@ -41,9 +46,6 @@ export const siteConfig = {
   legalName: 'Mehdi Azdouffal – AZD Transport',
   legalForm: 'Einzelunternehmen',
   ownerName: 'Mehdi Azdouffal',
-
-  claim: 'Premium Fahrzeugüberführungen. Diskret. Sicher. Deutschlandweit.',
-  shortDescription: 'Premium Fahrzeugüberführungen auf eigener Achse.',
 
   /**
    * Die Betriebsstätte aus der Gewerbeanmeldung (Feld 15).
@@ -102,19 +104,8 @@ export const siteConfig = {
    */
   vatId: '',
 
-  /**
-   * Bewusst neutral. Sobald eine Police vorliegt, wird hier der konkrete
-   * Umfang eingetragen — und nur dann. Aussagen wie "vollversichert" ohne
-   * Deckung wären genau die Zusage, an der ein Premiumkunde einen Anbieter
-   * misst, wenn etwas passiert.
-   */
-  insuranceText:
-    'Die konkrete Absicherung wird je nach Auftrag und Fahrzeug individuell geprüft. Die Details erhalten Sie vor Auftragserteilung schriftlich.',
-
   /** Wohin Anfragen gehen. Leer = an `email`. */
   requestInbox: process.env.REQUEST_INBOX?.trim() || 'info@azd-transport.com',
-
-  serviceArea: 'Deutschlandweit — auf Anfrage europaweit',
 
   /**
    * Optionales Kopfbild.
@@ -130,7 +121,6 @@ export const siteConfig = {
    * legt automatisch einen Verlauf darüber, damit die Schrift lesbar bleibt.
    */
   heroImage: '' as string,
-
 } as const;
 
 /** Alle noch offenen Angaben, für den Hinweis in den Rechtsseiten. */
@@ -183,9 +173,14 @@ export function whatsappLink(message: string): string {
  * sollte. Das sieht nach Hausaufgabe aus und wird weggelöscht; wer WhatsApp
  * wählt, will tippen wie in einem Chat. Alle Angaben auf einmal gibt es im
  * Formular — dessen WhatsApp-Knopf baut die vollständige Nachricht.
+ *
+ * Der Text kommt von außen (`content(locale).whatsappOpener`) und hat bewusst
+ * keinen Vorgabewert: ein deutscher Aufhänger unter einem englischen Knopf
+ * wäre genau die Sorte Fehler, die niemandem auffällt, der den Knopf nicht
+ * selbst antippt.
  */
-export function whatsappRequestLink(): string {
-  return whatsappLink('Hallo, ich interessiere mich für eine Fahrzeugüberführung.');
+export function whatsappRequestLink(opener: string): string {
+  return whatsappLink(opener);
 }
 
 export function telLink(): string {

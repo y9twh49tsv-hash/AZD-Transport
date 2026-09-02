@@ -41,6 +41,15 @@ const nextConfig: NextConfig = {
    * dass sich der Bildoptimierer als offener Weiterleiter missbrauchen lässt.
    */
   images: { remotePatterns: [] },
+  experimental: {
+    /**
+     * Die Anwendung hat zwei Wurzellayouts — eines je Sprache. Damit gibt es
+     * kein gemeinsames Layout, aus dem Next eine 404-Seite für unbekannte
+     * Adressen zusammensetzen könnte; ohne diese Einstellung zeigt es seine
+     * eigene weiße Fehlerseite. `app/global-not-found.tsx` ersetzt sie.
+     */
+    globalNotFound: true,
+  },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },

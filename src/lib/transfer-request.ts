@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { content, type Locale } from '@/content';
 
 /**
  * Die Anfrage für eine Fahrzeugüberführung.
@@ -11,21 +12,6 @@ import { z } from 'zod';
  * annehmen. Das Formular prüft im Browser, die Server-Action prüft die bereits
  * geparste Ausgabe ein zweites Mal.
  */
-
-const optionalText = (max: number) =>
-  z
-    .string()
-    .trim()
-    .max(max, `Bitte kürzer fassen (höchstens ${max} Zeichen).`)
-    .nullish()
-    .transform((v) => v || null);
-
-const requiredText = (min: number, max: number) =>
-  z
-    .string()
-    .trim()
-    .min(min, 'Bitte ausfüllen.')
-    .max(max, `Bitte kürzer fassen (höchstens ${max} Zeichen).`);
 
 export const VEHICLE_TYPES = [
   'PKW',
@@ -42,60 +28,89 @@ export const VEHICLE_STATES = [
   'sonstiges / Rückfrage erforderlich',
 ] as const;
 
-export const transferRequestSchema = z
-  .object({
-    pickupLocation: requiredText(2, 120),
-    dropoffLocation: requiredText(2, 120),
+/**
+ * Das Schema in der Sprache des Absenders.
+ *
+ * Die Werte selbst bleiben deutsch — sie sind die Kennungen, die über die
+ * Leitung gehen, und die dürfen sich nicht mit der Anzeigesprache ändern.
+ * Übersetzt wird nur, was der Mensch liest: die Fehlermeldungen.
+ */
+export function transferRequestSchema(locale: Locale) {
+  const t = content(locale).errors;
+  const tooLong = (max: number) => t.tooLong.replace('{max}', String(max));
 
-    vehicleMake: optionalText(60),
-    vehicleModel: optionalText(60),
-    vehicleType: z.enum(VEHICLE_TYPES).default('PKW'),
-    vehicleState: z.enum(VEHICLE_STATES).default('zugelassen'),
-    vehicleValue: optionalText(40),
-
-    preferredDate: z
-      .union([z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, 'Bitte ein gültiges Datum wählen.'), z.literal('')])
-      .nullish()
-      .transform((v) => v || null),
-    dateFlexible: z.boolean().default(false),
-
-    notes: optionalText(2000),
-
-    name: requiredText(2, 100),
-    phone: optionalText(40),
-    email: z
-      .union([z.string().trim().toLowerCase().email('Bitte eine gültige E-Mail-Adresse angeben.'), z.literal('')])
-      .nullish()
-      .transform((v) => v || null),
-
-    privacyAccepted: z.literal(true, {
-      errorMap: () => ({ message: 'Bitte bestätigen Sie die Datenschutzhinweise.' }),
-    }),
-
-    /**
-     * Honigtopf. Ein Feld, das für Menschen unsichtbar ist und das
-     * automatische Formularausfüller trotzdem befüllen — ohne Dienst eines
-     * Dritten und ohne eine Aufgabe, die echte Kundschaft lösen muss.
-     *
-     * Das Schema lehnt einen ausgefüllten Honigtopf bewusst *nicht* ab. Zwei
-     * Gründe: eine Fehlermeldung würde einem Absender verraten, dass das Feld
-     * geprüft wird, und — wichtiger — auch der Passwortmanager eines echten
-     * Kunden füllt gelegentlich ein Feld namens „Firma“ aus. Der bekäme dann
-     * eine Fehlermeldung zu einem Feld, das er nicht sehen kann. Die Anfrage
-     * wird stattdessen in der Server-Action still verworfen.
-     */
-    company: z
+  const optionalText = (max: number) =>
+    z
       .string()
-      .optional()
-      .nullable()
-      .transform((v) => (v ?? '').slice(0, 200)),
-  })
-  .refine((v) => !!v.phone || !!v.email, {
-    message: 'Bitte Telefon oder E-Mail angeben, damit wir antworten können.',
-    path: ['phone'],
-  });
+      .trim()
+      .max(max, tooLong(max))
+      .nullish()
+      .transform((v) => v || null);
 
-export type TransferRequestInput = z.infer<typeof transferRequestSchema>;
+  const requiredText = (min: number, max: number) =>
+    z.string().trim().min(min, t.required).max(max, tooLong(max));
+
+  return z
+    .object({
+      pickupLocation: requiredText(2, 120),
+      dropoffLocation: requiredText(2, 120),
+
+      vehicleMake: optionalText(60),
+      vehicleModel: optionalText(60),
+      vehicleType: z.enum(VEHICLE_TYPES).default('PKW'),
+      vehicleState: z.enum(VEHICLE_STATES).default('zugelassen'),
+      vehicleValue: optionalText(40),
+
+      preferredDate: z
+        .union([
+          z
+            .string()
+            .trim()
+            .regex(/^\d{4}-\d{2}-\d{2}$/, t.invalidDate),
+          z.literal(''),
+        ])
+        .nullish()
+        .transform((v) => v || null),
+      dateFlexible: z.boolean().default(false),
+
+      notes: optionalText(2000),
+
+      name: requiredText(2, 100),
+      phone: optionalText(40),
+      email: z
+        .union([z.string().trim().toLowerCase().email(t.invalidEmail), z.literal('')])
+        .nullish()
+        .transform((v) => v || null),
+
+      privacyAccepted: z.literal(true, {
+        errorMap: () => ({ message: t.needPrivacy }),
+      }),
+
+      /**
+       * Honigtopf. Ein Feld, das für Menschen unsichtbar ist und das
+       * automatische Formularausfüller trotzdem befüllen — ohne Dienst eines
+       * Dritten und ohne eine Aufgabe, die echte Kundschaft lösen muss.
+       *
+       * Das Schema lehnt einen ausgefüllten Honigtopf bewusst *nicht* ab. Zwei
+       * Gründe: eine Fehlermeldung würde einem Absender verraten, dass das Feld
+       * geprüft wird, und — wichtiger — auch der Passwortmanager eines echten
+       * Kunden füllt gelegentlich ein Feld namens „Firma“ aus. Der bekäme dann
+       * eine Fehlermeldung zu einem Feld, das er nicht sehen kann. Die Anfrage
+       * wird stattdessen in der Server-Action still verworfen.
+       */
+      company: z
+        .string()
+        .optional()
+        .nullable()
+        .transform((v) => (v ?? '').slice(0, 200)),
+    })
+    .refine((v) => !!v.phone || !!v.email, {
+      message: t.needContact,
+      path: ['phone'],
+    });
+}
+
+export type TransferRequestInput = z.infer<ReturnType<typeof transferRequestSchema>>;
 
 /**
  * Die Anfrage als lesbarer Text.
@@ -108,6 +123,13 @@ export type TransferRequestInput = z.infer<typeof transferRequestSchema>;
  * Die Felder sind alle einzeln optional, weil dieselbe Funktion auch ein noch
  * halb ausgefülltes Formular abbilden muss: der WhatsApp-Knopf soll schon
  * funktionieren, wenn nur Abhol- und Zielort stehen.
+ *
+ * Geschrieben wird in der Sprache des Absenders, nicht in der des Betriebs.
+ * Der Kunde sieht die WhatsApp-Nachricht, bevor er sie abschickt — eine
+ * deutsche Nachricht aus einem englischen Formular sähe aus, als hätte die
+ * Seite etwas anderes verschickt als angezeigt. Für den Betrieb ist die
+ * englische Fassung ohnehin lesbar und sagt nebenbei, in welcher Sprache
+ * geantwortet werden will.
  */
 export type RequestMessageInput = {
   pickupLocation?: string | null;
@@ -139,6 +161,13 @@ function line(label: string, value: string | null | undefined): string | null {
   return text ? `${label}: ${text}` : null;
 }
 
+/** Der Anzeigename eines Auswahlwerts; unbekannte Werte bleiben, wie sie sind. */
+function label(table: Record<string, string>, value: string | null | undefined): string | null {
+  const key = value?.trim();
+  if (!key) return null;
+  return table[key] ?? key;
+}
+
 /**
  * Die Anfrage in einer Zeile.
  *
@@ -148,7 +177,9 @@ function line(label: string, value: string | null | undefined): string | null {
  * Deshalb die Reihenfolge — Strecke, Fahrzeug, Termin, Kontakt: die Frage
  * „hinfahren oder nicht" steht vorne.
  */
-export function buildRequestLine(data: RequestMessageInput): string {
+export function buildRequestLine(data: RequestMessageInput, locale: Locale): string {
+  const t = content(locale);
+
   const vehicle = [data.vehicleMake, data.vehicleModel]
     .map((part) => part?.trim())
     .filter(Boolean)
@@ -162,8 +193,8 @@ export function buildRequestLine(data: RequestMessageInput): string {
 
   return [
     route || null,
-    vehicle || data.vehicleType || null,
-    date && (data.dateFlexible ? `${date} (flexibel)` : date),
+    vehicle || label(t.vehicleTypes, data.vehicleType),
+    date && (data.dateFlexible ? `${date} (${t.notification.dateFlexibleShort})` : date),
     data.name?.trim() || null,
     data.phone?.trim() || data.email?.trim() || null,
   ]
@@ -173,6 +204,7 @@ export function buildRequestLine(data: RequestMessageInput): string {
 
 export function buildRequestMessage(
   data: RequestMessageInput,
+  locale: Locale,
   /**
    * Obergrenze für die Gesamtlänge. Nur der WhatsApp-Weg braucht sie: die
    * Nachricht steckt dort in einer Adresse, und sehr lange Adressen werden von
@@ -181,6 +213,9 @@ export function buildRequestMessage(
    */
   options: { maxLength?: number } = {},
 ): string {
+  const t = content(locale).notification;
+  const { vehicleTypes, vehicleStates } = content(locale);
+
   const vehicle = [data.vehicleMake, data.vehicleModel]
     .map((part) => part?.trim())
     .filter(Boolean)
@@ -188,24 +223,24 @@ export function buildRequestMessage(
 
   const build = (notes: string | null | undefined) =>
     [
-      'Anfrage Fahrzeugüberführung',
+      t.heading,
       '',
-      line('Abholort', data.pickupLocation),
-      line('Zielort', data.dropoffLocation),
+      line(t.pickup, data.pickupLocation),
+      line(t.dropoff, data.dropoffLocation),
       '',
-      line('Fahrzeug', vehicle || null),
-      line('Fahrzeugtyp', data.vehicleType),
-      line('Zulassung', data.vehicleState),
-      line('Fahrzeugwert', data.vehicleValue),
+      line(t.vehicle, vehicle || null),
+      line(t.vehicleType, label(vehicleTypes, data.vehicleType)),
+      line(t.vehicleState, label(vehicleStates, data.vehicleState)),
+      line(t.vehicleValue, data.vehicleValue),
       '',
-      line('Wunschtermin', formatDate(data.preferredDate)),
-      data.dateFlexible ? 'Termin flexibel: ja' : null,
+      line(t.preferredDate, formatDate(data.preferredDate)),
+      data.dateFlexible ? t.dateFlexible : null,
       '',
-      line('Bemerkungen', notes),
+      line(t.notes, notes),
       '',
-      line('Name', data.name),
-      line('Telefon', data.phone),
-      line('E-Mail', data.email),
+      line(t.name, data.name),
+      line(t.phone, data.phone),
+      line(t.email, data.email),
     ]
       .filter((entry) => entry !== null)
       // Zwei Leerzeilen hintereinander entstehen, wenn ein ganzer Block leer

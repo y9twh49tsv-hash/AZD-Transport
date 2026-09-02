@@ -3,13 +3,10 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, MessageCircle, Phone } from 'lucide-react';
-import { submitTransferRequest } from '@/app/(transfer)/anfrage/actions';
-import {
-  buildRequestMessage,
-  VEHICLE_STATES,
-  VEHICLE_TYPES,
-} from '@/lib/transfer-request';
+import { submitTransferRequest } from '@/lib/actions/transfer-request';
+import { buildRequestMessage, VEHICLE_STATES, VEHICLE_TYPES } from '@/lib/transfer-request';
 import { siteConfig, telLink, whatsappLink, WHATSAPP_MESSAGE_LIMIT } from '@/config/site';
+import { content, pagePath, type Locale } from '@/content';
 import { cn } from '@/lib/utils';
 
 type Errors = Record<string, string>;
@@ -27,6 +24,7 @@ function Field({
   error,
   hint,
   required,
+  optionalLabel,
   children,
   className,
 }: {
@@ -35,6 +33,7 @@ function Field({
   error?: string;
   hint?: string;
   required?: boolean;
+  optionalLabel: string;
   children: React.ReactNode;
   className?: string;
 }) {
@@ -42,7 +41,7 @@ function Field({
     <div className={className}>
       <label htmlFor={htmlFor} className="block text-sm font-medium text-foreground">
         {label}
-        {!required && <span className="ms-1.5 text-xs text-muted-foreground">optional</span>}
+        {!required && <span className="ms-1.5 text-xs text-muted-foreground">{optionalLabel}</span>}
       </label>
       <div className="mt-2">{children}</div>
       {error ? (
@@ -118,11 +117,19 @@ const EMPTY: Values = {
  * etwas — genau daran scheitern die meisten Kontaktformulare mit
  * WhatsApp-Knopf.
  *
+ * Die Auswahlwerte bleiben deutsch, die Beschriftungen nicht: „PKW" ist die
+ * Kennung, die über die Leitung geht, „Car" nur das, was danebensteht. Würde
+ * die Kennung mit der Anzeigesprache wechseln, käme aus dem englischen
+ * Formular ein Wert, den das Schema nicht kennt.
+ *
  * `text-base` in allen Eingabefeldern ist keine Geschmacksfrage: Safari auf
  * dem iPhone zoomt beim Fokussieren in jedes Feld mit kleinerer Schrift, und
  * der Zoom bleibt danach stehen.
  */
-export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
+export function RequestForm({ locale, defaultNotes }: { locale: Locale; defaultNotes?: string }) {
+  const t = content(locale);
+  const f = t.request;
+
   const [errors, setErrors] = useState<Errors>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -137,7 +144,17 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
    * einziger `onChange` am <form> genügt dafür — Änderungsereignisse steigen
    * auf, es braucht also keinen Zustand pro Feld.
    */
-  const [values, setValues] = useState<Values>({ ...EMPTY, notes: defaultNotes ?? null });
+  const [values, setValues] = useState<Values>({
+    ...EMPTY,
+    notes: defaultNotes ?? null,
+  });
+
+  const message = () =>
+    whatsappLink(
+      buildRequestMessage(values, locale, {
+        maxLength: WHATSAPP_MESSAGE_LIMIT,
+      }),
+    );
 
   function onSubmit(formData: FormData) {
     setServerError(null);
@@ -148,6 +165,7 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
     setValues(valuesFrom(formData));
 
     const payload = {
+      locale,
       pickupLocation: formData.get('pickupLocation'),
       dropoffLocation: formData.get('dropoffLocation'),
       vehicleMake: formData.get('vehicleMake'),
@@ -201,10 +219,10 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
     if (!current.pickupLocation || !current.dropoffLocation) {
       event.preventDefault();
       setErrors({
-        ...(current.pickupLocation ? {} : { pickupLocation: 'Bitte ausfüllen.' }),
-        ...(current.dropoffLocation ? {} : { dropoffLocation: 'Bitte ausfüllen.' }),
+        ...(current.pickupLocation ? {} : { pickupLocation: t.errors.required }),
+        ...(current.dropoffLocation ? {} : { dropoffLocation: t.errors.required }),
       });
-      setServerError('Bitte geben Sie Abhol- und Zielort an — dann steht alles in der Nachricht.');
+      setServerError(f.needRoute);
       form.querySelector<HTMLInputElement>('#pickupLocation')?.focus();
       return;
     }
@@ -219,10 +237,9 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
         <span className="mx-auto inline-flex size-14 items-center justify-center rounded-full bg-primary-muted">
           <CheckCircle2 className="size-7 text-primary" aria-hidden />
         </span>
-        <h2 className="mt-6 text-2xl font-semibold tracking-tight">Vielen Dank.</h2>
+        <h2 className="mt-6 text-2xl font-semibold tracking-tight">{f.doneTitle}</h2>
         <p className="mx-auto mt-3 max-w-md text-[0.95rem] leading-relaxed text-muted-foreground">
-          Ihre Anfrage wurde übermittelt. Wir prüfen die Angaben und melden uns kurzfristig mit
-          einem individuellen Angebot.
+          {f.doneText}
         </p>
 
         {/*
@@ -233,18 +250,15 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
           Absenden.
         */}
         <div className="panel mx-auto mt-8 max-w-md bg-primary-muted/25 p-6">
-          <p className="text-sm leading-relaxed text-foreground">
-            Soll es schneller gehen? Schicken Sie dieselbe Anfrage zusätzlich per WhatsApp —
-            fertig ausgefüllt, ein Tippen.
-          </p>
+          <p className="text-sm leading-relaxed text-foreground">{f.doneWhatsAppLead}</p>
           <a
-            href={whatsappLink(buildRequestMessage(values, { maxLength: WHATSAPP_MESSAGE_LIMIT }))}
+            href={message()}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-4 flex min-h-12 items-center justify-center gap-2.5 rounded-sm bg-primary px-5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
           >
             <MessageCircle className="size-4" aria-hidden />
-            Zusätzlich per WhatsApp senden
+            {f.doneWhatsAppCta}
           </a>
         </div>
 
@@ -257,10 +271,10 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
             {siteConfig.phone}
           </a>
           <Link
-            href="/"
+            href={pagePath('home', locale)}
             className="inline-flex min-h-12 items-center justify-center rounded-sm px-5 text-sm text-muted-foreground hover:text-foreground"
           >
-            Zurück zur Startseite
+            {f.backHome}
           </Link>
         </div>
       </div>
@@ -281,20 +295,21 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
       </div>
 
       <fieldset className="space-y-5">
-        <legend className="eyebrow">Strecke</legend>
+        <legend className="eyebrow">{f.sectionRoute}</legend>
         <div className="grid gap-5 sm:grid-cols-2">
           <Field
-            label="Abholort"
+            label={f.pickup}
             htmlFor="pickupLocation"
             error={errors.pickupLocation}
-            hint="PLZ oder Ort genügt"
+            hint={f.locationHint}
+            optionalLabel={f.optional}
             required
           >
             <input
               id="pickupLocation"
               name="pickupLocation"
               className={control}
-              placeholder="60311 Frankfurt am Main"
+              placeholder={f.pickupPlaceholder}
               autoComplete="off"
               required
               aria-invalid={!!errors.pickupLocation}
@@ -303,17 +318,18 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
           </Field>
 
           <Field
-            label="Zielort"
+            label={f.dropoff}
             htmlFor="dropoffLocation"
             error={errors.dropoffLocation}
-            hint="PLZ oder Ort genügt"
+            hint={f.locationHint}
+            optionalLabel={f.optional}
             required
           >
             <input
               id="dropoffLocation"
               name="dropoffLocation"
               className={control}
-              placeholder="80331 München"
+              placeholder={f.dropoffPlaceholder}
               autoComplete="off"
               required
               aria-invalid={!!errors.dropoffLocation}
@@ -326,42 +342,53 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
       <div className="rule" />
 
       <fieldset className="space-y-5">
-        <legend className="eyebrow">Fahrzeug</legend>
+        <legend className="eyebrow">{f.sectionVehicle}</legend>
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="Hersteller" htmlFor="vehicleMake" error={errors.vehicleMake}>
+          <Field
+            label={f.make}
+            htmlFor="vehicleMake"
+            error={errors.vehicleMake}
+            optionalLabel={f.optional}
+          >
             <input
               id="vehicleMake"
               name="vehicleMake"
               className={control}
-              placeholder="z. B. Porsche"
+              placeholder={f.makePlaceholder}
               autoComplete="off"
             />
           </Field>
 
-          <Field label="Modell" htmlFor="vehicleModel" error={errors.vehicleModel}>
+          <Field
+            label={f.model}
+            htmlFor="vehicleModel"
+            error={errors.vehicleModel}
+            optionalLabel={f.optional}
+          >
             <input
               id="vehicleModel"
               name="vehicleModel"
               className={control}
-              placeholder="z. B. 911 Carrera"
+              placeholder={f.modelPlaceholder}
               autoComplete="off"
             />
           </Field>
 
-          <Field label="Fahrzeugtyp" htmlFor="vehicleType" required>
+          <Field label={f.vehicleType} htmlFor="vehicleType" optionalLabel={f.optional} required>
             <select id="vehicleType" name="vehicleType" className={control} defaultValue="PKW">
               {VEHICLE_TYPES.map((type) => (
                 <option key={type} value={type}>
-                  {type}
+                  {t.vehicleTypes[type] ?? type}
                 </option>
               ))}
             </select>
           </Field>
 
           <Field
-            label="Zulassung"
+            label={f.vehicleState}
             htmlFor="vehicleState"
-            hint="Für die Fahrt wird ein gültiges Kennzeichen benötigt"
+            hint={f.vehicleStateHint}
+            optionalLabel={f.optional}
             required
           >
             <select
@@ -372,24 +399,25 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
             >
               {VEHICLE_STATES.map((state) => (
                 <option key={state} value={state}>
-                  {state}
+                  {t.vehicleStates[state] ?? state}
                 </option>
               ))}
             </select>
           </Field>
 
           <Field
-            label="Fahrzeugwert"
+            label={f.vehicleValue}
             htmlFor="vehicleValue"
             error={errors.vehicleValue}
-            hint="Hilft bei der Einschätzung der Absicherung"
+            hint={f.vehicleValueHint}
+            optionalLabel={f.optional}
             className="sm:col-span-2"
           >
             <input
               id="vehicleValue"
               name="vehicleValue"
               className={control}
-              placeholder="z. B. 95.000 €"
+              placeholder={f.vehicleValuePlaceholder}
               autoComplete="off"
             />
           </Field>
@@ -399,9 +427,14 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
       <div className="rule" />
 
       <fieldset className="space-y-5">
-        <legend className="eyebrow">Termin</legend>
+        <legend className="eyebrow">{f.sectionDate}</legend>
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="Wunschtermin" htmlFor="preferredDate" error={errors.preferredDate}>
+          <Field
+            label={f.preferredDate}
+            htmlFor="preferredDate"
+            error={errors.preferredDate}
+            optionalLabel={f.optional}
+          >
             <input
               id="preferredDate"
               name="preferredDate"
@@ -423,27 +456,26 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
                 className="size-5 shrink-0 accent-[hsl(var(--primary))]"
               />
               <span className="text-sm text-foreground">
-                Termin ist flexibel
-                <span className="block text-xs text-muted-foreground">
-                  Ermöglicht oft ein günstigeres Angebot
-                </span>
+                {f.dateFlexible}
+                <span className="block text-xs text-muted-foreground">{f.dateFlexibleHint}</span>
               </span>
             </label>
           </div>
         </div>
 
         <Field
-          label="Bemerkungen"
+          label={f.notes}
           htmlFor="notes"
           error={errors.notes}
-          hint="Besonderheiten, Ansprechpartner vor Ort, Übergabezeiten"
+          hint={f.notesHint}
+          optionalLabel={f.optional}
         >
           <textarea
             id="notes"
             name="notes"
             rows={4}
             className={cn(control, 'min-h-[7rem] py-3 leading-relaxed')}
-            placeholder="Abholung beim Autohaus, Ansprechpartner Herr …"
+            placeholder={f.notesPlaceholder}
             defaultValue={defaultNotes}
           />
         </Field>
@@ -452,9 +484,16 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
       <div className="rule" />
 
       <fieldset className="space-y-5">
-        <legend className="eyebrow">Kontakt</legend>
+        <legend className="eyebrow">{f.sectionContact}</legend>
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="Name" htmlFor="name" error={errors.name} required className="sm:col-span-2">
+          <Field
+            label={f.name}
+            htmlFor="name"
+            error={errors.name}
+            optionalLabel={f.optional}
+            required
+            className="sm:col-span-2"
+          >
             <input
               id="name"
               name="name"
@@ -467,10 +506,11 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
           </Field>
 
           <Field
-            label="Telefon"
+            label={f.phone}
             htmlFor="phone"
             error={errors.phone}
-            hint="Telefon oder E-Mail genügt"
+            hint={f.contactHint}
+            optionalLabel={f.optional}
           >
             <input
               id="phone"
@@ -484,7 +524,7 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
             />
           </Field>
 
-          <Field label="E-Mail" htmlFor="email" error={errors.email}>
+          <Field label={f.email} htmlFor="email" error={errors.email} optionalLabel={f.optional}>
             <input
               id="email"
               name="email"
@@ -511,12 +551,15 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
             className="mt-0.5 size-5 shrink-0 accent-[hsl(var(--primary))]"
           />
           <span className="text-sm leading-relaxed text-muted-foreground">
-            Ich habe die{' '}
-            <Link href="/datenschutz" target="_blank" className="text-primary underline">
-              Datenschutzhinweise
-            </Link>{' '}
-            gelesen und bin damit einverstanden, dass meine Angaben zur Bearbeitung der Anfrage
-            verwendet werden.
+            {f.privacyBefore}
+            <Link
+              href={pagePath('privacy', locale)}
+              target="_blank"
+              className="text-primary underline"
+            >
+              {f.privacyLink}
+            </Link>
+            {f.privacyAfter}
           </span>
         </label>
         {errors.privacyAccepted && (
@@ -539,14 +582,9 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
         eine Antwort wartet, die nie kommt.
       */}
       {whatsappOpened && (
-        <div
-          role="status"
-          className="rounded-sm border border-primary/40 bg-primary-muted/40 p-4"
-        >
+        <div role="status" className="rounded-sm border border-primary/40 bg-primary-muted/40 p-4">
           <p className="text-sm leading-relaxed text-foreground">
-            <strong>WhatsApp wurde geöffnet.</strong> Ihre Angaben stehen dort schon in der
-            Nachricht — bitte einmal auf <strong>Senden</strong> tippen, dann ist die Anfrage bei
-            uns.
+            <strong>{f.whatsappOpenedTitle}</strong> {f.whatsappOpenedText}
           </p>
         </div>
       )}
@@ -557,7 +595,7 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
           disabled={pending}
           className="flex min-h-14 w-full items-center justify-center gap-2 rounded-sm bg-primary px-6 text-[0.95rem] font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
         >
-          {pending ? 'Wird übermittelt …' : 'Unverbindliches Angebot anfordern'}
+          {pending ? f.submitting : f.submit}
           {!pending && <ArrowRight className="size-4" aria-hidden />}
         </button>
 
@@ -569,20 +607,20 @@ export function RequestForm({ defaultNotes }: { defaultNotes?: string } = {}) {
           Berührung heraus, ohne Umweg.
         */}
         <a
-          href={whatsappLink(buildRequestMessage(values, { maxLength: WHATSAPP_MESSAGE_LIMIT }))}
+          href={message()}
           target="_blank"
           rel="noopener noreferrer"
           onClick={onWhatsApp}
           className="flex min-h-14 w-full items-center justify-center gap-2.5 rounded-sm border border-border px-6 text-[0.95rem] font-medium text-foreground transition-colors hover:border-primary/60"
         >
           <MessageCircle className="size-4 text-primary" aria-hidden />
-          Anfrage per WhatsApp senden
+          {f.whatsappSubmit}
         </a>
 
         <p className="text-center text-sm leading-relaxed text-muted-foreground">
-          Beide Wege enthalten dieselben Angaben — Sie müssen nichts abtippen.
+          {f.bothWays}
           <br />
-          Lieber telefonisch?{' '}
+          {f.ratherCall}{' '}
           <a href={telLink()} className="text-foreground underline underline-offset-4">
             {siteConfig.phone}
           </a>
