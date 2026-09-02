@@ -105,6 +105,8 @@ export type Content = {
     closeMenu: string;
     call: string;
     skipToContent: string;
+    /** Beschriftung des Sprachschalters — für Screenreader. */
+    language: string;
   };
 
   home: {

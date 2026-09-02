@@ -70,11 +70,18 @@ Adressen. Kein Präfix für Deutsch, weil das der Hauptmarkt ist und die Adresse
 bereits im Umlauf sind; übersetzte Adressen für Englisch, weil `/en/impressum`
 kein englischsprachiger Sucher findet.
 
+**Der Schalter steht in der Kopfleiste, auf jeder Bildschirmbreite** — als
+**DE | EN** nebeneinander, die laufende Sprache hervorgehoben. Nicht als
+einzelnes Wort und nicht hinter dem Menüknopf: wer die Seite auf Englisch lesen
+will, öffnet kein Menü und geht keine Liste durch, sondern verlässt die Seite.
+Beide Sprachen nebeneinander zeigen außerdem, welche gerade läuft — das tut ein
+Umschalter, der nur die andere nennt, nie. In der Fußzeile steht derselbe
+Schalter noch einmal.
+
 **Die Sprache steht in der Adresse — nicht in einem Cookie.** Es gibt keine
 automatische Weiterleitung nach Browsersprache und nichts, was sich eine Wahl
-merkt. Wer `/agb` aufruft, bekommt `/agb`; der Umschalter oben rechts (und
-unten in der Fußzeile) führt auf das Gegenstück derselben Seite, nicht auf die
-Startseite der anderen Sprache.
+merkt. Wer `/agb` aufruft, bekommt `/agb`; der Schalter führt auf das
+Gegenstück derselben Seite, nicht auf die Startseite der anderen Sprache.
 
 **Technisch** sind es zwei Wurzellayouts — `app/(de)/layout.tsx` und
 `app/(en)/layout.tsx` —, damit jede Fassung ihr eigenes `<html lang>` trägt.

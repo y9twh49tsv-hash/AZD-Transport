@@ -53,6 +53,7 @@ export const de: Content = {
     closeMenu: 'Menü schließen',
     call: 'Anrufen',
     skipToContent: 'Zum Inhalt springen',
+    language: 'Sprache',
   },
 
   home: {

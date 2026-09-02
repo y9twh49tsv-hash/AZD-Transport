@@ -85,10 +85,13 @@ export function SiteHeader({ locale }: { locale: Locale }) {
         </nav>
 
         <div className="flex items-center gap-2">
-          <LanguageSwitch
-            locale={locale}
-            className="hidden min-h-11 items-center rounded-sm px-3 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background sm:inline-flex"
-          />
+          {/*
+            Der Sprachschalter steht in der Leiste, auf jeder Bildschirmbreite —
+            nicht hinter dem Menüknopf. Wer die Seite auf Englisch lesen will,
+            soll nicht erst ein Menü öffnen und eine Liste durchgehen müssen; er
+            würde es nicht tun, sondern die Seite verlassen.
+          */}
+          <LanguageSwitch locale={locale} />
 
           <a
             href={telLink()}
@@ -133,12 +136,6 @@ export function SiteHeader({ locale }: { locale: Locale }) {
                   </Link>
                 </li>
               ))}
-              <li>
-                <LanguageSwitch
-                  locale={locale}
-                  className="flex min-h-[3.25rem] items-center text-base text-muted-foreground"
-                />
-              </li>
             </ul>
 
             <div className="mt-5 grid gap-2.5">

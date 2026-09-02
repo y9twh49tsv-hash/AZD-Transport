@@ -58,6 +58,7 @@ export const en: Content = {
     closeMenu: 'Close menu',
     call: 'Call',
     skipToContent: 'Skip to content',
+    language: 'Language',
   },
 
   home: {

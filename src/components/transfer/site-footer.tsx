@@ -53,10 +53,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           {/* Auch hier, nicht nur oben: wer die Seite gelesen hat und erst am
               Ende merkt, dass es sie in der eigenen Sprache gibt, soll nicht
               zurückscrollen müssen. */}
-          <LanguageSwitch
-            locale={locale}
-            className="mt-5 inline-flex min-h-11 items-center text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
-          />
+          <LanguageSwitch locale={locale} className="mt-6" />
         </div>
 
         <div>
