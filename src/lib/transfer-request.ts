@@ -139,6 +139,38 @@ function line(label: string, value: string | null | undefined): string | null {
   return text ? `${label}: ${text}` : null;
 }
 
+/**
+ * Die Anfrage in einer Zeile.
+ *
+ * Für den Platzhalter einer WhatsApp-Nachrichtenvorlage: Meta lehnt
+ * Platzhalter mit Zeilenumbrüchen ab, und in einer Benachrichtigung auf dem
+ * Sperrbildschirm zählt ohnehin nur, was in die ersten zwei Zeilen passt.
+ * Deshalb die Reihenfolge — Strecke, Fahrzeug, Termin, Kontakt: die Frage
+ * „hinfahren oder nicht" steht vorne.
+ */
+export function buildRequestLine(data: RequestMessageInput): string {
+  const vehicle = [data.vehicleMake, data.vehicleModel]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(' ');
+
+  const route = [data.pickupLocation?.trim(), data.dropoffLocation?.trim()]
+    .filter(Boolean)
+    .join(' → ');
+
+  const date = formatDate(data.preferredDate);
+
+  return [
+    route || null,
+    vehicle || data.vehicleType || null,
+    date && (data.dateFlexible ? `${date} (flexibel)` : date),
+    data.name?.trim() || null,
+    data.phone?.trim() || data.email?.trim() || null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
 export function buildRequestMessage(
   data: RequestMessageInput,
   /**

@@ -21,6 +21,7 @@ gefahren, nicht auf einen Anhänger oder Autotransporter geladen.
 2. [Alles ändern an einer Stelle](#2-alles-ändern-an-einer-stelle)
 3. [Lokal starten](#3-lokal-starten)
 4. [E-Mail einrichten](#4-e-mail-einrichten)
+4a. [WhatsApp: Anfragen automatisch aufs Handy](#4a-whatsapp-anfragen-automatisch-aufs-handy)
 5. [Deployen](#5-deployen)
 6. [Projektstruktur](#6-projektstruktur)
 7. [Tests und Qualitätssicherung](#7-tests-und-qualitätssicherung)
@@ -30,13 +31,13 @@ gefahren, nicht auf einen Anhänger oder Autotransporter geladen.
 
 ## 1. Wie die Seite funktioniert
 
-Sechs öffentliche Seiten, kein Konto, keine Datenbank:
+Sieben öffentliche Seiten, kein Konto, keine Datenbank:
 
 | Adresse | Inhalt |
 |---|---|
 | `/` | Startseite: Leistungen, Premium-Service, Ablauf, Anfrageformular, Geschäftskunden, FAQ |
 | `/anfrage` | dasselbe Formular als eigene Seite — verlinkbar aus Kopfzeile, Handy-Leiste und WhatsApp |
-| `/impressum` `/datenschutz` `/agb` `/widerruf` | Rechtstexte |
+| `/impressum` `/datenschutz` `/cookies` `/agb` `/widerruf` | Rechtstexte |
 
 **Der Anfrageweg.** Das Formular wird im Browser geprüft, ein zweites Mal auf dem
 Server, und dann als E-Mail an den Betrieb geschickt. Es gibt bewusst keine
@@ -126,6 +127,71 @@ Optional:
 
 Prüfen: `/api/health` meldet `email.sending: true`, sobald alles stimmt, und
 benennt sonst das konkrete Problem — ohne je einen Schlüssel auszugeben.
+
+---
+
+## 4a. WhatsApp: Anfragen automatisch aufs Handy
+
+Ohne Einrichtung nutzt die Seite kostenlose `wa.me`-Links: der Kunde füllt das
+Formular aus, tippt auf „Anfrage per WhatsApp senden" und drückt in WhatsApp
+einmal auf Senden. Das funktioniert sofort und ohne Vertrag.
+
+Mit der **Meta Cloud API** schickt zusätzlich der Server jede Anfrage von
+selbst — auch die vom Kunden, der das Formular abschickt und dann doch nicht
+auf Senden tippt.
+
+### Der Aufbau, für den das gedacht ist
+
+| Nummer | Rolle |
+|---|---|
+| die bekannte Kundennummer | bleibt in der WhatsApp Business App auf dem Handy. Die `wa.me`-Links zeigen dorthin, Kunden schreiben, man antwortet normal. **Empfängt** die Meldungen. |
+| eine zweite Nummer | liegt in der Cloud API und **verschickt** die Meldungen. Kunden sehen sie nie. |
+
+⚠ Eine Nummer in der Cloud API ist eine reine Servernummer — sie lässt sich
+nicht mehr in der WhatsApp-App benutzen, und sie darf dort auch vorher nie
+registriert gewesen sein.
+
+### Die Nachrichtenvorlage
+
+Eine Nachricht, die der Betrieb beginnt, verlangt außerhalb eines laufenden
+Chatfensters eine von Meta genehmigte Vorlage. Anzulegen im WhatsApp Manager
+unter *Message Templates*, Kategorie **Utility**, Sprache **Deutsch**:
+
+```
+Name:  neue_anfrage
+Text:  Neue Anfrage über die Website: {{1}}
+```
+
+Genau ein Platzhalter, und der Platzhalter darf **keine Zeilenumbrüche**
+enthalten — Meta lehnt sie mit Fehler 132000 ab, ohne zu sagen welcher
+Platzhalter schuld war. `buildRequestLine()` erzeugt deshalb eine Zeile:
+
+```
+60311 Frankfurt am Main → 80331 München · Mercedes-AMG GT 63 S · 15.10.2026 · Max Mustermann · 0170 1234567
+```
+
+Strecke zuerst: auf dem Sperrbildschirm sind zwei Zeilen sichtbar, und die
+Frage „hinfahren oder nicht" steht vorne.
+
+### Einrichten
+
+Vier Werte, alle in `.env.example` beschrieben:
+
+```
+WHATSAPP_PHONE_NUMBER_ID=   # aus dem API-Setup, NICHT die Telefonnummer
+WHATSAPP_ACCESS_TOKEN=      # dauerhafter Schlüssel eines Systembenutzers
+WHATSAPP_TEMPLATE_NAME=neue_anfrage
+OPERATOR_WHATSAPP=          # wohin die Meldung geht; leer = Nummer aus site.ts
+```
+
+Prüfen: `/api/health` meldet `whatsapp.sending: true`, sobald alles stimmt, und
+benennt sonst das konkrete Problem — ohne je einen Schlüssel auszugeben. Der
+häufigste Fehler ist die Telefonnummer an der Stelle der Phone Number ID;
+darauf weist der Endpunkt eigens hin.
+
+**Ein Weg genügt.** Kommt die Anfrage per E-Mail an, aber WhatsApp klemmt (oder
+umgekehrt), gilt sie als zugestellt. Erst wenn beide Wege scheitern, bekommt
+der Kunde einen Fehler zu sehen.
 
 ---
 

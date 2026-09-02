@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildRequestLine,
   buildRequestMessage,
   formatDate,
   transferRequestSchema,
@@ -250,5 +251,57 @@ describe('buildRequestMessage', () => {
 
   it('kürzt nicht, wenn die Nachricht ohnehin passt', () => {
     expect(buildRequestMessage(full, { maxLength: 5000 })).toBe(buildRequestMessage(full));
+  });
+});
+
+describe('buildRequestLine', () => {
+  const full = {
+    pickupLocation: '60311 Frankfurt am Main',
+    dropoffLocation: '80331 München',
+    vehicleMake: 'Porsche',
+    vehicleModel: '911 Carrera',
+    vehicleType: 'Sportwagen',
+    preferredDate: '2026-10-01',
+    dateFlexible: false,
+    name: 'Max Mustermann',
+    phone: '0157 82034336',
+    email: 'kunde@example.com',
+  };
+
+  it('passt in eine Zeile und beginnt mit der Strecke', () => {
+    // Auf dem Sperrbildschirm sind zwei Zeilen sichtbar. Was dort zuerst
+    // steht, entscheidet, ob man das Telefon überhaupt entsperrt.
+    const line = buildRequestLine(full);
+    expect(line).not.toMatch(/[\r\n\t]/);
+    expect(line.startsWith('60311 Frankfurt am Main → 80331 München')).toBe(true);
+  });
+
+  it('nennt Fahrzeug, Termin, Name und eine Rufnummer', () => {
+    expect(buildRequestLine(full)).toBe(
+      '60311 Frankfurt am Main → 80331 München · Porsche 911 Carrera · 01.10.2026 · Max Mustermann · 0157 82034336',
+    );
+  });
+
+  it('markiert einen flexiblen Termin als solchen', () => {
+    expect(buildRequestLine({ ...full, dateFlexible: true })).toContain('01.10.2026 (flexibel)');
+  });
+
+  it('nimmt die E-Mail, wenn keine Telefonnummer da ist', () => {
+    expect(buildRequestLine({ ...full, phone: null })).toContain('kunde@example.com');
+  });
+
+  it('weicht auf den Fahrzeugtyp aus, wenn Hersteller und Modell fehlen', () => {
+    const line = buildRequestLine({ ...full, vehicleMake: null, vehicleModel: null });
+    expect(line).toContain('Sportwagen');
+  });
+
+  it('lässt weg, was fehlt, statt leere Trenner zu drucken', () => {
+    const line = buildRequestLine({
+      pickupLocation: 'Frankfurt',
+      dropoffLocation: 'München',
+    });
+    expect(line).toBe('Frankfurt → München');
+    expect(line).not.toMatch(/·\s*·/);
+    expect(line).not.toMatch(/·\s*$/);
   });
 });

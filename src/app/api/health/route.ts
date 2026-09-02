@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { appUrl } from '@/config/app-url';
 import { siteConfig } from '@/config/site';
 import { emailConfigProblems, maskEmail } from '@/lib/notifications/email';
+import { whatsappConfigProblems } from '@/lib/notifications/whatsapp';
 
 /**
  * Zustandsprüfung für den Container-Host (Railway `healthcheckPath`, Docker
@@ -32,6 +33,7 @@ export function GET() {
   // einen Schlüssel oder Teile davon — nur den Namen der Variablen und was an
   // ihr nicht stimmt.
   const emailProblems = emailConfigProblems();
+  const whatsappProblems = whatsappConfigProblems();
 
   return NextResponse.json({
     status: 'ok',
@@ -44,6 +46,26 @@ export function GET() {
       inbox: maskEmail(siteConfig.requestInbox),
       replyTo: process.env.EMAIL_REPLY_TO?.trim() || null,
       ...(emailProblems.length > 0 ? { problems: emailProblems } : {}),
+    },
+    /*
+      Der zweite Weg: die Anfrage zusätzlich als WhatsApp-Meldung an den
+      Betrieb. Beantwortet die Frage, die sich nach dem Einrichten der Meta
+      Cloud API sofort stellt — kommt sie jetzt aufs Handy oder immer noch nur
+      per E-Mail? Die Zielnummer wird nicht ausgegeben, der Endpunkt ist
+      öffentlich.
+    */
+    whatsapp: {
+      sending: whatsappProblems.length === 0,
+      template: process.env.WHATSAPP_TEMPLATE_NAME?.trim() || 'neue_anfrage',
+      ...(whatsappProblems.length > 0
+        ? {
+            problems: whatsappProblems,
+            hint:
+              'Ruhend ist in Ordnung: die Anfrage geht dann per E-Mail hinaus. ' +
+              'Für den WhatsApp-Weg braucht es die Meta Cloud API — ' +
+              'WHATSAPP_PHONE_NUMBER_ID und WHATSAPP_ACCESS_TOKEN.',
+          }
+        : {}),
     },
   });
 }

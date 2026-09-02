@@ -3,7 +3,13 @@
 import { unstable_rethrow } from 'next/navigation';
 import { getEmailAdapter } from '@/lib/notifications/email';
 import { siteConfig } from '@/config/site';
-import { buildRequestMessage, transferRequestSchema } from '@/lib/transfer-request';
+import { sendWhatsAppNotification } from '@/lib/notifications/whatsapp';
+import type { SendResult } from '@/lib/notifications/types';
+import {
+  buildRequestLine,
+  buildRequestMessage,
+  transferRequestSchema,
+} from '@/lib/transfer-request';
 
 export type RequestResult =
   | { ok: true }
@@ -54,33 +60,58 @@ export async function submitTransferRequest(input: unknown): Promise<RequestResu
     .join('')}</div>`;
 
   try {
-    const result = await getEmailAdapter().send({
-      to: siteConfig.requestInbox,
-      subject,
-      text: body,
-      html,
-      // Antworten gehen direkt an die Kundschaft, nicht an den Versanddienst.
-      replyTo: data.email ?? undefined,
-    });
+    /*
+      Beide Wege gleichzeitig, nicht nacheinander: der Kunde wartet auf die
+      Antwort, und zwei Netzabrufe hintereinander verdoppeln die Wartezeit
+      ohne Gewinn. `allSettled`, damit ein Fehler auf einem Weg den anderen
+      nicht mitreißt.
+    */
+    const [email, whatsapp] = await Promise.allSettled([
+      getEmailAdapter().send({
+        to: siteConfig.requestInbox,
+        subject,
+        text: body,
+        html,
+        // Antworten gehen direkt an die Kundschaft, nicht an den Versanddienst.
+        replyTo: data.email ?? undefined,
+      }),
+      sendWhatsAppNotification(buildRequestLine(data)),
+    ]);
 
-    if (!result.ok && !result.skipped) {
-      console.error('[anfrage] Versand fehlgeschlagen:', result.error);
+    const delivered = (channel: PromiseSettledResult<SendResult>, name: string): boolean => {
+      if (channel.status === 'rejected') {
+        console.error(`[anfrage] ${name} hat geworfen:`, channel.reason);
+        return false;
+      }
+      if (channel.value.skipped) {
+        console.warn(`[anfrage] ${name} nicht eingerichtet:`, channel.value.error);
+        return false;
+      }
+      if (!channel.value.ok) {
+        console.error(`[anfrage] ${name} fehlgeschlagen:`, channel.value.error);
+        return false;
+      }
+      return true;
+    };
+
+    const emailDelivered = delivered(email, 'E-Mail');
+    const whatsappDelivered = delivered(whatsapp, 'WhatsApp');
+
+    /*
+      Ein Weg genügt. Bewusst nicht beide verlangen: solange die Anfrage
+      irgendwo ankommt, wo sie gelesen wird, ist sie zugestellt — und dem
+      Kunden einen Fehler zu zeigen, weil einer von zwei Kanälen klemmt, würde
+      genau die Anfrage kosten, die schon da ist.
+
+      Kommt sie nirgends an, wird das auch so gesagt. Einen Erfolg zu
+      quittieren, den es nicht gibt, ist die eine Stelle, an der jemand auf
+      eine Antwort wartet, die nie kommt.
+    */
+    if (!emailDelivered && !whatsappDelivered) {
       return {
         ok: false,
         error:
           'Die Anfrage konnte gerade nicht übermittelt werden. Bitte rufen Sie uns an oder schreiben Sie per WhatsApp.',
-      };
-    }
-
-    // Kein konfigurierter Versanddienst: die Anfrage landet nur im
-    // Serverprotokoll. Das als Erfolg zu quittieren wäre eine Lüge gegenüber
-    // jemandem, der auf eine Antwort wartet.
-    if (result.skipped) {
-      console.warn('[anfrage] Kein E-Mail-Versand konfiguriert — Anfrage nur im Protokoll:', subject);
-      return {
-        ok: false,
-        error:
-          'Der Nachrichtenversand ist derzeit nicht verfügbar. Bitte rufen Sie uns an oder schreiben Sie per WhatsApp.',
       };
     }
 
